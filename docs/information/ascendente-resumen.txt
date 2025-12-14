@@ -1,0 +1,2176 @@
+Análisis Sintáctico Ascendente
+
+Generalidades
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+Cuántas producciones hay?
+
+La frase abbcde se puede reducir paso a paso…
+1. Se buscan las subcadenas de la frase que coincidan
+con la parte derecha de alguna producción.
+2. Se reemplaza la subcadena (o parte derecha de la
+producción coincidente) en la frase por el símbolo no
+terminal a la izquierda de la producción (cabezote).
+
+Generalidades
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+Paso 1
+Paso 2
+Paso 1
+Paso 2
+Paso 1
+Paso 2
+Paso 1
+Paso 2
+
+La frase abbcde se puede reducir paso a paso…
+1. Se buscan las subcadenas de la frase que coincidan con la
+parte derecha de alguna producción.
+2. Se reemplaza la subcadena (o parte derecha de la producción
+coincidente) en la frase por el símbolo no terminal a la
+izquierda de la producción (cabezote).
+Si hay varias cadenas posibles, se escoge la más izquierda
+
+abbcde
+abbcde
+aAbcde
+aAbcde
+aAde
+aAde
+aABe
+aABe
+S
+
+A→b
+
+B →d
+
+A → Abc A → b
+
+B →d
+
+A→b
+
+B →d
+
+S →aABe
+
+Generalidades
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+Árbol de
+Análisis
+Sintáctico
+MD al revés
+
+A→b
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+A → Abc
+B →d
+S →aABe
+
+S
+A
+
+B
+
+A
+a b b c d e
+
+Mango: Un mango de una
+cadena es una subcadena
+que concuerda con el lado
+derecho de una producción
+y cuya reducción al no
+terminal del lado izquierdo
+de dicha producción
+representa un paso previo
+de una derivacion más
+derecha
+
+S aABe aAde  aAbcde  abbcde
+
+Derivación
+más
+Derecha al
+revés
+
+Mango
+Puede haber más de un mango en una forma de frase más
+derecha.
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+Reconocer:
+w=id1+id2*id3
+
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Poda y Vecinos de un Mango
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+A→b
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+Vecinos del mango: A → b
+Izq. y Der. Terminal a ; b,c,d,e
+
+A → Abc
+B →d
+S →aABe
+
+S
+A
+
+B
+
+El mango A →  en el AAS de
+una forma de frase derecha
+ es el subárbol completo
+situado más a la izquierda con
+un nodo y todos sus hijos
+
+Poda del mango:
+Eliminación de los hijos de
+A del AAS.
+
+A
+ Formado por T
+a b b c d e
+w Formado por T
+
+S aABe aAde  aAbcde  abbcde
+
+Poda y Vecinos de un Mango
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+A→b
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+Vecinos del mango: A → Abc
+Izq. y Der. Terminal a; d,e
+
+a
+
+A → Abc
+B →d
+S →aABe
+
+S
+A
+
+A
+
+B
+
+El mango A →  en el AAS de
+una forma de frase derecha
+ es el subárbol completo
+situado más a la izquierda con
+un nodo y todos sus hijos
+
+Poda del mango:
+Eliminación de los hijos de
+A del AAS.
+
+ Formado por T
+
+b c d e
+w Formado por T
+
+S aABe aAde  aAbcde  abbcde
+
+Poda y Vecinos de un Mango
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+A→b
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+Vecinos del mango: B → d
+Izq. Terminal a y No Terminal
+A ; Der. Terminal e
+
+a
+
+A → Abc
+B →d
+S →aABe
+
+S
+A
+
+B
+
+El mango A →  en el AAS de
+una forma de frase derecha
+ es el subárbol completo
+situado más a la izquierda con
+un nodo y todos sus hijos
+
+Poda del mango:
+Eliminación de los hijos de
+B del AAS.
+
+ Formado por T
+y/o No T
+
+d e
+w Formado por T
+
+S aABe aAde  aAbcde  abbcde
+
+Poda y Vecinos de un Mango
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+El mango A →  en el AAS de
+una forma de frase derecha
+ es el subárbol completo
+situado más a la izquierda con
+un nodo y todos sus hijos
+
+A→b
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+A → Abc
+B →d
+S →aABe
+
+Poda del mango:
+Eliminación de los hijos de
+S del AAS.
+
+S
+A
+
+B
+
+ es 
+
+a
+
+e
+w es 
+
+S aABe aAde  aAbcde  abbcde
+
+Poda y Vecinos de un Mango
+Dada la GIC:
+S →aABe
+A →Abc | b
+B →d
+
+abbcde
+aAbcde
+aAde
+aABe
+S
+
+A→b
+A → Abc
+B →d
+S →aABe
+
+S
+
+El mango A →  en el AAS de
+una forma de frase derecha
+ es el subárbol completo
+situado más a la izquierda con
+un nodo y todos sus hijos
+
+Poda del mango:
+Eliminación de los hijos de
+S del AAS.
+ Formado por T
+y/o No T
+
+GENERALIZACIÓN
+w Formado por T
+
+S aABe aAde  aAbcde  abbcde
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+id1+id2*id3
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Mango
+id1
+
+Reconocer:
+w=id1+id2*id3
+
+Producción de Reducción
+E →id
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+id3
+
+E →id
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+id3
+
+E →id
+
+E+E*E
+
+E*E
+
+E →E * E
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+id3
+
+E →id
+
+E+E*E
+
+E*E
+
+E →E * E
+
+E+E
+
+E+E
+
+E →E + E
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+id3
+
+E →id
+
+E+E*E
+
+E*E
+
+E →E * E
+
+E+E
+
+E+E
+
+E →E + E
+
+E
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+id1+id2*id3
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Mango
+id1
+
+Reconocer:
+w=id1+id2*id3
+
+Producción de Reducción
+E →id
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+E+E
+
+E →E+E
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+E+E
+
+E →E+E
+
+E*id3
+
+id3
+
+E →id
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+E+E
+
+E →E+E
+
+E*id3
+
+id2
+
+E →id
+
+E*E
+
+E*E
+
+E →E*E
+
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Reducciones/Desplazamientos
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+
+Forma de Frase
+Derecha
+
+Mango
+
+Producción de Reducción
+
+id1+id2*id3
+
+id1
+
+E →id
+
+E+id2*id3
+
+id2
+
+E →id
+
+E+E*id3
+
+E+E
+
+E →E+E
+
+E*id3
+
+id2
+
+E →id
+
+E*E
+
+E*E
+
+E →E*E
+
+E
+Dada la GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Análisis Sintáctico por Despl/Red
+Pila
+
+Entrada
+
+$
+
+w$
+
+$S
+
+Acción
+
+$ Aceptar
+
+w: cadena a reconocer
+S: Símbolo no terminal de
+inicio de G
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+$E+id2
+
+reducir E →id
+
+*id3$ reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+$E+E*id3
+
+$ reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+$E+E*id3
+
+$ reducir E →id
+
+$E+E*E
+
+$ reducir E →E*E
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+$E+E*id3
+
+$ reducir E →id
+
+$E+E*E
+
+$ reducir E→E*E
+
+$E+E
+
+$ reducir E→E+E
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+$E+E*id3
+
+$ reducir E →id
+
+$E+E*E
+
+$ reducir E→E*E
+
+$E+E
+
+$ reducir E→E+E
+
+$E
+
+$ Aceptar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+$E+id2
+
+reducir E →id
+
+*id3$ reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+$E*
+
+id3$ desplazar
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+$E*
+
+id3$ desplazar
+
+$E*id3
+
+$ reducir E →id
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+$E*
+
+id3$ desplazar
+
+$E*id3
+
+$ reducir E →id
+
+$E*E
+
+$ reducir E→E*E
+
+Análisis Sintáctico por Despl/Red
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+$E*
+
+id3$ desplazar
+
+$E*id3
+
+$ reducir E →id
+
+$E*E
+
+$ reducir E→E*E
+
+$E
+
+$ Aceptar
+
+Análisis Sintáctico por Despl/Red
+Comparación I y II
+
+Derivación más
+derecha I
+E E+E
+E E+E*E
+E E+E*id3
+E E+id2*id3
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ desplazar
+
+$E+E*
+
+id3$ desplazar
+
+$E+E*id3
+
+$ reducir E →id
+
+$E+E*E
+
+$ reducir E→E*E
+
+$E+E
+
+$ reducir E→E+E
+
+$E
+
+$ Aceptar
+
+Análisis Sintáctico por Despl/Red
+Comparación I y II
+
+Derivación más
+derecha II
+E E*E
+E E*id3
+E E+E*id3 Conflicto
+E E+id2*id3 Desplaz/
+Reducción
+E id1+id2*id3
+GIC
+E →E + E
+E →E * E
+E →(E)
+E →id
+
+Reconocer:
+w=id1+id2*id3
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+id1+id2*id3$
+
+desplazar
+
+$id1
+
++id2*id3$
+
+$E
+
++id2*id3$ desplazar
+
+$E+
+
+id2*id3$ desplazar
+
+reducir E →id
+
+$E+id2
+
+*id3$ reducir E →id
+
+$E+E
+
+*id3$ reducir E→E+E
+
+$E
+
+*id3$ desplazar
+
+$E*
+
+id3$ desplazar
+
+$E*id3
+
+$ reducir E →id
+
+$E*E
+
+$ reducir E→E*E
+
+$E
+
+$ Aceptar
+
+

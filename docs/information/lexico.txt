@@ -1,0 +1,2529 @@
+Análisis Léxico
+
+Análisis Léxico
+Cálculo Discriminante de una Ecuación Cuadrática
+Errores Léxicos
+
+Python
+
+Java
+
+Análisis Léxico
+Componente
+Léxico
+Programa
+Fuente
+
+Analizador Léxico
+Genera el
+siguiente C.L.
+
+Analizador
+Sintáctico
+
+Tabla de
+Símbolos
+
+Analizador Léxico: Primera fase de un compilador. Lee los
+caracteres de entrada suministrados por un programa
+fuente y elabora una secuencia de componentes léxicos
+que toma el Analizador Sintáctico para hacer el análisis.
+
+Componentes Léxico, Patrones y
+Lexemas
+Componente
+Léxico
+
+Lexemas de
+Ejemplo
+x4tu, v3, saldo38
+56, 3432, 4
++
+If
+
+while
+>
+
+Descripción del Patrón o Regla
+
+Componentes Léxico, Patrones y
+Lexemas
+Componente
+Léxico
+
+Lexemas de
+Ejemplo
+
+Descripción del Patrón o Regla
+
+id
+
+x4tu, v3, saldo38 Inician por letra y siguen cero o más letras y/o
+dígitos
+
+num
+
+56, 3432, 4
+
+Inician por un dígito y siguen cero o más dígitos
+
+suma
+
++
+
++
+
+resta
+
+-
+
+-
+
+if
+
+if
+
+if
+
+while
+
+while
+
+while
+
+mayorque
+
+>
+
+>
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Alfabeto o clase de caracter:
+Conjunto finito de símbolos. Se denota
+por Σ.
+Ejemplos:
+Σ1 = 𝑎, 𝑏, 𝑐, … , 𝑧
+Σ2 = 0,1,2, … , 9
+Σ3 = 0,1
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Cadena, frase, palabra o string:
+Secuencia finita de símbolos tomados de un
+alfabeto Σ.
+Ejemplos:
+De Σ1 = 𝑎, 𝑏, 𝑐, … , 𝑧 , s1=“casa”, s2= “pesado”
+De Σ2 = 0,1,2, … , 9 , t1=3429, t2= 87632
+De Σ3 = 0,1 , u1=1011101, u2= 11101
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Cadena, frase, palabra o string:
+Longitud de una cadena s, escrita como |s|,
+es el número de apariciones de símbolos en s.
+Ejemplos:
+s1=“casa”, |s1|=4; s2= “pesado”, |s2|=6
+t1=3429, |t1|=4; t2= 87632, |t2|=5
+u1=1011101, |u1|=7; u2= 11101, |u2|=5
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Cadena, frase, palabra o string:
+La cadena vacía, representada por ,
+es una cadena especial de longitud
+cero. Es decir,||=0
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Cadena, frase, palabra o string:
+Concatenación de cadenas: Si 𝑥 e 𝑦 son cadenas
+definidas en los alfabetos Σ1 y Σ2 o en el mismo
+alfabeto Σ; la concatenación 𝑥𝑦, es la cadena
+resultante de agregar 𝑦 a 𝑥.
+Ejemplo:
+Si x=“casa” e y=“quinta”, xy = “casaquinta”
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Cadena, frase, palabra o string:
+Elemento Identidad de Concatenación: La
+cadena vacía es el elemento identidad de la
+concatenación. Es decir, s = s = s
+Pregunta:
+Si 𝑥 es una cadena definida en Σ1 e 𝑦 es una
+cadena definida en Σ2 , o ambas definidas en Σ, a
+qué será igual |𝑥𝑦|?
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Cadena, frase, palabra o string:
+Concatenación como producto: La
+concatenación se puede considerar el producto
+de cadenas.
+Exponenciación de cadenas: Si 𝑠 es una cadena
+definida en Σ, luego 𝑠𝑠, 𝑠𝑠𝑠, 𝑠𝑠𝑠𝑠𝑠, etc. están
+definida en Σ. Se podría resumir su escritura
+como 𝑠 2 , 𝑠 3 , 𝑠 5 , respectivamente.
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Cadena, frase, palabra o string:
+Exponenciación de cadenas: La exponenciación se define como:
+𝑠 0 =∈ y si 𝑖 > 0, 𝑠 𝑖 = 𝑠 𝑖−1 𝑠 = 𝑠𝑠 𝑖−1
+Luego,
+𝑠 0 =∈
+𝑠1 = 𝑠1−1 𝑠 = 𝑠𝑠1−1 = 𝑠 0 𝑠 = 𝑠𝑠 0 = 𝑠
+
+𝑠 2 = 𝑠 2−1 𝑠 = 𝑠𝑠 2−1 = 𝑠1 𝑠 = 𝑠𝑠1 = 𝑠𝑠
+𝑠 3 = 𝑠 3−1 𝑠 = 𝑠𝑠 3−1 = 𝑠 2 𝑠 = 𝑠𝑠 2 = 𝑠𝑠𝑠
+Pregunta:
+Si 𝑥 es una cadena definida en Σ1 e 𝑦 es una cadena definida
+en Σ2 , o ambas definidas en Σ, a qué será igual |𝑥 𝑖 𝑦 𝑗 |, donde
+𝑖, 𝑗 son números naturales ?
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Lenguaje:
+Cualquier conjunto de cadenas de un
+alfabeto Σ.
+Ejemplos:
+𝐿1 =
+=∅
+𝐿2 = ∈
+𝐿3 = 00,10,11,01
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Partes de una cadena:
+Prefijo de s: Cadena que se obtiene al
+eliminar cero o más símbolos desde la
+derecha de la cadena s.
+Ejemplos:
+cam es prefijo de camino
+camino es prefijo de camino
+∈ es prefijo de camino
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+
+Partes de una cadena:
+Sufijo de s: Cadena que se obtiene al
+eliminar cero o más símbolos desde la
+izquierda de la cadena s.
+Ejemplos:
+mino es sufijo de camino
+camino es sufijo de camino
+∈ es sufijo de camino
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Partes de una cadena:
+Subcadena de s: Cadena que se obtiene al eliminar un
+prefijo y un sufijo de la cadena s.
+Todo prefijo y sufijo de s es una subcadena de s, pero no
+toda subcadena de s es un prefijo o sufijo de s.
+Ejemplos:
+ami es subcadena de camino
+camino es subcadena de camino
+∈ es subcadena de camino
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Partes de una cadena:
+Prefijo, Sufijo o Subcadena propios de s:
+Cualquier cadena x, donde x , y
+respectivamente x es un prefijo, sufijo o
+subcadena de s tal que s x.
+Ejemplos:
+cam es prefijo propio de camino
+mino es sufijo propio de camino
+ami es subcadena propia de camino
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Partes de una cadena:
+Subsecuencia de s: Cualquier cadena
+formada por la eliminación de cero o más
+símbolos no necesariamente contiguos de s.
+Ejemplos:
+can es subsecuencia de camino
+mio es subsecuencia de camino
+ami es subsecuencia de camino
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Unión de L y M:
+𝑳 ∪ 𝑴 = {𝒔Τ𝒔 está en 𝑳 o 𝒔 está en 𝑴}
+
+Ejemplo:
+Sea 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧 y 𝑀 = 0,1, … , 9
+𝐿 ∪ 𝑀 = {𝑎, 𝑏, 𝑐, … , 𝑧, 0,1, … , 9}
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Concatenación de L y M:
+𝑳𝑴 = {𝒔𝒕Τ𝒔 está en 𝑳 y 𝒕 está en 𝑴}
+
+Ejemplo:
+Sea 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧 y 𝑀 = 0,1, … , 9
+𝐿𝑀 = {𝑎0, 𝑎1, … , 𝑎9, 𝑏0, 𝑏1, … , 𝑏9, … , 𝑧0, 𝑧1, … , 𝑧9}
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Exponenciación de L:
+𝑳𝑳 = {𝒔𝒕Τ𝒔 está en 𝑳 y 𝒕 está en 𝑳}
+Se define:
+𝐿0 = {∈}
+𝐿𝑖 = 𝐿𝑖−1 𝐿 = 𝐿𝐿𝑖−1 , 𝑖 > 0
+Luego:
+𝐿1 = 𝐿1−1 𝐿 = 𝐿𝐿1−1 = 𝐿0 𝐿 = 𝐿𝐿0 = {∈ }𝐿 = 𝐿 ∈ = 𝐿
+𝐿2 = 𝐿2−1 𝐿 = 𝐿𝐿2−1 = 𝐿1 𝐿 = 𝐿𝐿1 = 𝐿𝐿
+Ejemplo:
+Sea 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧
+𝐿2 = 𝑎𝑎, 𝑎𝑏, … , 𝑎𝑧, 𝑏𝑎, 𝑏𝑏, … , 𝑏𝑧, … , 𝑧𝑎, 𝑧𝑏, … , 𝑧𝑧
+= {𝒂𝟐 , 𝑎𝑏, … , 𝑎𝑧, 𝑏𝑎, 𝒃𝟐 , … , 𝑏𝑧, … , 𝑧𝑎, 𝑧𝑏, … , 𝒛𝟐 }
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Cerradura de Kleene de L:
+∞
+
+𝑳∗ = ራ 𝑳𝒊 = 𝑳𝟎 ∪ 𝑳𝟏 ∪ 𝑳𝟐 ∪ ⋯ ∪ 𝑳∞
+𝒊=𝟎
+
+Ejemplo:
+Sea 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧
+
+𝐿∗ = 𝐿0 ∪ 𝐿1 ∪ 𝐿2 ∪ ⋯ ∪ 𝐿∞ = {∈} ∪ 𝐿 ∪ 𝐿2 ∪ … ∪ 𝐿∞
+𝐿∗ = {∈, 𝑎, 𝑏, 𝑐, … , 𝑧, 𝒂𝟐, 𝑎𝑏, … , 𝑎𝑧, 𝑏𝑎, 𝒃𝟐 , … , 𝑏𝑧, … , 𝑧𝑎, 𝑧𝑏, … , 𝒛𝟐 , …}
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Cerradura Positiva de L:
+∞
+
+𝑳+ = ራ 𝑳𝒊 = 𝑳𝟏 ∪ 𝑳𝟐 ∪ ⋯ ∪ 𝑳∞
+𝒊=𝟏
+
+Ejemplo:
+Sea 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧
+
+𝐿+ = 𝐿1 ∪ 𝐿2 ∪ ⋯ ∪ 𝐿∞ = 𝐿 ∪ 𝐿2 ∪ … ∪ 𝐿∞
+𝐿+ = {𝑎, 𝑏, 𝑐, … , 𝑧, 𝒂𝟐 , 𝑎𝑏, … , 𝑎𝑧, 𝑏𝑎, 𝒃𝟐 , … , 𝑏𝑧, … , 𝑧𝑎, 𝑧𝑏, … , 𝒛𝟐 , …}
+
+Pregunta: ¿A que equivalen 𝐿∗ en función de 𝐿+ y 𝐿+ en función de 𝐿∗ ?
+
+Especificación de Componentes
+Léxicos
+Alfabeto, Cadenas y Lenguajes
+Operaciones sobre lenguajes
+Ejercicios:
+
+Dado los lenguajes 𝐿 = 𝑎, 𝑏, 𝑐, … , 𝑧 y
+𝑀 = 0,1, … , 9 , obtener o describir los
+siguientes lenguajes:
+2
+∗
+∗
+a) 𝐿𝑀
+c) 𝑀𝐿
+e) 𝐿 𝐿 ∪ 𝑀
+3
++
+b) 𝐿(𝐿 ∪ 𝑀) d) 𝑀 𝐿 ∪ 𝑀 f) 𝑀
+
+Especificación de Componentes
+Léxicos
+Expresiones Regulares
+
+https://xkcd.com/208/
+
+Especificación de Componentes
+Léxicos
+
+Expresiones Regulares
+Es una norma o regla definida sobre un
+alfabeto 𝚺 y a partir de la cual se generan
+las cadenas de un lenguaje 𝑳.
+Si 𝒓 es una expresión regular (e.r.) definida
+sobre 𝚺, luego 𝑳(𝒓) es el lenguaje
+generado a partir de 𝒓.
+𝚺
+
+𝒓
+
+𝑳(𝒓)
+
+Especificación de Componentes
+Léxicos
+Expresiones Regulares
+Construcción
+Se construyen a partir de expresiones
+regulares más simples usando un método
+inductivo:
+Caso Base:
+1. ∈ es una e.r. que designa al lenguaje ∈ .
+2. Si a es un símbolo de Σ, entonces a es una e.r.
+que designa al lenguaje {a}.
+
+Especificación de Componentes
+Léxicos
+Expresiones Regulares
+Construcción
+Suposición:
+Si 𝒓 y 𝒔 son e.r. definidas en los alfabetos Σ1 y Σ2 ,
+respectivamente, o definidas en el mismo Σ; y además,
+generan los lenguajes 𝐿 𝑟 y 𝐿 𝑠 , se induce que:
+Paso Inductivo:
+3. 𝑟|𝑠 es una e.r. que genera al lenguaje 𝐿 𝑟|𝑠 = 𝐿 𝑟 ∪ 𝐿 𝑠 .
+4. 𝑟𝑠 es una e.r. que genera al lenguaje 𝐿 𝑟𝑠 = 𝐿 𝑟 𝐿 𝑠 .
+5. 𝑟 ∗ es una e.r. que genera al lenguaje 𝐿 𝑟 ∗ = (𝐿(𝑟))∗ =
+𝐿∗ (𝑟).
+
+Especificación de Componentes
+Léxicos
+Expresiones Regulares
+Construcción
+Ejemplos
+1. Construir una e.r. en Σ = 𝑎, 𝑏 , que genere las
+cadenas que finalicen en 𝑎𝑏𝑏, no importa el prefijo de
+inicio. Ej: 𝑎𝑏𝑏, 𝑎𝑎𝑏𝑎𝑏𝑏.
+2. Construir una e.r. que genere los número binarios.
+3. Construir una e.r. que genere los binarios pares.
+4. Construir una e.r. que genere los binarios impares.
+5. Construir una e.r. que genere los binarios con un
+número impar de 1’s, no importa la cantidad de 0’s. Ej:
+1, 010011, 10010110010, 0011100100100001100.
+Leer: Fig. 3.9
+
+Especificación de Componentes
+Léxicos
+Definiciones Regulares
+Por notación, es conveniente dar nombres a las e.r. y
+definir más e.r. utilizando estos nombres como si
+fueran símbolos.
+Dado un alfabeto Σ, una definición regular (d.r.) es una
+secuencia de definiciones de la forma:
+𝑑1 → 𝑟1
+𝑑2 → 𝑟2
+…
+𝑑𝑛 → 𝑟𝑛
+donde cada 𝑑𝑖 es un nombre distinto, y cada 𝑟𝑖 es una
+e.r. sobre los símbolos de Σ ∪ 𝑑1 , 𝑑2 , … , 𝑑𝑖−1 .
+No se utiliza un 𝑑𝑗 con 𝑗 > 𝑖 para construir 𝑟𝑖 .
+
+Especificación de Componentes
+Léxicos
+Definiciones Regulares
+Ejemplos:
+Construir d.r. para:
+1. Las variables de un programa.
+2. Los números reales positivos.
+3. La identidad de archivos en DOS, donde un archivo
+consta de un nombre alfanumérico de cualquier
+longitud; seguido por una extensión que contiene un
+punto(.), y máximo tres caracteres alfanuméricos.
+4. La ruta de un directorio en DOS.
+
+Especificación de Componentes
+Léxicos
+Definiciones Regulares
+Abreviaturas en la notación:
+1. Uno o más casos:
+𝑎∗ 𝑎 = 𝑎𝑎∗ = 𝑎+
+2. Cero o un caso:
+𝑎| ∈=∈ |𝑎 = 𝑎?
+3. Clases de carácter: Selección de un carácter del
+conjunto.
+𝑎 𝑏 𝑐| … |𝑧 = [𝑎 − 𝑧]
+0 1 … |9 = [0 − 9]
+𝑎 𝑏 𝑐 … 𝑧 𝐴 𝐵 𝐶 … |𝑍 = 𝑎 − 𝑧𝐴 − 𝑍
+𝑎 𝑏 𝑐 … 𝑧 0 1 2 … |9 = 𝑎 − 𝑧0 − 9
+
+Autómatas Finitos
+x
+
+Autómata Finito
+(Reconocedor)
+
+ቊ
+
+𝑆𝑖
+𝑁𝑜
+
+Reconocedor de un lenguaje: Programa que toma como
+entrada una cadena x y responde “si” si x es una frase que el
+programa reconoce para un lenguaje, y “no”, si no lo es.
+A partir de una e.r., se construye un reconocedor utilizando un
+diagrama de transiciones llamado autómata finito
+
+Autómatas Finitos
+Tipos de Autómatas
+Tipo
+
+Memoria
+
+Complejidad
+
+Reconocimiento
+
+Determinístico
+
+Menos
+
+Más Complejos
+
+Más rápido
+
+No Determinístico Más
+
+Menos Complejos Menos rápido
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Modelo matemático formado por una quíntupla
+𝑁 = 𝑆, Σ, 𝑠0 , 𝐹, 𝑚𝑢𝑒𝑣𝑒(𝛿)
+1. Un conjunto de estados 𝑆
+2. Un conjunto de símbolos de entrada Σ (alfabeto de
+símbolos de entrada)
+3. Un estado 𝑠0 denominado el estado de inicio o inicial
+(𝑠0 está en 𝑆)
+4. Un conjunto de estados de finalización o de
+reconocimiento 𝐹 (𝐹 ⊆ 𝑆)
+5. Una función de transición 𝑚𝑢𝑒𝑣𝑒 𝑜 𝛿 que
+transforma pares estado-símbolos en conjuntos de
+estados.
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Función de transición 𝒎𝒖𝒆𝒗𝒆:
+𝑚𝑢𝑒𝑣𝑒: 𝑆 × Σ → ℘(𝑆)
+𝑚𝑢𝑒𝑣𝑒 𝑠, 𝑎 = 𝑆 ′ , 𝑆 ′ 𝑒𝑠𝑡á 𝑒𝑛 ℘(𝑆)
+Nota: Dado un conjunto 𝐴, el conjunto ℘(𝐴) se denomina
+Potencia de 𝐴 y es el conjunto formado por todos los
+subconjuntos de 𝐴.
+℘ 𝐴 = 𝑋/𝑋 ⊆ 𝐴
+Ejemplo:
+𝐴 = 𝑎, 𝑒, 𝑜 , luego
+℘ 𝐴 = {∅, 𝐴, 𝑎 , 𝑒 , 𝑜 , 𝑎, 𝑒 , 𝑎, 𝑜 , 𝑒, 𝑜 }
+𝐴 =3y ℘ 𝐴 = 2𝐴 =8
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Se puede representar mediante un grafo
+dirigido etiquetado, llamado grafo de
+transiciones.
+Ejemplo:
+𝒂
+0
+
+𝒂
+
+1
+
+𝒃
+
+𝒃
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+2
+
+𝒃
+
+3
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒂
+𝒂
+
+0
+
+1
+
+𝒃
+
+2
+
+𝒃
+
+3
+
+𝒃
+
+Componentes:
+𝑆 = 0,1,2,3
+𝛴 = 𝑎, 𝑏
+𝑠0 = 0
+𝐹= 3
+
+𝑚𝑢𝑒𝑣𝑒 0, 𝑎 = {0,1}
+𝑚𝑢𝑒𝑣𝑒 0, 𝑏 = 0
+𝑚𝑢𝑒𝑣𝑒 1, 𝑎 = {}
+𝑚𝑢𝑒𝑣𝑒 1, 𝑏 = {2}
+
+𝑚𝑢𝑒𝑣𝑒 2, 𝑎 = {}
+𝑚𝑢𝑒𝑣𝑒 2, 𝑏 = 3
+𝑚𝑢𝑒𝑣𝑒 3, 𝑎 = {}
+𝑚𝑢𝑒𝑣𝑒 3, 𝑏 = {}
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒂
+𝒂
+
+0
+
+𝒃
+
+1
+
+2
+
+𝒃
+
+𝒃
+
+Tabla de Transiciones
+Estado
+
+0
+
+𝒂
+
+𝒃
+
+0,1
+
+0
+
+1
+
+2
+
+2
+
+3
+
+*3
+
+3
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒂
+0
+
+𝒂
+
+1
+
+𝒃
+
+2
+
+𝒃
+
+3
+
+𝒃
+
+Reconocimiento o Aceptación
+Un AFN acepta una cadena de entrada x, si y solo si, hay algún
+camino en el grafo de transiciones desde el estado de inicio a
+algún estado de aceptación, de tal forma que las etiquetas de las
+aristas a lo largo del camino deletreen a x.
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒂
+0
+
+𝒂
+
+1
+
+𝒃
+
+2
+
+𝒃
+
+3
+
+𝒃
+
+Reconocimiento o Aceptación
+El camino se realiza mediante transiciones llamadas movimientos
+Ejemplo:
+Reconocer 𝑎𝑏𝑏, 𝑎𝑏𝑎𝑏𝑏, 𝑎𝑏𝑎𝑏𝑎
+
+Autómatas Finitos
+Autómatas Finitos No Determinístico (AFN)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒂
+𝒂
+
+0
+
+1
+
+𝒃
+
+Reconocimiento o Aceptación
+Ejemplo: 𝒂𝒃𝒃
+0
+
+a
+
+0
+
+b
+
+0
+
+a
+
+1
+
+b
+
+0
+
+b
+
+0 No Reconoce
+
+2
+
+b
+
+3 Si Reconoce
+
+𝒃
+
+2
+
+𝒃
+
+3
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+Modelo matemático formado por una quíntupla
+𝐷 = 𝑆, Σ, 𝑠0 , 𝐹, 𝑚𝑢𝑒𝑣𝑒(𝛿)
+1. Un conjunto de estados 𝑆
+2. Un conjunto de símbolos de entrada Σ (alfabeto de
+símbolos de entrada)
+3. Un estado 𝑠0 denominado el estado de inicio o inicial
+(𝑠0 está en 𝑆)
+4. Un conjunto de estados de finalización o de
+reconocimiento 𝐹 (𝐹 ⊆ 𝑆)
+5. Una función de transición 𝑚𝑢𝑒𝑣𝑒 𝑜 𝛿 que
+transforma pares estado-símbolos en estados del AFD.
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+Función de transición 𝒎𝒖𝒆𝒗𝒆:
+𝑚𝑢𝑒𝑣𝑒: 𝑆 × Σ → 𝑆
+𝑚𝑢𝑒𝑣𝑒 𝑠, 𝑎 = 𝑠 ′ , 𝑠 ′ 𝑒𝑠𝑡á 𝑒𝑛 𝑆
+Nota: A diferencia del AFN, en el AFD, la función
+de transición 𝑚𝑢𝑒𝑣𝑒 genera una estado de 𝑆, a
+partir del par 𝑠, 𝑎 .
+Al AFD se le considera un caso especial del AFN.
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+Se representa también con el grafo de transiciones.
+Ejemplo:
+𝒃
+
+𝒃
+
+0
+
+𝒂
+
+1
+
+𝒃
+𝒂
+
+2
+
+𝒂
+𝒂
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝒃
+
+3
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+Dado el AFD:
+
+𝒃
+
+𝒃
+
+0
+
+𝒂
+
+1
+
+𝒃
+𝒂
+
+2
+
+𝒃
+
+3
+
+𝒂
+
+Componentes:
+𝑆 = 0,1,2,3
+𝛴 = 𝑎, 𝑏
+𝑠0 = 0
+𝐹= 3
+
+𝒂
+
+𝑚𝑢𝑒𝑣𝑒 0, 𝑎
+𝑚𝑢𝑒𝑣𝑒 0, 𝑏
+𝑚𝑢𝑒𝑣𝑒 1, 𝑎
+𝑚𝑢𝑒𝑣𝑒 1, 𝑏
+
+=1
+=0
+=1
+=2
+
+𝑚𝑢𝑒𝑣𝑒 2, 𝑎
+𝑚𝑢𝑒𝑣𝑒 2, 𝑏
+𝑚𝑢𝑒𝑣𝑒 3, 𝑎
+𝑚𝑢𝑒𝑣𝑒 3, 𝑏
+
+=1
+=3
+=1
+=0
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+Dado el AFN:
+
+𝒃
+
+𝒃
+𝒂
+
+0
+
+𝒃
+
+1
+
+𝒂
+
+2
+
+𝒃
+
+𝒂
+
+Tabla de Transiciones
+
+𝒂
+𝒂
+
+𝒃
+
+0
+
+1
+
+0
+
+1
+
+1
+
+2
+
+2
+
+1
+
+3
+
+*3
+
+1
+
+0
+
+Estado
+
+3
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+𝒃
+
+𝒃
+
+0
+
+𝒂
+
+1
+
+𝒃
+𝒂
+
+2
+
+𝒃
+
+3
+
+𝒂
+
+𝒂
+
+Reconocimiento o Aceptación
+El camino se realiza mediante transiciones llamadas movimientos
+Ejemplo:
+Reconocer 𝑎𝑏𝑏, 𝑎𝑏𝑎𝑏𝑏, 𝑎𝑏𝑎𝑏𝑎
+
+Autómatas Finitos
+Autómatas Finitos Determinístico (AFD)
+Dado el AFN:
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+𝒃
+
+𝒃
+𝒂
+
+0
+
+𝒃
+
+1
+
+𝒂
+
+2
+
+𝒃
+
+𝒂
+𝒂
+
+Reconocimiento o Aceptación
+Ejemplo: 𝒂𝒃𝒃, 𝒂𝒃𝒂𝒃𝒂
+0
+
+a
+
+1
+
+b
+
+0
+
+a
+
+1
+
+b
+
+2
+
+b
+
+3 Si Reconoce 𝒂𝒃𝒃
+
+2
+
+a
+
+1 b
+
+2 a
+
+1 No Reconoce 𝒂𝒃𝒂𝒃𝒂
+
+3
+
+Autómatas Finitos
+Diferencias entre AFN y AFD
+𝑨𝑭𝑵
+
+𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+𝑨𝑭𝑫
+
+1. En un AFD, para cada estado 𝑠 y cada símbolo de
+entrada 𝑎, hay como máximo una arista etiquetada con
+𝑎 que sale de 𝑠.
+2. En un AFN puede haber aristas etiquetadas con la
+entrada .
+
+Autómatas Finitos
+
+Paso de una e.r. a un AFN
+Método de Thompson
+Método Inductivo
+Entrada: Una e.r. 𝑟 definida en un
+alfabeto Σ.
+Salida: Un AFN 𝑁 que acepte el
+lenguaje 𝐿 𝑟 = 𝐿(𝑁).
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Caso Base:
+1. Para la e.r. ∈, el AFN es el siguiente:
+𝒊
+
+∈
+
+𝒇
+
+Este AFN reconoce {∈}
+
+2. Para la e.r. 𝑎, el AFN es el siguiente:
+𝒊
+
+𝑎
+
+𝒇
+
+Este AFN reconoce {𝑎}
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Suposición:
+Si 𝑵 𝒓 y 𝑵 𝒔 son los AFNs para las e.r. 𝒓 y 𝒔,
+respectivamente; además 𝑳(𝒓) y 𝑳(𝒔) son los lenguajes que
+reconocen respectivamente estas e.r.
+
+𝑖𝑟
+
+𝑁(𝑟)
+
+Reconoce a 𝐿(𝑟)
+
+𝑓𝑟
+
+𝑖𝑠
+
+𝑁(𝑠)
+
+𝑓𝑠
+
+Reconoce a 𝐿(𝑠)
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Paso Inductivo:
+3. Para la e.r. 𝑟|𝑠, el AFN es el siguiente:
+𝑖𝑟
+
+𝑁(𝑟)
+
+𝑓𝑟
+
+
+
+
+
+𝑖
+
+𝑓
+
+
+
+𝑖𝑠
+
+𝑁(𝑠)
+
+𝑓𝑠
+
+Este AFN reconoce 𝐿 𝑟|𝑠 = 𝐿 𝑟 ∪ 𝐿 𝑠
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Paso Inductivo:
+4. Para la e.r. 𝑟𝑠, el AFN es el siguiente:
+
+𝑖𝑠𝑟𝑠 𝑖𝑠 𝑖𝑠𝑁(𝑠)
+𝑓𝑠 𝑓𝑠 𝑓𝑠 𝑓𝑠
+𝑖𝑠𝑁(𝑠)
+𝑖𝑟 𝑖𝑟 𝑖𝑁(𝑟)
+𝑖𝑟𝑖𝑁(𝑟)
+𝑓𝑟 𝑁(𝑟)
+𝑓𝑁(𝑟)
+𝑖𝑠𝑁(𝑠)
+𝑓𝑓𝑠𝑠𝑁(𝑠)
+𝑁(𝑠)
+𝑁(𝑠)
+𝑟 𝑖𝑟𝑁(𝑟)
+𝑟 𝑁(𝑟)
+𝑟 𝑓𝑟 𝑓𝑟 𝑓𝑟𝑖𝑓
+
+Este AFN reconoce 𝐿 𝑟𝑠 = 𝐿 𝑟 𝐿 𝑠
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Paso Inductivo:
+5. Para la e.r. 𝑟 ∗ , el AFN es el siguiente:
+
+
+𝑖
+
+
+
+𝑖𝑟
+
+𝑁(𝑟)
+
+𝑓𝑟
+
+
+
+𝑓
+
+
+
+Este AFN reconoce 𝐿 𝑟 ∗ = (𝐿(𝑟))∗ = 𝐿∗ (𝑟)
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Paso Inductivo:
+6. Para la e.r. 𝑟 + , el AFN es el siguiente:
+
+
+𝑖
+
+
+
+𝑖𝑟
+
+𝑁(𝑟)
+
+𝑓𝑟
+
+
+
+𝑓
+
+Este AFN reconoce 𝐿 𝑟 + = (𝐿(𝑟))+ = 𝐿+ (𝑟)
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Paso Inductivo:
+7. Para la e.r. 𝑟?, el AFN es el siguiente:
+
+𝑖
+
+
+
+𝑖𝑟
+
+𝑁(𝑟)
+
+𝑓𝑟
+
+
+
+𝑓
+
+
+
+Este AFN reconoce 𝐿 𝑟? = 𝐿 𝑟 ?
+
+Autómatas Finitos
+
+Paso de una e.r. a un AFN
+Método de Thompson
+Ejemplos:
+Construir el AFN para las e.r.
+∗
+
+1. 𝒂|𝒃 𝒂𝒃𝒃
+∗
+2. 𝒂 𝒂|𝒃 𝒃𝒃
+
+Autómatas Finitos
+Paso de una e.r. a un AFN
+Método de Thompson
+Ejemplos:
+1. AFN para 𝒂|𝒃 ∗ 𝒂𝒃𝒃
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+
+Paso de una AFN a un AFD-No
+Óptimo
+Método de Subconjuntos
+Entrada: Un AFN 𝑁 que acepta el
+lenguaje 𝐿(𝑁).
+Salida: Un AFD 𝐷 que acepte el
+mismo lenguaje.
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Operaciones sobre los estados del AFN.
+cerradura-(𝑠): Conjunto de estados del AFN alcanzables desde
+el estado 𝑠 del AFN con transiciones  solamente.
+Ejemplo:
+𝑇=cerradura-(0)={0,1,2,4,7}
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Operaciones sobre los estados del AFN.
+mueve(𝑇, 𝑎): Conjunto de estados del AFN hacia los cuales hay
+una transición con el símbolo de entrada 𝑎 desde algún estado 𝑠
+en 𝑇 del AFN.
+Ejemplo:
+Si 𝑇=cerradura-(0)={0,1,2,4,7}
+Luego
+𝐴 =mueve(𝑇, 𝑎) = {3,8}
+𝐵 =mueve(𝑇, 𝑏) = {5}
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Operaciones sobre los estados del AFN.
+cerradura-(𝑇): Conjunto de estados del AFN alcanzables desde
+algún estado 𝑠 en 𝑇 con transiciones  solamente.
+Ejemplo:
+
+Si 𝐴 =mueve(𝑇, 𝑎) = {3,8}
+𝐶=cerradura-(𝐴)={3,6,1,7,2,4,8}
+Si 𝐵 =mueve(𝑇, 𝑏) = {5}
+𝐷=cerradura-(𝐵)={5,6,1,7,2,4}
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Algoritmo de Subconjuntos
+
+Estado
+
+Símbolos
+𝒂
+
+𝒃
+Estado
+Marca
+
+tranD
+
+estadosD
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Algoritmo de Subconjuntos
+
+Estado
+Marca
+
+Ejemplo: Hallar el AFD de (paso a paso):
+
+A B C
+x x
+x
+estadosD
+
+D
+x
+
+E
+x
+
+A=cerradura-(𝟎)={0,1,2,4,7}
+Estado
+Símbolos
+T=A, a=a,U= B =cerradura-(mueve(A,a))=cerradura-({3,8})={1,2,3,4,6,7,8}
+𝒂
+𝒃
+T=A, a=b,U= C =cerradura-(mueve(A,b))=cerradura-({5})= {1,2,4,5,6,7}
+T=B, a=a,U= B =cerradura-(mueve(B,a))=cerradura-({3,8})
+C
+A
+B
+T=B, a=b,U= D =cerradura-(mueve(B,b))=cerradura-({5,9})={1,2,4,5,6,7,9}
+D
+B
+B
+T=C, a=a,U= B =cerradura-(mueve(C,a))= cerradura-({3,8})
+C
+B
+C
+T=C, a=b,U= C =cerradura-(mueve(C,b))= cerradura-({5})
+T=D, a=a,U= B =cerradura-(mueve(D,a))=cerradura-({3,8})
+E
+D
+B
+T=D, a=b,U= E =cerradura-(mueve(D,b))=cerradura-({5,10})={1,2,4,5,6,7,10}
+E
+B
+C
+T=E, a=a,U= B =cerradura-(mueve(E,a))= cerradura-({3,8})
+T=E, a=b,U= C =cerradura-(mueve(E,b))= cerradura-({5})
+tranD
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Algoritmo de Subconjuntos
+
+Ejemplo: Hallar el AFD de (resultados):
+
+A=cerradura-(𝟎)={0,1,2,4,7}
+Estado
+Símbolos
+B=cerradura-(mueve(A,a))=cerradura-({3,8})={1,2,3,4,6,7,8}
+𝒂
+𝒃
+C=cerradura-(mueve(A,b))=cerradura-({5})={1,2,4,5,6,7}
+A
+B
+C
+B=cerradura-(mueve(B,a))=cerradura-({3,8})
+B
+B
+D
+D=cerradura-(mueve(B,b))=cerradura-({5,9})={1,2,4,5,6,7,9}
+B=cerradura-(mueve(C,a))=cerradura-({3,8})
+C
+B
+C
+C=cerradura-(mueve(C,b))=cerradura-({5})
+D
+B
+E
+B=cerradura-(mueve(D,a))=cerradura-({3,8})
+B
+C
+*E
+E=cerradura-(mueve(D,b))=cerradura-({5,10})={1,2,4,5,6,7,10}
+B=cerradura-(mueve(E,a))=cerradura-({3,8})
+tranD
+C=cerradura-(mueve(E,b))=cerradura-({5})
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFN a un AFD-No Óptimo
+Método de Subconjuntos
+Algoritmo de Subconjuntos
+
+Estado
+
+A=cerradura-(𝟎)={0,1,2,4,7}
+B=cerradura-(mueve(A,a))=cerradura-({3,8})={1,2,3,4,6,7,8}
+C=cerradura-(mueve(A,b))=cerradura-({5})={1,2,4,5,6,7}
+D=cerradura-(mueve(B,b))=cerradura-({5,9})={1,2,4,5,6,7,9}
+E=cerradura-(mueve(D,b))=cerradura-({5,10})={1,2,4,5,6,7,10}
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+C
+
+B
+
+B
+
+D
+
+C
+
+B
+
+C
+
+D
+
+B
+
+E
+
+*E
+
+B
+
+C
+
+tranD
+AFD No Óptimo
+
+Subconjuntos
+
+AFN
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+
+Paso de una AFD No Óptimo a un
+AFD Óptimo
+Método de Estados Significativos
+Entrada: Un AFD 𝐷 No Óptimo
+que acepta el lenguaje 𝐿(𝐷).
+Salida: Un AFD 𝐷 Óptimo que
+acepte el mismo lenguaje 𝐿(𝐷).
+
+Autómatas Finitos
+Paso de una AFD No Óptimo a un AFD Óptimo
+Método de Estados Significativos
+Estado Significativo: Es un estado de un AFN que tiene
+transiciones de salida diferentes de .
+El mueve(𝑠, 𝑎)≠ ∅, si s es significativo para algún 𝑎 en Σ.
+Ejemplo: En el AFN, cuáles son los estados significativos?
+
+Estados Significativos={2,4,7,8,9,10}
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFD No Óptimo a un AFD Óptimo
+Método de Estados Significativos
+En el algoritmo de subconjuntos, el mueve(T,a) utiliza
+los estados significativos en el subconjunto T para
+hallar los estados alcanzables desde T.
+A=cerradura-(𝟎)={0,1,2,4,7}
+B=cerradura-(mueve(A,a))=cerradura-({3,8})={1,2,3,4,6,7,8}
+C=cerradura-(mueve(A,b))=cerradura-({5})={1,2,4,5,6,7}
+D=cerradura-(mueve(B,b))=cerradura-({5,9})={1,2,4,5,6,7,9}
+E=cerradura-(mueve(D,b))=cerradura-({5,10})={1,2,4,5,6,7,10}
+
+Ejemplo:
+mueve(A,a)=mueve({0,1,2,4,7},a)
+mueve(A,b)=mueve({0,1,2,4,7},b)
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFD No Óptimo a un AFD Óptimo
+Método de Estados Significativos
+Durante la construcción, si dos subconjuntos tienen los
+mismos estados significativos, se identifican.
+A=cerradura-(𝟎)={0,1,2,4,7}
+B=cerradura-(mueve(A,a))=cerradura-({3,8})={1,2,3,4,6,7,8}
+C=cerradura-(mueve(A,b))=cerradura-({5})={1,2,4,5,6,7}
+D=cerradura-(mueve(B,b))=cerradura-({5,9})={1,2,4,5,6,7,9}
+E=cerradura-(mueve(D,b))=cerradura-({5,10})={1,2,4,5,6,7,10}
+
+Ejemplo:
+Est_Sig(A)={2,4,7}
+Est_Sig(B)={2,4,7,8}
+Est_Sig(C)={2,4,7}
+Est_Sig(D)={2,4,7,9}
+Est_Sig(E)={2,4,7,10}
+Luego, los estados A y C se identifican
+
+Estado
+
+A
+
+Símbolos
+𝒂
+
+𝒃
+
+B
+
+C
+
+Estado
+
+Significativos
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+D
+
+B
+
+B
+
+D
+
+C
+
+B
+
+C
+
+D
+
+B
+
+E
+
+D
+
+B
+
+E
+
+*E
+
+B
+
+A
+
+*E
+
+B
+
+C
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una AFD No Óptimo a un AFD Óptimo
+Método de Estados Significativos
+AFD Óptimo con Estados Significativos
+Estado
+
+tranD
+
+𝒃
+
+{2,4,7}
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+D
+
+D
+
+B
+
+E
+
+*E
+
+B
+
+A
+
+𝒂
+
+𝒃
+
+{2,4,7,8}
+
+𝒃
+
+{2,4,7,9}
+
+𝒂
+𝒂
+AFD Óptimo con Estados Significativos
+
+𝒂
+
+𝒃
+
+{2,4,7,10}
+
+Autómatas Finitos
+Resumen de Métodos
+Métodos de Thompson, Subconjutos y Estados Significativos
+AFD No Óptimo
+
+Subconjuntos
+
+AFN
+
+Estado
+
+A
+
+Estado
+
+Símbolos
+𝒂
+
+𝒃
+
+B
+
+C
+Significativos
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+D
+
+B
+
+B
+
+D
+
+C
+
+B
+
+C
+
+D
+
+B
+
+E
+
+D
+
+B
+
+E
+
+*E
+
+B
+
+A
+
+*E
+
+B
+
+C
+
+Sig
+nifi
+cat
+ivo
+
+AFD Óptimo
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Entrada: Una e.r. 𝑟 que acepta el lenguaje 𝐿(𝑟).
+Salida: Un AFD 𝐷 Óptimo que acepte el mismo
+lenguaje.
+Método:
+1. Construir un árbol sintáctico 𝑻 para la e.r. aumentada
+𝑟#.
+2. Construir las funciones 𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒, 𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠,
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠 y 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠 haciendo recorridos de
+abajo-arriba en 𝑻.
+3. Construir el conjunto de estados de 𝐷, 𝑒𝑠𝑡𝑎𝑑𝑜𝑠𝐷, y
+la tabla de transiciones para 𝐷, 𝑡𝑟𝑎𝑛𝐷.
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+La construcción de Thompson genera un estado significativo cuando un
+símbolo del alfabeto aparece en la e.r.
+La construcción relaciona los estados significativos del AFN con los símbolos
+de la e.r.
+El AFN tiene un solo estado de aceptación, pero no es significativo porque no
+tiene transiciones de salida.
+Se concatena el marcador # a la e.r. 𝑟, y se da al estado de aceptación de 𝑟
+una transición en #, convirtiéndolo en estado significativo del AFN para 𝑟#.
+Se genera una e.r. aumentada r#.
+Cuando se realiza el
+reconocimiento, y la construcción
+está completa, cualquier estado
+del AFN con una transición en #
+debe ser estado de aceptación.
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Una e.r. aumentada 𝑟#, se representa mediante
+un árbol sintáctico con los siguientes tipos de
+nodos:
+Tipos de nodos
+
+Clase
+
+Etiqueta
+
+Hojas
+
+Símbolo del Σ
+
+Símbolo
+
+Interiores
+
+Posición
+𝑖 𝑒𝑠𝑡á 𝑒𝑛 ℕ
+
+
+
+
+
+-
+
+nodo-o
+
+|
+
+-
+
+nodo-cat
+
+∙
+
+-
+
+nodo-ast
+
+∗
+
+-
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+
+A cada hoja no etiquetada con  se le asocia una posición, que es un entero.
+Un símbolo repetido en una e.r. tiene varias posiciones.
+La posición de cada símbolo se puede identificar con la etiqueta del estado
+significativo en el AFN, como se observa en la figura.
+
+𝑟# = 𝑎|𝑏 ∗ 𝑎𝑏𝑏#
+1 2
+
+345 6
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Ejemplo:
+Para la e.r. (𝑎| ∈)∗ 𝑎, construir el árbol sintáctico, y
+señalar las posiciones tanto en la e.r. como en el árbol:
+𝑟# = 𝑎| ∈ ∗ 𝑎#
+1
+
+23
+
+#
+3
+
+𝑎
+2
+
+*
+
+Árbol
+
+|
+𝑎
+1
+
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Funciones:
+anulable(𝑛): Función booleana sobre un nodo 𝑛. El anulable
+será Verdadero si al aplicarlo sobre el nodo 𝑛, existe la
+posibilidad de generar la cadena vacía  en algún momento; o
+Falso si nunca la genera.
+Ejemplo:
+El anulable de las siguientes e.r. es:
+𝑎| ∈ + 𝑏?
+𝑎? 𝑏 +
+𝑏 ∗ 𝑏? 𝑎∗
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Funciones:
+𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠(𝑛): Función sobre un nodo 𝑛 que devuelve el
+conjunto de posiciones que pueden concordar con el primer
+símbolo de una cadena generada por la sub-expresión regular
+con raíz en 𝑛.
+Ejemplo:
+El primerapos en las siguientes e.r. es:
+𝑎|𝑏 ∗ 𝑎𝑏𝑏
+𝑎? 𝑏 + 𝑎𝑏 ∗
+𝑏 ∗ 𝑏? 𝑎∗
+𝑎𝑏 + 𝑎|𝑏 ∗
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Funciones:
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠(𝑛): Función sobre un nodo 𝑛 que devuelve el
+conjunto de posiciones que pueden concordar con el último
+símbolo de una cadena generada por la sub-expresión regular
+con raíz en 𝑛.
+Ejemplo:
+El ultimapos en las siguientes e.r. es:
+𝑎|𝑏 ∗ 𝑎𝑏𝑏
+𝑎? 𝑏 + 𝑎𝑏 ∗
+𝑏 ∗ 𝑏? 𝑎∗
+𝑎𝑏 + 𝑎|𝑏 ∗
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Funciones:
+𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠(𝑖): Si 𝑖 es una posición, 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠(𝑖) es el
+conjunto de posiciones 𝑗 tales que hay alguna cadena de entrada
+… 𝑐𝑑 … tal que 𝑖 corresponde a la aparición de 𝑐 y 𝑗 a la aparición
+de 𝑑.
+Ejemplo:
+El siguientepos en las siguientes e.r. es:
+𝑎|𝑏 ∗ 𝑎𝑏𝑏
+𝑎𝑏 + 𝑎|𝑏 ∗
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Reglas para calcular las funciones en los nodos
+Nodo 𝑛
+
+𝒂𝑛𝑢𝑙𝑎𝑏𝑙𝑒(𝑛)
+
+𝒑𝒓𝒊𝒎𝒆𝒓𝒂𝒑𝒐𝒔(𝑛)
+
+𝒖𝒍𝒕𝒊𝒎𝒂𝒑𝒐𝒔(𝑛)
+
+𝑛 es un nodo hoja
+etiquetado con 
+
+true
+
+∅
+
+∅
+
+𝑛 es una hoja etiquetada
+con posición 𝑖
+
+false
+
+𝑖
+
+𝑖
+
+𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒 𝑐1 𝒐𝒓
+𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒(𝑐2)
+
+𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠 𝑐1 ∪
+𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠(𝑐2)
+
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠 𝑐1 ∪
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠(𝑐2)
+
+𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒 𝑐1 𝒂𝒏𝒅
+𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒(𝑐2 )
+
+𝑖𝑓 𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒 𝑐1 𝑡ℎ𝑒𝑛
+𝑝𝑝𝑜𝑠 𝑐1 ∪ 𝑝𝑝𝑜𝑠 𝑐2
+𝑒𝑙𝑠𝑒 𝑝𝑝𝑜𝑠 𝑐1
+
+𝑖𝑓 𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒 𝑐2 𝑡ℎ𝑒𝑛
+𝑢𝑝𝑜𝑠 𝑐1 ∪ 𝑢𝑝𝑜𝑠 𝑐2
+𝑒𝑙𝑠𝑒 𝑢𝑝𝑜𝑠 𝑐2
+
+true
+
+𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠 𝑐1
+
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠 𝑐1
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Ejemplo:
+𝑎𝑛𝑢𝑙𝑎𝑏𝑙𝑒, 𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠 𝑦 𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠 para (𝑎|𝑏)∗ 𝑎𝑏𝑏#
+{1,2,3} {6}
+f
+{1,2,3} {5}
+{6}#{6}
+f
+6
+f
+{1,2,3} {4}
+{5}
+{5}
+𝑏
+f
+5
+{1,2,3} {3}
+{4}𝑏{4} f
+f
+4
+{1,2}*{1,2} {3}𝑎{3} f
+v
+3
+f
+{1,2}|{1,2}
+f
+
+Árbol Sintáctico Inicial
+
+{2}𝑏{2}
+{1}𝑎{1}
+2
+1
+f
+f
+anulable, primerapos, ultimapos
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Cálculo del 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠:
+1. Si 𝑛 es un nodo-cat con hijo izquierdo 𝑐1e hijo derecho 𝑐2 , e 𝑖
+es una posición dentro de 𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠(𝑐1), entonces todas las
+posiciones de 𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠(𝑐2 ) están en el 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠(𝑖).
+
+𝑐1 ∙ 𝑐2
+
+𝑝𝑝(𝑐1 )
+
+𝑢𝑝 𝑐1 𝑝𝑝(𝑐2 )
+{𝑖, 𝑗, … } {𝑘, 𝑙, … }
+
+𝑠𝑝𝑜𝑠 𝑖 𝑐𝑜𝑛𝑡𝑖𝑒𝑛𝑒 𝑎 {𝑘, 𝑙, … }
+𝑠𝑝𝑜𝑠 𝑗 𝑐𝑜𝑛𝑡𝑖𝑒𝑛𝑒 𝑎 {𝑘, 𝑙, … }
+
+𝑢𝑝(𝑐2 )
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Cálculo del 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠:
+2. Si 𝑛 es un nodo-ast con hijo 𝑐1, e 𝑖 es una posición dentro de
+𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠(𝑛), entonces todas las posiciones de 𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠(𝑛)
+están en el 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠(𝑖).
+
+∙ 𝑐1 ∙ 𝑐1 ∙
+𝑝𝑝(𝑐1 )
+
+𝑠𝑝𝑜𝑠 𝑖 𝑐𝑜𝑛𝑡𝑖𝑒𝑛𝑒 𝑎 {𝑘, 𝑙, … }
+𝑠𝑝𝑜𝑠 𝑗 𝑐𝑜𝑛𝑡𝑖𝑒𝑛𝑒 𝑎 {𝑘, 𝑙, … }
+
+𝑝𝑝(𝑐1 )
+𝑢𝑝 𝑐1
+{𝑖, 𝑗, … } {𝑘, 𝑙, … }
+
+𝑢𝑝(𝑐1 )
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+Cálculo del 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠:
+Dado que ya se calcularon el 𝑝𝑟𝑖𝑚𝑒𝑟𝑎𝑝𝑜𝑠
+y 𝑢𝑙𝑡𝑖𝑚𝑎𝑝𝑜𝑠 en el árbol sintáctico para
+cada nodo, se calcula 𝑠𝑖𝑔𝑢𝑖𝑒𝑛𝑡𝑒𝑝𝑜𝑠
+haciendo un recorrido de abajo hacia
+arriba en el árbol.
+Posición 𝑖
+
+𝒔𝒊𝒈𝒖𝒊𝒆𝒏𝒕𝒆𝒑𝒐𝒔(𝒊)
+
+1
+
+{1,2,3}
+
+2
+
+{1,2,3}
+
+3
+
+{4}
+
+4
+
+{5}
+
+5
+
+{6}
+
+6
+
+{}
+
+{1,2,3} {6}
+f
+{1,2,3} {5}
+{6}#{6}
+f
+6
+f
+{1,2,3} {4}
+{5}
+{5}
+𝑏
+f
+5
+{1,2,3} {3}
+{4}𝑏{4} f
+f
+4
+{1,2}*{1,2} {3}𝑎{3} f
+v
+3
+f
+{1,2}|{1,2}
+f
+
+{1}𝑎{1}
+1
+f
+
+{2}𝑏{2}
+2
+f
+
+𝑟# = 𝑎|𝑏 ∗ 𝑎𝑏𝑏#
+1 2
+
+345 6
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+
+Estado
+
+Símbolos
+𝒂
+
+𝒃
+Estado
+Marca
+
+tranD
+
+{1,2,3} {6}
+f
+{1,2,3} {5}
+{6}#{6}
+f
+6
+f
+{1,2,3} {4}
+{5}
+{5}
+𝑏
+f
+5
+{1,2,3} {3}
+{4}𝑏{4} f
+f
+4
+{1,2}*{1,2} {3}𝑎{3} f
+v
+3
+f
+{1,2}|{1,2}
+f
+{1}𝑎{1}
+1
+f
+
+{2}𝑏{2}
+2
+f
+
+𝑟# = 𝑎|𝑏 ∗ 𝑎𝑏𝑏#
+1 2
+
+345 6
+
+estadosDTomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+𝑟# = 𝑎|𝑏 ∗ 𝑎𝑏𝑏#
+
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+
+Posición 𝑖 𝒔𝒊𝒈𝒖𝒊𝒆𝒏𝒕𝒆𝒑𝒐𝒔(𝒊)
+
+raiz
+
+Estado
+Marca
+
+A B C
+x x x
+estadosD
+
+D
+x
+
+El estado de inicio del AFD es que
+corresponde con la 𝑝𝑝𝑜𝑠(𝑟𝑎í𝑧).
+El estado de finalización del AFD es
+el que contiene la posición de #.
+
+345 6
+
+1 2
+
+A=ppos(raiz)={1,2,3}
+T=A, a=a,U= B =spos(1)spos(3)={1,2,3,4}
+T=A, a=b,U= A =spos(2) =
+{1,2,3}
+T=B, a=a,U= B =spos(1)spos(3)
+T=B, a=b,U= C =spos(2)spos(4)={1,2,3,5}
+T=C, a=a,U= B =spos(1)spos(3)
+T=C, a=b,U= D =spos(2)spos(5)={1,2,3,6}
+T=D, a=a,U= B =spos(1)spos(3)
+T=D, a=b,U= A =spos(2)
+
+1
+
+{1,2,3}
+
+2
+
+{1,2,3}
+
+3
+
+{4}
+
+4
+
+{5}
+
+5
+
+{6}
+
+6
+
+{}
+Estado
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+C
+
+C
+
+B
+
+D
+
+D
+
+B
+
+A
+
+tranD
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+𝑟# = 𝑎|𝑏 ∗ 𝑎𝑏𝑏#
+
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+
+Estado
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+C
+
+C
+
+B
+
+D
+
+*D
+
+B
+
+A
+
+tranD
+
+1 2
+
+345 6
+
+Posición 𝑖 𝒔𝒊𝒈𝒖𝒊𝒆𝒏𝒕𝒆𝒑𝒐𝒔(𝒊)
+
+El estado de inicio del AFD es que
+corresponde con la 𝑝𝑝𝑜𝑠(𝑟𝑎í𝑧).
+El estado de finalización del AFD es
+el que contiene la posición de #.
+
+1
+
+{1,2,3}
+
+2
+
+{1,2,3}
+
+3
+
+{4}
+
+4
+
+{5}
+
+5
+
+{6}
+
+6
+
+{}
+
+A=ppos(raiz)={1,2,3}
+T=A;a=a;U=B=spos(1)spos(3)={1,2,3,4}
+T=A;a=b;U=A=spos(2)={1,2,3}
+T=B;a=a;U=B=spos(1)spos(3)
+T=B;a=b;U=C=spos(2)spos(4)={1,2,3,5}
+T=C;a=a;U=B=spos(1)spos(3)
+T=C;a=b;U=D=spos(2)spos(5)={1,2,3,6}
+T=D;a=a;U=B=spos(1)spos(3)
+T=D;a=b;U=A=spos(2)
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Autómatas Finitos
+Paso de una e.r. a un AFD Óptimo
+Método del Árbol Sintáctico
+AFD Óptimo con Posiciones(Anterior Estados Significativos)
+Estado
+
+tranD
+
+𝒃
+
+{1,2,3}
+
+Símbolos
+𝒂
+
+𝒃
+
+A
+
+B
+
+A
+
+B
+
+B
+
+C
+
+C
+
+B
+
+D
+
+*D
+
+B
+
+A
+
+𝒂
+
+AFD Óptimo
+
+𝒃
+
+{1,2,3,4}
+
+𝒃
+
+{1,2,3,5}
+
+𝒂
+𝒂
+AFD Óptimo con Posiciones
+
+𝒂
+
+𝒃
+
+{1,2,3,6}
+
+Autómatas Finitos
+Conversión de un AFD a una E.R.
+Lema de Ardem
+Sistemas de Ecuaciones en E.R.
+Ecuación en expresiones regulares: Ecuación lineal donde variables y
+coeficientes toman la forma de expresiones regulares.
+𝑋 = 𝑟𝑋 | 𝑠
+Entrada: Autómata finito 𝐷 = { , 𝑆, 𝑠0, 𝐹, }, con 𝑆 = {𝑠0, 𝑠1, 𝑠2, … , 𝑠𝑛}
+Salida: Sistema de ecuaciones donde en 𝑠0 determina el lenguaje del AFD
+Método:
+1. Por cada estado 𝑠𝑖 , introducir una variable 𝑠𝑖 .
+2. Si 𝑠𝑖 está en 𝐹, luego añadir en la parte derecha de la 𝑖-ésima ecuación el
+término ∈; es decir, 𝑠𝑖 =∈.
+3. Si (𝑠𝑖 , 𝑎) = 𝑠𝑗 entonces en la parte derecha de la 𝑖-ésima ecuación
+aparece el término 𝑎𝑠𝑗 ; es decir, 𝑠𝑖 = 𝑎𝑠𝑗 , con 𝑎 en  { ∈}.
+
+Autómatas Finitos
+Conversión de un AFD a una E.R.
+Lema de Ardem
+ Sea 𝑿 = 𝒓𝑿|𝒔 una ecuación en expresiones regulares, luego 𝑿 =
+𝒓∗ 𝒔 es una solución para la ecuación. Es única si ∈ es generada por
+𝑟.
+
+Sistema de Ecuaciones en E.R.
+ Dado un sistema de ecuaciones en expresiones regulares, la
+resolución viene tras aplicar el método de Gauss utilizando el
+Lemma de Arden para reducir.
+ Útil para obtener una e.r. a partir de un A.F. o una gramática
+regular.
+
+Autómatas Finitos
+Conversión de un AFD a una E.R.
+Lema de Ardem
+Ejemplo 1:
+1
+B
+
+A
+
+0
+
+1
+
+0
+
+A=1B | 0A
+(1)
+B=1A | 0B |  (2)
+Resolviendo
+De (1): Aplicando Ardem
+A=0*1B
+(1’)
+Rempl. (1’) en (2)
+B=10*1B | 0B | 
+B= (10*1| 0)B | 
+B= (10*1 | 0)*  Aplicando Ardem
+B= (10*1 | 0)* (2’)
+Rempl. (2’) en (1’)
+A=0*1 (10*1 | 0)* Expr. Regular buscada
+
+Autómatas Finitos
+Conversión de un AFD a una E.R.
+Lema de Ardem
+Ejemplo 2:
+a
+
+C
+
+B
+
+A
+
+b
+
+b
+
+a
+
+b
+
+a
+
+A= bA | aB
+(1)
+B= bC | aA | 
+(2)
+C=aC | bB
+(3)
+Resolviendo
+De (1): Por Ardem
+A=b*aB
+(1’)
+De (3): Por Ardem
+C=a*bB
+(3’)
+Rempl (1’) y (3’) en (2)
+B=ba*bB | ab*aB | 
+B=(ba*b | ab*a ) B | 
+B= (ba*b | ab*a )*  Por Ardem
+B= (ba*b | ab*a )* (2’)
+Rempl en (1’)
+A=b*a (ba*b | ab*a )* Exp. Regular
+
+

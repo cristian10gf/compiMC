@@ -1,0 +1,2983 @@
+Análisis Sintáctico Ascendente
+Precedencia de Operadores
+
+Generalidades
+Son un caso especial de Análisis Sintáctico
+Ascendente o de Desplazamiento y Reducción
+Características:
+• Ningún lado derecho (cuerpo) de la
+producción es .
+• No tiene dos No Terminales adyacentes.
+Ejemplo: La GIC siguiente es de operadores:
+E →E + E | E – E | E * E | E / E | E^E | (E) | id
+
+Generalidades
+Se establecen tres relaciones de precedencia :
+<⋅, ≐,⋅>
+Si a y b son símbolos terminales: operadores o
+cualquier otro símbolo, se tienen las siguientes
+relaciones de precedencia:
+Relación
+
+Significado
+
+𝑎 <⋅ 𝑏
+
+𝑎 "cede la precedencia a " b
+
+𝑎≐𝑏
+
+𝑎 "tiene la misma precedencia que " b
+
+𝑎 ⋅> 𝑏
+
+𝑎 "tiene más precedencia que " b
+
+Uso de Relaciones de Precedencia
+La GIC siguiente es de operadores:
+E →E + E | E * E | id
+Se dará por sentada la siguiente tabla de
+Precedencia de Operadores:
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Uso de Relaciones de Precedencia
+Dada una cadena w se usará el siguiente procedimiento
+para hallar los mangos
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre los
+símbolos que conforman $w$, según la tabla de
+precedencia.
+3. Recorrer la cadena generada en 2 desde la izquierda
+hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar un <⋅,
+sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+
+Uso de Relaciones de Precedencia
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Cadena a reconocer:
+w=id+id*id
+
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre
+los símbolos que conforman $w$, según la tabla
+de precedencia.
+3. Recorrer la cadena generada en 2 desde la
+izquierda hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar
+un <⋅, sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+
+Paso 1
+
+$id+id*id$
+
+Paso 2
+
+$<⋅ id⋅> + <⋅ id ⋅> * <⋅ id ⋅> $
+
+Paso 3
+
+$<⋅ id⋅> + <⋅ id ⋅> * <⋅ id ⋅> $
+
+Paso 4
+
+$<⋅ id⋅> + <⋅ id ⋅> * <⋅ id ⋅> $
+
+Paso 5
+
+$<⋅ id⋅> + <⋅ id ⋅> * <⋅ id⋅> $
+
+mango
+
+Uso de Relaciones de Precedencia
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Cadena a reconocer:
+w=id+id*id
+
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre
+los símbolos que conforman $w$, según la tabla
+de precedencia.
+3. Recorrer la cadena generada en 2 desde la
+izquierda hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar
+un <⋅, sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+
+Paso 1
+
+$+id*id$
+
+Paso 2
+
+$ <⋅+<⋅ id ⋅> * <⋅ id⋅> $
+
+Paso 3
+
+$ <⋅+<⋅ id ⋅> * <⋅ id⋅> $
+
+Paso 4
+
+$ <⋅+<⋅ id ⋅> * <⋅ id⋅> $
+
+Paso 5
+
+$ <⋅+<⋅ id ⋅> * <⋅ id⋅> $
+
+mango
+
+Uso de Relaciones de Precedencia
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Cadena a reconocer:
+w=id+id*id
+Paso 1
+
+$+*id$
+
+Paso 2
+
+$<⋅ +<⋅* <⋅id ⋅> $
+
+Paso 3
+
+$<⋅ +<⋅* <⋅id ⋅> $
+
+Paso 4
+
+$<⋅ +<⋅* <⋅id ⋅> $
+
+Paso 5
+
+$<⋅ +<⋅* <⋅id ⋅> $
+
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre
+los símbolos que conforman $w$, según la tabla
+de precedencia.
+3. Recorrer la cadena generada en 2 desde la
+izquierda hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar
+un <⋅, sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+
+mango
+
+Uso de Relaciones de Precedencia
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Cadena a reconocer:
+w=id+id*id
+Paso 1
+
+$+*$
+
+Paso 2
+
+$ <⋅ +<⋅* ⋅>$
+
+Paso 3
+
+$ <⋅ +<⋅* ⋅>$
+
+Paso 4
+
+$ <⋅ +<⋅* ⋅>$
+
+Paso 5
+
+$ <⋅ +<⋅* ⋅>$
+
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre
+los símbolos que conforman $w$, según la tabla
+de precedencia.
+3. Recorrer la cadena generada en 2 desde la
+izquierda hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar
+un <⋅, sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+
+mango
+
+Uso de Relaciones de Precedencia
+b
+
++
+
+*
+
+id
+
+$
+
++
+
+⋅>
+
+<⋅
+
+<⋅
+
+⋅>
+
+*
+
+⋅>
+
+⋅>
+
+<⋅
+
+⋅>
+
+id
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+<⋅
+
+a
+
+⋅>
+<⋅
+
+Cadena a reconocer:
+w=id+id*id
+Paso 1
+
+$+$
+
+Paso 2
+
+$ <⋅ + ⋅> $
+
+Paso 3
+
+$ <⋅ + ⋅> $
+
+Paso 4
+
+$ <⋅ + ⋅> $
+
+Paso 5
+
+$ <⋅+ ⋅> $
+
+Pasos:
+1. Se inserta la cadena entre los símbolos $: $w$.
+2. Se insertan las relaciones de precedencia entre
+los símbolos que conforman $w$, según la tabla
+de precedencia.
+3. Recorrer la cadena generada en 2 desde la
+izquierda hasta encontrar el primer ⋅>.
+4. Devolverse hacia la izquierda hasta encontrar
+un <⋅, sobrepasando los ≐.
+5. El mango se encuentra a la derecha del <⋅ y a la
+izquierda del ⋅>.
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+mango
+
+Establecer Relaciones de Precedencia
+Se definen las siguientes reglas para
+seleccionar mangos apropiados
+Pasos:
+1. Si el operador 1 tiene mayor precedencia que el
+operador 2, hágase 1 ⋅> 2 y 2<⋅ 1.
+Ejemplo: Si * tiene mayor precedencia que +,
+hágase * ⋅> + y + <⋅ *
+
+Establecer Relaciones de Precedencia
+2. Si 1 y 2 son operadores de igual precedencia
+(pueden ser el mismo operador) y asociativos por
+izquierda, entonces hágase 1 ⋅> 2 y 2⋅>1.
+Si 1 y 2 son operadores de igual precedencia
+(pueden ser el mismo operador) y asociativos por
+derecha, entonces hágase 1<⋅2 y 2<⋅1.
+
+Ejemplo: Si + y – son asociativos por la
+izquierda, hágase + ⋅> +, + ⋅> –, – ⋅> – y – ⋅> +
+Ejemplo: Si ^ es asociativo por la derecha,
+hágase ^<⋅^
+
+Establecer Relaciones de Precedencia
+3. Hágase
+
+Ejemplo1: Reconocer id, luego de Der. md.:
+Eid
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+Derivación más derecha: Eid
+
+Ejemplo1: Derivando hacia atrás:
+E$<⋅ id⋅>$
+Cuál es el mango?
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+
+Ejemplo2: Reconocer id+id, luego de Der. md.:
+EE+E E+id id+id
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+Derivación más derecha: EE+E E+id id+id
+
+Ejemplo2: Derivando hacia atrás:
+$<⋅id⋅>+ id $ Cuál es el mango?
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+Derivación más derecha: EE+E E+id id+id
+
+Ejemplo2: Derivando hacia atrás:
+ $ E +<⋅id ⋅> $
+Cuál es el mango?
+$<⋅id⋅>+ id $
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+Derivación más derecha: EE+E E+id id+id
+
+Ejemplo2: Derivando hacia atrás:
+E$
+Cuál es el mango?
+E + ⋅>
+ $<⋅
+ $ +<⋅id⋅> $
+$<⋅id⋅>+ id $
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Ejemplo3: Reconocer id*(id+id)+id, luego de
+Der. md.: EE+EE+idE*E+id E*(E)+id 
+E*(E+E)+id  E*(E+id)+id  E*(id+id)+id 
+id*(id+id)+id
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+Derivación más derecha: EE+EE+idE*E+id E*(E)+id E*(E+E)+id 
+E*(E+id)+id  E*(id+id)+id  id*(id+id)+id
+
+Ejemplo3: Derivando hacia atrás:
+ $<⋅id ⋅>* ( id + id ) + id $ Cuál es el mango?
+Ya están resueltos, no aporta una nueva regla
+
+Establecer Relaciones de Precedencia
+Conclusión:
+3. Hágase
+En una forma de frase, todo mango se debe delimitar
+$<⋅id
+entre los símbolos <⋅ y ⋅>.
+id ⋅> $
+id ⋅>  (<⋅id
+ <⋅id
+$ <⋅ 
+ ⋅> $
+Derivación más derecha: EE+EE+idE*E+id E*(E)+id E*(E+E)+id 
+E*(E+id)+id  E*(id+id)+id  id*(id+id)+id
+
+Ejemplo3: Derivando hacia atrás:
+ $ E * (<⋅ id⋅> + id ) + id $ Cuál es el mango?
+ $<⋅id ⋅>* ( id + id ) + id $
+
+Establecer Relaciones de Precedencia
+Conclusión:
+3. Hágase
+En una forma de frase, todo mango se debe delimitar
+$<⋅id
+entre los símbolos <⋅ y ⋅>.
+id ⋅> $
+id ⋅>  (<⋅id
+ <⋅id id ⋅> )
+$ <⋅ 
+ ⋅> $
+Derivación más derecha: EE+EE+idE*E+id E*(E)+id E*(E+E)+id 
+E*(E+id)+id  E*(id+id)+id  id*(id+id)+id
+
+Ejemplo3: Derivando hacia atrás:
+ $ E * ( E +<⋅id⋅>) + id $
+Cuál es el mango?
+ $ * (<⋅ id⋅> + id ) + id $
+ $<⋅id ⋅>* ( id + id ) + id $
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+(<⋅id
+id ⋅> )
+(<⋅ 
+ ⋅> )
+
+Derivación más derecha: EE+EE+idE*E+id E*(E)+id E*(E+E)+id 
+E*(E+id)+id  E*(id+id)+id  id*(id+id)+id
+
+Ejemplo3: Derivando hacia atrás:
+Cuál es el mango?
+ $ E * ( <⋅
+E + ⋅>
+E ) + id $
+ $ * ( +<⋅id⋅>) + id $
+ $ * ( <⋅id ⋅>+ id ) + id $
+ $<⋅id ⋅>* ( id + id ) + id $
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+(<⋅id  <⋅(
+id ⋅> ) ) ⋅> 
+(<⋅  ( ≐ )
+ ⋅> )
+
+Derivación más derecha: EE+EE+idE*E+id E*(E)+id E*(E+E)+id 
+E*(E+id)+id  E*(id+id)+id  id*(id+id)+id
+
+Ejemplo3: Derivando hacia atrás:
+Cuál es el mango?
+ $ E *<⋅ ( ≐
+E )⋅>+ id $
+ $ * ( <⋅+ ⋅>) + id $
+ $ * ( +<⋅id ⋅>) + id $
+ $ * ( <⋅ id ⋅> + id ) + id $
+
+Establecer Relaciones de Precedencia
+3. Hágase
+$<⋅id
+id ⋅> $
+id ⋅> 
+ <⋅id
+$ <⋅ 
+ ⋅> $
+
+Conclusión:
+En una forma de frase, todo mango se debe delimitar
+entre los símbolos <⋅ y ⋅>.
+
+(<⋅id  <⋅(
+id ⋅> ) ) ⋅> 
+(<⋅  ( ≐ )
+ ⋅> )
+
+$<⋅(
+)⋅>$
+
+(<⋅(
+)⋅> )
+
+Ejemplo4: Cuáles serían las relaciones de
+precedencia de:
+$<⋅(
+(<⋅(
+)⋅>$
+)⋅> )
+
+Tabla de Precedencia de Operadores
+Para la GIC siguiente de operadores, obtener la tabla
+de precedencia de operadores:
+E →E + E | E * E | (E)|id
+$<⋅id
+b
+a
++
+*
+(
+)
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+(<⋅id ( ≐ )
+id ⋅> $ id ⋅> ) $<⋅(
+id ⋅>  (<⋅  )⋅>$
+ <⋅id  ⋅> ) (<⋅(
+$ <⋅   <⋅( )⋅> )
+ ⋅> $ ) ⋅> 
+
+id
+$
+Revisar el Ejemplo 4.28 del libro guía (pag 213). NO considerar el -E.
+Construir la Tabla de Precedencia sin –E y comparar con el ejemplo:
+E →E + E | E - E|E * E |E / E|E ^ E | (E)|id
+
+Tabla de Precedencia de Operadores
+Para la GIC siguiente de operadores, obtener la tabla
+de precedencia de operadores:
+E →E + E | E * E | (E)|id
+$<⋅id
+b +
+*
+a
++ ⋅> <⋅
+
+)
+
+id
+
+$
+
+<⋅ ⋅>
+
+<⋅
+
+⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅
+
+⋅>
+
+(
+
+<⋅
+
+≐
+
+<⋅
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅
+
+(
+
+<⋅ <⋅
+
+<⋅ <⋅
+
+(<⋅id ( ≐ )
+id ⋅> $ id ⋅> ) $<⋅(
+id ⋅>  (<⋅  )⋅>$
+ <⋅id  ⋅> ) (<⋅(
+$ <⋅   <⋅( )⋅> )
+ ⋅> $ ) ⋅> 
+
+<⋅
+
+Revisar el Ejemplo 4.28 del libro guía (pag 213). NO considerar el -E.
+Construir la Tabla de Precedencia sin –E y comparar con el ejemplo:
+E →E + E | E - E|E * E |E / E|E ^ E | (E)|id
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+$
+
+a
+
+b +
+
+*
+
+(
+
+)
+
+id
+
+Entrada
+
+Acción
+
+id*(id+id)+id$ desplazar
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
+*
+
+(
+
+)
+
+id
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
+*
+
+(
+
+)
+
+id
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
+*
+
+(
+
+)
+
+id
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
+*
+
+(
+
+)
+
+id
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+<⋅
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$ desplazar
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$id
+
+*(id+id)+id$ reducir
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$
+
+*(id+id)+id$ desplazar
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*
+
+(id+id)+id$ desplazar
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*(
+
+id+id)+id$ desplazar
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+$
+
++id$ desplazar
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*(id
+
++id)+id$ reducir
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+$
+
++id$ desplazar
+
+$+
+
+id$ desplazar
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*(
+
++id)+id$ desplazar
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+$
+
++id$ desplazar
+
+$+
+
+id$ desplazar
+
+$+id
+
+$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*(+
+
+id)+id$ desplazar
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+$
+
++id$ desplazar
+
+$+
+
+id$ desplazar
+
+$+id
+
+$ reducir
+
+$+
+
+$ reducir
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+GIC de operadores:
+E →E + E | E * E | (E)|id
+w= id * (id+id)+id
+Pila
+
+a
+
+b +
+
++
+
+*
+
+(
+
+)
+
+id
+
+$
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$
+
+<⋅ <⋅ <⋅
+
+<⋅
+
+<⋅
+
+Entrada
+
+Acción
+
+$*(+id
+
+)+id$ reducir
+
+$*(+
+
+)+id$ reducir
+
+$*(
+
+)+id$ desplazar
+
+$*()
+
++id$ reducir
+
+$*
+
++id$ reducir
+
+$
+
++id$ desplazar
+
+$+
+
+id$ desplazar
+
+$+id
+
+$ reducir
+
+$+
+
+$ reducir
+
+$
+
+$ aceptar
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo de Análisis Sintáctico Por
+Precedencia de Operadores
+Pila
+
+b +
+a
+
+*
+
+(
+
+)
+
+id
+
+$
+
++
+
+⋅> <⋅
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+GIC :
+E →E + E | E * E | (E)|id
+
+*
+
+⋅> ⋅>
+
+<⋅ ⋅>
+
+<⋅ ⋅>
+
+w= id * (id+id)+id
+
+(
+
+<⋅ <⋅ <⋅
+
+≐
+
+<⋅
+
+Entrada
+
+Acción
+
+$
+
+id*(id+id)+id$
+
+desplazar
+
+$id
+
+*(id+id)+id$
+
+reducir
+
+$
+
+*(id+id)+id$
+
+desplazar
+
+$*
+
+(id+id)+id$
+
+desplazar
+
+$*(
+
+id+id)+id$
+
+desplazar
+
+$*(id
+
++id)+id$
+
+reducir
+
+$*(
+
++id)+id$
+
+desplazar
+
+$*(+
+
+id)+id$
+
+desplazar
+
+$*(+id
+
+)+id$
+
+reducir
+
+$*(+
+
+)+id$
+
+reducir
+
+$*(
+
+)+id$
+
+desplazar
+
+$*()
+
++id$
+
+reducir
+
+$*
+
++id$
+
+reducir
+
+$
+
++id$
+
+desplazar
+
+$+
+
+id$
+
+desplazar
+
+)
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$+id
+
+$
+
+reducir
+
+id
+
+⋅> ⋅>
+
+⋅>
+
+⋅>
+
+$+
+
+$
+
+reducir
+
+$
+
+<⋅ <⋅ <⋅
+
+$
+
+$
+
+aceptar
+
+<⋅
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Ejercicio
+Dada la siguiente GIC:
+S →(L) | a
+L →L,S | S
+• Obtener la tabla de precedencia de
+operadores (Recuerde utilizar derivación más
+derecha al revés).
+• Reconocer la cadena (a,(a,a)).
+
+Ejercicio
+Dada la siguiente GIC:
+S →(L) | a
+L →L,S | S
+
+(
+(
+)
+a
+,
+$
+
+)
+
+a
+
+,
+
+$
+
+

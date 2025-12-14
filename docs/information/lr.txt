@@ -1,0 +1,7029 @@
+Analizadores Sintácticos LR
+
+1
+
+Análisis Sintáctico LR
+• Técnica eficiente de análisis sintáctico
+ascendente.
+• LR(k):
+• L: Examen de la Entrada de Izquierda a Derecha
+• R: Construye una derivación más derecha.
+• k: Número de símbolos de la entrada de examen
+por anticipado para tomar decisiones. (k=1,
+normalmente).
+
+2
+
+Análisis Sintáctico LR
+• Comparación con LL(1): ASD y LR(1): ASA.
+LL(k)
+
+LR(k)
+
+L: Examen de la entrada de Izquierda a derecha.
+
+L: Construye una
+R: Construye una
+derivación más
+derivación más derecha.
+izquierda.
+k: Número de símbolos de la entrada de examen
+por anticipado para tomar decisiones. (k=1,
+normalmente).
+3
+
+Análisis Sintáctico LR
+Tres Técnicas para construcción de tabla de
+análisis sintáctico LR:
+• SLR: Single LR o LR Sencillo. El más fácil de
+implementar, pero el menos poderoso de los
+tres métodos.
+• LR Canónico: Es el más poderoso y costoso
+de todos.
+• LALR: Look Ahead LR o LR con examen por
+anticipado. Está en un punto intermedio.
+4
+
+Análisis Sintáctico por Despl/Red
+Pila
+
+Entrada
+
+$
+
+w$
+
+$S
+
+w: cadena a reconocer
+S: Símbolo no terminal de
+inicio de G
+
+Acción
+
+$ Aceptar
+
+desplazar: transferir un terminal del frente de la
+entrada hacia el tope de la pila.
+reducir: reemplazar una cadena  en la parte superior
+de la pila por un no terminal, dado que existe un
+mango A→ .
+5
+
+Generalidades
+• Para realizar el Análisis Sintáctico LR se debe
+aumentar la grámática.
+• Si S es el símbolo de inicio de la GIC, luego se
+agrega un nuevo símbolo inicial S’ con la
+producción:
+S’→S
+Por qué?
+
+6
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+1
+
+$
+
+Entrada Acción
+()$ desplazar
+
+()
+7
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+(S) ()
+8
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+3
+
+$(S
+
+)$ desplazar
+
+(S) ()
+9
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+3
+
+$(S
+
+)$ desplazar
+
+4
+
+$(S)
+
+$ reducir S → 
+
+(S)S  (S) ()
+10
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+3
+
+$(S
+
+)$ desplazar
+
+4
+
+$(S)
+
+$ reducir S → 
+
+5
+
+$(S)S
+
+$ reducir S → (S)S
+
+S  (S)S  (S) ()
+11
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+3
+
+$(S
+
+)$ desplazar
+
+4
+
+$(S)
+
+$ reducir S → 
+
+5
+
+$(S)S
+
+$ reducir S → (S)S
+
+6
+
+$S
+
+$ reducir S’ → S
+
+S’  S  (S)S  (S) ()
+12
+
+Ejemplo 1
+Dada la GIC: S→(S)S | 
+La GIC aumentada es:
+S’→S
+S→(S)S | 
+w=()
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+()$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+3
+
+$(S
+
+)$ desplazar
+
+4
+
+$(S)
+
+$ reducir S → 
+
+5
+
+$(S)S
+
+$ reducir S → (S)S
+
+6
+
+$S
+
+$ reducir S’ → S
+
+7
+
+$S’
+
+$ aceptar
+
+S’  S  (S)S  (S) ()
+13
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+1
+
+$
+
+Entrada Acción
+n+n$ desplazar
+
+n+n
+14
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+E+n n+n
+15
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+E+n n+n
+16
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+E+n n+n
+17
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+E  E+n n+n
+18
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+6
+
+$E
+
+$ reducir E’ → E
+
+E’ E  E+n n+n
+19
+
+Ejemplo 2
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+6
+
+$E
+
+$ reducir E’ → E
+
+7
+
+$E’
+
+$ aceptar
+
+E’ E  E+n n+n
+20
+
+Ejemplo 1 vs Ejemplo 2
+GIC aumentada:
+E’→E
+E→E+n | n
+
+GIC aumentada:
+S’→S
+S→(S)S | 
+No.
+
+Pila
+
+1
+
+Entrada
+
+Acción
+
+No.
+
+Pila
+
+Entrada
+
+Acción
+
+$
+
+()$ desplazar
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$(
+
+)$ reducir S → 
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$(S
+
+)$ desplazar
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$(S)
+
+$ reducir S → 
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$(S)S
+
+$ reducir S → (S)S
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+6
+
+$S
+
+$ reducir S’ → S
+
+6
+
+$E
+
+$ reducir E’ → E
+
+7
+
+$S’
+
+$ aceptar
+
+7
+
+$E’
+
+$ aceptar
+
+Línea 5: S está en la parte superior de la pila, y el ASA realiza
+una reducción S → (S)S
+Línea 6: S está en la parte superior de la pila , y el ASA realiza
+una reducción S’→ S
+
+Línea 3: E está en la parte superior de la pila, y el ASA realiza
+un desplazamiento. Terminal de entrada es +.
+Línea 6: E está en la parte superior de la pila , y el ASA realiza
+una reducción E’→ E. Terminal a la entrada es $.
+
+Un ASA puede necesitar examinar más allá de la parte
+superior de la pila para determinar la acción a ejecutar.
+
+Un ASA puede necesitar consultar el terminal en la
+entrada como una búsqueda hacia adelante. 21
+
+Forma de Frase Más Derecha
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+
+D
+
+C
+
+No.
+
+Pila
+
+Entrada Acción
+
+1 A $
+
+n+n$ desplazar
+
+2 A $n
+
++n$ reducir E → n
+
+3
+
+B $E
+
++n$ desplazar
+
+4
+
+B $E+
+
+n$ desplazar
+
+5
+
+B $E+n
+
+$ reducir E → E+n
+
+6
+
+C $E
+
+$ reducir E’ → E
+
+7
+
+D $E’
+
+$ aceptar
+
+B
+
+A
+
+E’ E  E+n n+n
+Formas de Frase Más Derecha
+Cada forma de frase se divide entre la entrada y la pila
+durante un análisis sintáctico ascendente
+
+22
+
+Prefijo Viable
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+Prefijos Viables de E+n
+
+E∥+n
+4 E+∥n
+5 E+n∥
+3
+
+E
+E+
+E+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+6
+
+$E
+
+$ reducir E’ → E
+
+7
+
+$E’
+
+$ aceptar
+
+Prefijo Viable
+Se indica dónde está la parte superior de la pila en cada momento
+mediante el símbolo ∥ (división entre la pila y la entrada)
+
+23
+
+Prefijo Viable
+Dada la GIC: E→E+n | n
+La GIC aumentada es:
+E’→E
+E→E+n | n
+w=n+n
+Prefijos Viables de n+n
+
+∥n+n
+2 n∥+n
+1
+
+
+n
+
+No.
+
+Pila
+
+Entrada Acción
+
+1
+
+$
+
+n+n$ desplazar
+
+2
+
+$n
+
++n$ reducir E → n
+
+3
+
+$E
+
++n$ desplazar
+
+4
+
+$E+
+
+n$ desplazar
+
+5
+
+$E+n
+
+$ reducir E → E+n
+
+6
+
+$E
+
+$ reducir E’ → E
+
+7
+
+$E’
+
+$ aceptar
+
+Prefijo Viable
+Se indica dónde está la parte superior de la pila en cada momento
+mediante el símbolo ∥ (división entre la pila y la entrada)
+
+24
+
+Autómatas Finitos de Elementos
+LR(0)
+• Elemento LR(0): o simplemente Elemento de
+una GIC es una producción con una posición
+distinguida en su lado derecho.
+• Posición distinguida: Se indica mediante un
+punto (metasímbolo, no es un terminal).
+• Ejemplo: Si A →, luego A →. es un
+elemento LR(0).
+
+25
+
+Elementos de GIC del Ejemplo 1
+La GIC aumentada del Ejemplo 1:
+S’→S
+S→(S)S | 
+Tiene tres producciones y sus elementos son:
+S’→.S
+S’→S.
+S→.(S)S
+S→(.S)S
+S→(S.)S
+S→(S).S
+S→(S)S.
+S→.
+26
+
+Elementos de GIC del Ejemplo 2
+La GIC aumentada del Ejemplo 2:
+E’→E
+E→E+n | n
+Tiene tres producciones y sus elementos son:
+E’→.E
+E’→E.
+E→.E+n
+E→E.+n
+E→E+.n
+E→E+n.
+E→.n
+E→n.
+27
+
+Autómatas Finitos de Elementos
+LR(0)
+• Idea General: El elemento es un paso
+intermedio en el reconocimiento del lado
+derecho de una opción de producción.
+• En el elemento A →. construido de la
+producción A →, significa que
+➢ya se ha analizado .
+
+➢y que se pueden derivar los siguientes
+terminales de la entrada a partir de .
+o En términos de la pila de análisis sintáctico, esto significa que 
+debe aparecer en la cima de la pila.
+28
+
+Autómatas Finitos de Elementos
+LR(0)
+• Un elemento A → . significa que estamos
+cerca de reconocer una A mediante la
+selección de la producción A → (Elementos
+iniciales).
+• Un elemento A →. significa que  está
+ubicado en la parte superior de la pila y puede
+ser un mango, si lo vamos a utilizar para la
+siguiente reducción (Elementos completos).
+29
+
+Autómatas Finitos de Elementos
+LR(0)
+• Los elementos LR(0) se pueden emplear como
+los estados de un A.F., los cuales mantienen
+información acerca de la pila y del progreso de
+un análisis por desplazamiento/reducción.
+Autómata
+Finito No
+Determinístico
+
+Elementos
+Canónicos o
+LR(0)
+
+Métodos de
+Subconjuntos
+
+Métodos Directo
+
+Autómata
+Finito
+Determinístico
+
+Conjuntos de
+Elementos
+Canónicos
+
+30
+
+Autómatas Finitos de Elementos
+LR(0)
+Transiciones:
+1. Si se tiene un elemento A →.X. Luego este
+elemento representa un estado del AFN.
+2. X puede ser un terminal o un No terminal.
+3. Dado que existe otro elemento A →X. y,
+por tanto representa otro estado.
+4. Luego existe una transición del estado
+A→.X al estado A →X. con el símbolo
+X.
+A→.X
+
+X
+
+A→X.
+
+31
+
+Autómatas Finitos de Elementos
+LR(0)
+Transiciones:
+A→.X
+
+X
+
+A→X.
+
+X es un terminal. Por qué se presenta una transición de esta forma?
+Porque hubo un desplazamiento del terminal X desde la entrada hacia la pila
+X es un No terminal. Por qué se presenta una transición de esta forma?
+Porque hubo una reducción. Sin embargo X no estará como símbolo a la entrada.
+Qué procedimiento se sigue para que aparezca X en la cima de la pila?
+
+32
+
+Autómatas Finitos de Elementos
+LR(0)
+Transiciones:
+A→.X
+
+X
+
+A→X.
+
+Cuando X es un No terminal, aparecerá en la cima de la pila durante una reducción
+donde interviene una producción X→.
+Una reducción de esta clase debe estar precedida por el reconocimiento de una . Es
+decir,  debe aparecer en la cima de la pila.
+Luego el estado determinado por el elemento X→. indica el comienzo de este
+proceso (el punto indica que estamos cerca de reconocer a  )
+Por tanto, por cada elemento A→.X se debe agregar una transición  en cada
+producción X→ de X, indicando que se produce X mediante el reconocimiento de los
+lados derechos de sus producciones.
+A→.X
+
+
+
+X →. 
+33
+
+Ejemplo de AFN
+La GIC del Ejemplo 2 sin aumentar:
+E→E+n | n
+
+E’→.E
+
+E→.E+n
+
+
+E
+
+E’→E.
+
+
+
+
+E→.n
+
+n
+
+E→n.
+
+E
+E→E.+n
+
++
+
+E→E+.n
+
+n
+
+E→E+n.
+34
+
+Ejemplo de AFN
+La GIC del Ejemplo 1 aumentada:
+
+S’→S
+S→(S)S | 
+Construir el AFN para este ejemplo:
+S
+
+S’→.S
+
+S’→S.
+
+
+
+
+S→.(S)S
+(
+
+
+S→(.S)S
+
+S→.
+
+S
+
+S→(S)S.
+
+
+S→(S.)S
+
+
+)
+
+S
+S→(S).S
+
+35
+
+Autómatas Finitos de Elementos
+LR(0)
+Los Elementos Canónicos ó LR(0) forman los
+Conjuntos Canónicos. Estos forman la Colección
+Canónica.
+Colección Canónica
+Conjunto Canónico I0
+Conjunto Canónico I1
+Conjunto Canónico I2
+Conjunto Canónico I n
+Elemento Canónico
+
+[A→.] [A→.]
+36
+
+Tabla de Análisis Sintáctico SLR: AFD
+La GIC aumentada del Ejemplo 2:
+E’→E
+E→E+n | n
+
+Método de Subconjuntos
+0
+
+0=[E’→.E]
+2=[E→.E+n]
+
+
+
+2
+
+
+5=[E→E.+n]
+
+E’→.E
+
+E→.E+n
+
+E
+
+1
+
+
+
+
+E→E.+n
+
+1=[E’→E.]
+4=[E→n.]
+
+3=[E→.n]
+3
+
+E
+
+5
+
+E’→E.
+
+E→.n
+
+n
+
+4
+
+6=[E→E+.n]
++
+
+6
+
+E→E+.n
+
+E→n.
+
+7=[E→E+n.]
+n
+
+7
+
+E→E+n.
+
+T=Cerradura-({0})={0,2,3}= Cerradura({[E’→.E]})={ [E’→.E], [E→.E+n], [E→.n] }
+0
+0
+2
+3
+Cerradura(I): Si I es un conjunto de elementos para una GIC G, entonces Cerradura (I) es
+el conjunto de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. Si A→.B está en cerrradura(I) y B→ es una producción, entonces añádase el elemento
+B→. a cerradura(I).
+37
+
+Ejemplo de Aplicación de cerradura
+Dada la GIC aumentada:
+E’→E
+E→E+T | T
+T→T*F | F
+F→(E) | id
+
+Si I es el conjunto de un elemento:
+I={[E’→.E]}
+
+cerradura(I)
+[E’→.E]
+[E →.E+T]
+[E →.T]
+[T→.T*F ]
+[T →. F]
+[F→.(E)]
+[F →. id]
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+38
+
+Tabla de Análisis Sintáctico SLR: AFD
+La GIC aumentada del Ejemplo 2:
+E’→E
+E→E+n | n
+
+Método de Subconjuntos
+0
+
+0=[E’→.E]
+2=[E→.E+n]
+
+
+
+2
+
+
+5=[E→E.+n]
+
+E’→.E
+
+E→.E+n
+
+E
+
+1
+
+
+
+
+E→E.+n
+
+1=[E’→E.]
+4=[E→n.]
+
+3=[E→.n]
+3
+
+E
+
+5
+
+E’→E.
+
+E→.n
+
+n
+
+4
+
+6=[E→E+.n]
++
+
+6
+
+E→E+.n
+
+E→n.
+
+7=[E→E+n.]
+n
+
+7
+
+E→E+n.
+
+T=Cerradura-({0})={0,2,3}= Cerradura({[E’→.E]})={ [E’→.E], [E→.E+n], [E→.n] }=I
+0
+0
+2
+3
+Cerradura(mueve(T,E))=Cerradura({1,5})= Cerradura({[E’→E.],[E→E.+n]})={ [E’→E.], [E→E.+n] }
+1
+5
+1
+5
+Cerradura(mueve(T,n))=Cerradura({4})= Cerradura({[E→n.]})={ [E→n.] }
+4
+4
+ir_a(I,E) = Cerradura({[E’→E.],[E→E.+n]})={[E’→E.],[E→E.+n]}
+ir_a(I,X): donde I es el conjunto de elementos y X es un símbolo gramatical. Se define ir_a(I,X)
+39
+como la cerradura del conjunto de todos los elementos [A →X.] tales que [A →.X] esté en I
+
+Ejemplo de Aplicación de ir_a
+Dada la GIC aumentada:
+E’→E
+E→E+T | T
+T→T*F | F
+F→(E) | id
+
+Si I es el conjunto de elementos:
+I={[E’→E.],[E→E.+T]}
+
+ir_a(I,+)=cerradura({[E→E+.T]})
+[E →E+.T]
+[T →.T*F]
+[T→.F ]
+[F→.(E)]
+[F →. id]
+
+40
+
+Tabla de Análisis Sintáctico SLR: AFD
+• Cerradura(I): Si I es un conjunto de elementos para
+una GIC G, entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a
+cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+
+• ir_a(I,X): donde I es el conjunto de elementos y X es un
+símbolo gramatical. Se define ir_a(I,X) como la
+cerradura del conjunto de todos los elementos
+[A →X.] tales que [A →.X] esté en I
+41
+
+Construcción de Conjuntos Canónicos
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+42
+
+ANÁLISIS SINTÁCTICO SLR
+EJEMPLO
+
+Gramática
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+Gramática Aumentada
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+43
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+Cerradura({[E' →.E]})
+=
+{[E' → .E], [E → .E or T], [E → .T], [T → .T and F],
+[T → .F], [F → .id], [F → .(E)]}
+=
+I0
+
+Cerradura(I): Si I es un conjunto de elementos para una GIC G,
+entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+44
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+ir_a(I,X): donde I es el conjunto de
+elementos y X es un símbolo gramatical.
+Se define ir_a(I,X) como la cerradura del
+conjunto de todos los elementos
+[A →X.] tales que [A →.X] esté en I
+
+I0 ={[E' → .E], [E → .E or T],
+[E → .T], [T → .T and F],
+[T → .F], [F → .id], [F → .(E)]}
+Cerradura(I): Si I es un conjunto de elementos para una GIC G,
+entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+
+Ir_a(I0, E)
+=
+Cerradura({[E' → E.], [E → E. or T]})
+=
+{[E' → E.], [E → E. or T]}
+=
+I1
+Ir_a(I0, T)
+=
+Cerradura({[E → T.], [T → T. and F]})
+=
+{[E → T.], [T → T. and F]}
+=
+I2
+
+45
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I0 ={[E' → .E], [E → .E or T],
+[E → .T], [T → .T and F],
+[T → .F], [F → .id], [F → .(E)]}
+Cerradura(I): Si I es un conjunto de elementos para una GIC G,
+entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+
+Ir_a(I0, F)
+=
+Cerradura({[T → F.]})
+=
+{[T → F.]}
+=
+I3
+ir_a(I,X): donde I es el conjunto de
+Ir_a(I0, id)
+elementos y X es un símbolo gramatical.
+=
+Cerradura ({[F → id.]})
+Se define ir_a(I,X) como la cerradura del
+conjunto de todos los elementos
+=
+{[F → id.]}
+[A →X.] tales que [A →.X] esté en I
+=
+I4
+Ir_a(I0, ( )
+=
+Cerradura({[F → (.E)]})
+=
+{[F → (.E)], [E → .E or T], [E → .T], [T → .T and F], [T → .F],
+[F → .id], [F → .(E)]}
+=
+I5
+
+46
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I1= {[E' → E.], [E → E. or T]}
+
+Cerradura(I): Si I es un conjunto de elementos para una GIC G,
+entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+
+Ir_a(I1, or)
+=
+Cerradura({[E → E or. T]})
+=
+{[E → E or. T], [T → .T and F], [T → .F], [F → .id], [F → .(E)]}
+=
+I6
+ir_a(I,X): donde I es el conjunto de
+elementos y X es un símbolo gramatical.
+Se define ir_a(I,X) como la cerradura del
+conjunto de todos los elementos
+[A →X.] tales que [A →.X] esté en I
+
+47
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I2 = {[E → T.], [T → T. and F]}
+
+Cerradura(I): Si I es un conjunto de elementos para una GIC G,
+entonces es el conjunto
+de elementos construido a partir de I por las reglas:
+1. Inicialmente, todo elemento de I se añade a cerradura(I).
+2. 2. Si A→.B está en cerrradura(I) y B→ es una
+producción, entonces añádase el elemento B→. a
+cerradura(I).
+
+Ir_a(I2, and)
+=
+Cerradura({[T → T and. F]})
+=
+{[T → T and. F], [F → .id], [F → .(E)]}
+=
+I7
+
+ir_a(I,X): donde I es el conjunto de
+elementos y X es un símbolo gramatical.
+Se define ir_a(I,X) como la cerradura del
+conjunto de todos los elementos
+[A →X.] tales que [A →.X] esté en I
+
+48
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I5={[F → (.E)], [E → .E or T],
+[E → .T], [T → .T and F],
+[T → .F], [F → .id], [F → .(E)]}
+
+Ir_a(I5, E)
+=
+Cerradura({[F → (E.)], [E → E. or T]})
+=
+{[F → (E.)], [E → E. or T]}
+=
+I8
+
+Ir_a(I5, T)
+=
+Cerradura({[E → T.], [T → T. and F]})
+=
+I2
+
+49
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I5={[F → (.E)], [E → .E or T],
+[E → .T], [T → .T and F],
+[T →.F], [F → .id], [F → .(E)]}
+
+Ir_a(I5, F)
+=
+Cerradura({[T → F.]})
+=
+I3
+Ir_a(I5, id)
+=
+Cerradura ({[F → id.]})
+=
+I4
+Ir_a(I5, ( )
+=
+Cerradura({[F → (.E)]})
+=
+I5
+50
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I6 ={[E → E or. T], [T → .T and
+F], [T → .F], [F → .id], [F →
+.(E)]}
+
+Ir_a(I6, T)
+=
+Cerradura({[E → E or T.], [T → T. and F]})
+=
+{[E → E or T.], [T → T. and F]}
+=
+I9
+Ir_a(I6, F)
+=
+Cerradura({[T → F.]})
+=
+I3
+
+51
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I6={[E → E or. T], [T → .T and
+F], [T → .F], [F → .id], [F →
+.(E)]}
+
+Ir_a(I6, id)
+=
+Cerradura ({[F → id.]})
+=
+I4
+Ir_a(I6, ( )
+=
+Cerradura({[F → (.E)]})
+=
+I5
+
+52
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I7={[T → T and. F], [F → .id],
+[F → .(E)]}
+
+Ir_a(I7, F)
+=
+Cerradura({[T → T and F.]})
+=
+{[T → T and F.]}
+=
+I10
+Ir_a(I7, id)
+=
+Cerradura ({[F → id.]})
+=
+I4
+Ir_a(I7, ( )
+=
+Cerradura({[F → (.E)]})
+=
+I5
+53
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I8={[F → (E.)], [E → E. or T]}
+
+Ir_a(I8, ) )
+=
+Cerradura({[F → (E).]})
+=
+{[F → (E).]}
+=
+I11
+
+Ir_a(I8, or)
+=
+Cerradura({[E → E or. T]})
+=
+I6
+
+54
+
+Conjuntos de Elementos
+Canónicos.
+E' → E
+E → E or T | T
+T → T and F | F
+F → id | (E)
+
+I9={[E → E or T.],
+[T → T. and F]}
+
+Ir_a(I9, and)
+=
+Cerradura({[T → T and. F]})
+=
+I7
+
+55
+
+Tabla TrandD de Autómata Finito Determinístico
+or
+
+and
+
+id
+
+(
+
+E
+
+T
+
+F
+
+I4
+
+I5
+
+I1
+
+I2
+
+I3
+
+I5
+
+I4
+
+I5
+
+I8
+
+I2
+
+I3
+
+I6
+
+I4
+
+I5
+
+I9
+
+I3
+
+I7
+
+I4
+
+I5
+
+I0
+I1
+
+)
+
+I6
+
+I2
+
+I7
+
+I3
+I4
+
+I8
+I9
+
+I6
+
+I10
+I11
+
+I7
+
+I10
+I11
+56
+
+Tabla SLR Resultante
+
+Tabla con encabezados de acción e ir_a
+
+acción
+
+ir_a
+
+Estado
+
+57
+
+Tabla SLR Resultante
+
+Tabla con encabezados de acción e ir_a
+Encabezados de sección acción :símbolos términales y $
+Encabezados de sección ir_a : símbolos no terminales
+acción
+Estado
+
+or
+
+and
+
+id
+
+(
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+58
+
+Tabla SLR Resultante
+
+Regla 2: El estado i se construye a partir del conjunto
+canónico Ii. Cada conjunto canónico Ii define el estado i.
+acción
+Estado
+
+or
+
+and
+
+id
+
+(
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+59
+
+Tabla SLR Resultante
+
+Regla 2: El estado i se construye a partir del conjunto
+canónico Ii. Cada conjunto canónico Ii define el estado i.
+acción
+Estado
+
+or
+
+and
+
+id
+
+(
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+0
+1
+2
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+60
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+[F → .id] en I0 y Ir_a(I0,id)= I4
+acción(0,id)= desplazar 4
+
+acción
+Estado
+
+or
+
+and
+
+id
+
+(
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+0
+1
+2
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+61
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+[F → .id] en I0 y Ir_a(I0,id)= I4
+acción(0,id)= desplazar 4
+[F → .(E)] en I0 y Ir_a(I0,()= I5
+acción(0,()= desplazar 5
+
+acción
+Estado
+0
+
+or
+
+and
+
+id
+
+(
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+d4
+
+1
+2
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+62
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+[F → .id] en I0 y Ir_a(I0,id)= I4
+acción(0,id)= desplazar 4
+[F → .(E)] en I0 y Ir_a(I0,()= I5
+acción(0,()= desplazar 5
+[E →E.orT] en I1 y Ir_a(I1,or)= I6
+acción(1,or)= desplazar 6
+
+acción
+Estado
+0
+
+or
+
+and
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+1
+2
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+63
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+[F → .id] en I0 y Ir_a(I0,id)= I4
+acción(0,id)= desplazar 4
+[F → .(E)] en I0 y Ir_a(I0,()= I5
+acción(0,()= desplazar 5
+[E →E.orT] en I1 y Ir_a(I1,or)= I6
+acción(1,or)= desplazar 6
+[T →T.andF] en I2 y Ir_a(I2,and)= I7
+acción(2,and)= desplazar 7
+
+acción
+Estado
+
+or
+
+0
+1
+
+and
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+d6
+
+2
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+64
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+[F → .id] en I0 y Ir_a(I0,id)= I4
+acción(0,id)= desplazar 4
+[F → .(E)] en I0 y Ir_a(I0,()= I5
+acción(0,()= desplazar 5
+[E →E.orT] en I1 y Ir_a(I1,or)= I6
+acción(1,or)= desplazar 6
+[T →T.andF] en I2 y Ir_a(I2,and)= I7
+acción(2,and)= desplazar 7
+
+acción
+Estado
+
+or
+
+and
+
+0
+1
+2
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+d6
+d7
+
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+65
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+En el AFD (TranD) se
+observa a la izquierda de
+la línea roja, que todos los
+Ii se pueden convertir, en
+las mismas posiciones de
+la matriz acción, en di o
+desplazar i.
+
+acción
+Estado
+
+or
+
+and
+
+0
+1
+2
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+d6
+d7
+
+3
+4
+
+5
+6
+
+7
+8
+9
+10
+11
+
+66
+
+Tabla SLR Resultante
+
+Regla 2.a): Si [A→.a] está en Ii e ir_a(Ii,a)=Ij, entonces
+Asignar “desplazar j” a acción[i,a].
+Ejemplo: Diap 44-46, Diap 45-47 y Diap. 45-48
+En el AFD (TranD) se
+observa a la izquierda de
+la línea roja, que todos los
+Ii se pueden convertir, en
+las mismas posiciones de
+la matriz acción, en di o
+desplazar i.
+
+acción
+Estado
+
+or
+
+and
+
+id
+
+(
+
+d4
+
+d5
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+0
+1
+
+ir_a
+)
+
+$
+
+E
+
+T
+
+F
+
+d6
+
+2
+
+d7
+
+3
+4
+
+8
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+67
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 45 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+1
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+E
+
+T
+
+F
+
+d6
+
+2
+
+d7
+
+3
+4
+
+[E → T.] en I2
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(E) = {$,or,)}
+
+7
+
+d4
+
+d5
+
+8
+
+acción(2,$)=red E → T=r2
+acción(2,or)=red E → T=r2
+acción(2,))=red E → T=r2
+
+ir_a
+
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+68
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 45 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+1
+
+d6
+
+2
+
+r2
+
+id
+
+(
+
+d4
+
+d5
+
+d7
+
+)
+
+$
+
+r2
+
+r2
+
+E
+
+T
+
+F
+
+3
+4
+
+[E → T.] en I2
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(E) = {$,or,)}
+
+7
+
+d4
+
+d5
+
+8
+
+acción(2,$)=red E → T=r2
+acción(2,or)=red E → T=r2
+acción(2,))=red E → T=r2
+
+ir_a
+
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+69
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 46 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+1
+
+d6
+
+2
+
+r2
+
+id
+
+(
+
+d4
+
+d5
+
+d7
+
+ir_a
+)
+
+$
+
+r2
+
+r2
+
+E
+
+T
+
+F
+
+3
+4
+
+[T → F.] en I3
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(T) = {$,or,),and}
+acción(3,$)=red T → F=r4
+acción(3,or)=red T → F=r4
+acción(3,))=red T → F=r4
+acción(3,and)=red T → F=r4
+
+7
+
+d4
+
+d5
+
+8
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+70
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 46 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+E
+
+T
+
+F
+
+4
+
+[T → F.] en I3
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(T) = {$,or,),and}
+acción(3,$)=red T → F=r4
+acción(3,or)=red T → F=r4
+acción(3,))=red T → F=r4
+acción(3,and)=red T → F=r4
+
+7
+
+d4
+
+d5
+
+8
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+71
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 46 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+E
+
+T
+
+F
+
+4
+
+[F → id.] en I4
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(F) = {$,or,),and}
+acción(4,$)=red F →id=r5
+acción(4,or)= red F →id=r5
+acción(4,))= red F →id=r5
+acción(4,and)= red F →id=r5
+
+7
+
+d4
+
+d5
+
+8
+9
+
+d6
+
+d11
+d7
+
+10
+11
+
+72
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 46 (2 ejemplos).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[F → id.] en I4
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(F) = {$,or,),and}
+acción(4,$)=red F →id=r5
+acción(4,or)= red F →id=r5
+acción(4,))= red F →id=r5
+acción(4,and)= red F →id=r5
+
+7
+
+d4
+
+d5
+
+8
+9
+
+d6
+
+E
+
+T
+
+F
+
+d11
+d7
+
+10
+11
+
+73
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 51 (1 ejemplo)
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[E → EorT.] en I9
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(E) = {$,or,)}
+
+7
+
+d4
+
+d5
+
+acción(9,$)=red E →EorT=r1
+acción(9,or)=red E →EorT=r1
+acción(9,))= red E →EorT=r1
+
+8
+9
+
+d6
+
+E
+
+T
+
+F
+
+d11
+d7
+
+10
+11
+
+74
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 51 (1 ejemplo)
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[E → EorT.] en I9
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(E) = {$,or,)}
+
+7
+
+d4
+
+d5
+
+acción(9,$)=red E →EorT=r1
+acción(9,or)=red E →EorT=r1
+acción(9,))= red E →EorT=r1
+
+8
+
+d6
+
+9
+
+r1
+
+E
+
+T
+
+F
+
+d11
+d7
+
+r1
+
+r1
+
+10
+11
+
+75
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 53 (1 ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+$
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(T) = {$,or,),and}
+
+7
+
+d4
+
+d5
+
+acción(10,$)=red T →TandF=r3
+
+8
+
+d6
+
+acción(10,or)=red T →TandF=r3
+
+9
+
+r1
+
+acción(10,and)= red T →TandF=r3
+
+)
+
+1
+
+[T → TandF.] en I10
+
+acción(10,))=red T →TandF=r3
+
+ir_a
+E
+
+T
+
+F
+
+d11
+d7
+
+r1
+
+r1
+
+10
+11
+
+76
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 53 (1 ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[T → TandF.] en I10
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(T) = {$,or,),and}
+
+7
+
+d4
+
+d5
+
+acción(10,$)=red T →TandF=r3
+
+8
+
+d6
+
+acción(10,or)=red T →TandF=r3
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+acción(10,))=red T →TandF=r3
+acción(10,and)= red T →TandF=r3
+
+11
+
+E
+
+T
+
+F
+
+d11
+
+77
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 54 (1 ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[F → (E).] en I11
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(F) = {$,or,),and}
+
+7
+
+d4
+
+d5
+
+acción(11,$)=red F →(E)=r6
+
+8
+
+d6
+
+acción(11,or)= red F →(E)=r6
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+acción(11,))= red F →(E)=r6
+acción(11,and)= red F →(E)=r6
+
+11
+
+E
+
+T
+
+F
+
+d11
+
+78
+
+Tabla SLR Resultante
+
+Regla 2.b): Si [A→.] está en Ii, entonces asignar
+“reducir A→” a acción[i,a] para toda a en SIGUIENTE(A).
+A no puede ser S’.
+Ejemplo: Diap. 54 (1 ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[F → (E).] en I11
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+Sgte(F) = {$,or,),and}
+
+7
+
+d4
+
+d5
+
+acción(11,$)=red F →(E)=r6
+
+8
+
+d6
+
+acción(11,or)= red F →(E)=r6
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+acción(11,))= red F →(E)=r6
+acción(11,and)= red F →(E)=r6
+
+E
+
+T
+
+F
+
+d11
+
+79
+
+Tabla SLR Resultante
+
+Regla 2.c): Si [S’→S.] está en Ii, entonces asignar
+“aceptar” a acción[i,$].
+Ejemplo: Diap. 45 (ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+[E’ → E.] en I1
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+acción(1,$)=aceptar
+
+7
+
+d4
+
+d5
+
+8
+
+d6
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+E
+
+T
+
+F
+
+d11
+
+80
+
+Tabla SLR Resultante
+
+Regla 2.c): Si [S’→S.] está en Ii, entonces asignar
+“aceptar” a acción[i,$].
+Ejemplo: Diap. 45 (ejemplo).
+
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+Acept
+
+[E’ → E.] en I1
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+acción(1,$)=aceptar
+
+7
+
+d4
+
+d5
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+81
+
+Tabla SLR Resultante
+
+Regla 3): Las transiciones ir_a para el estado i se construyen
+para todos los terminales A así: Si Ir_a(Ii,A) = Ij, entonces
+ir_a[i,A] = j.
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+82
+
+Tabla SLR Resultante
+
+Regla 3): Las transiciones ir_a para el estado i se construyen
+para todos los terminales A así: Si Ir_a(Ii,A) = Ij, entonces
+ir_a[i,A] = j.
+acción
+Estado
+
+or
+
+and
+
+0
+
+id
+
+(
+
+d4
+
+d5
+
+ir_a
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+83
+
+Modelo de Análisis Sintáctico LR
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+84
+
+Algoritmo de Análisis Sintáctico
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+85
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+86
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$ red. F→id
+
+87
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+red. F→id
+
+88
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$ red. E→T
+
+red. F→id
+
+89
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$
+
+red. F→id
+
+desplazar 6
+
+90
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$
+
+0E1or6
+
+red. F→id
+
+desplazar 6
+
+id and id$ desplazar 4
+
+91
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$
+
+red. F→id
+
+desplazar 6
+
+0E1or6
+
+id and id$ desplazar 4
+
+0E1or6id4
+
+and id$ red. F→id
+92
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0
+
+id or id and id$ desplazar 4
+
+0id4
+
+or id and id$
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$
+
+red. F→id
+
+desplazar 6
+
+0E1or6
+
+id and id$ desplazar 4
+
+0E1or6id4
+
+and id$ red. F→id
+
+0E1or6F3
+
+and id$
+
+red. T→F
+93
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0id4
+
+or id and id$ red. F→id
+
+0F3
+
+or id and id$
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$ desplazar 6
+
+0E1or6
+
+id and id$
+
+red. T→F
+
+desplazar 4
+
+0E1or6id4
+
+and id$ red. F→id
+
+0E1or6F3
+
+and id$ red. T→F
+
+0E1or6T9
+
+and id$ desplazar 7
+94
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0F3
+
+or id and id$ red. T→F
+
+0T2
+
+or id and id$
+
+0E1
+
+or id and id$ desplazar 6
+
+0E1or6
+
+id and id$ desplazar 4
+
+red. E→T
+
+0E1or6id4
+
+and id$
+
+0E1or6F3
+
+and id$ red. T→F
+
+0E1or6T9
+
+and id$ desplazar 7
+
+0E1or6T9and7
+
+red. F→id
+
+id$ desplazar 4
+95
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0T2
+
+or id and id$ red. E→T
+
+0E1
+
+or id and id$
+
+desplazar 6
+
+0E1or6
+
+id and id$ desplazar 4
+
+0E1or6id4
+
+and id$ red. F→id
+
+0E1or6F3
+
+and id$
+
+0E1or6T9
+
+and id$ desplazar 7
+
+red. T→F
+
+0E1or6T9and7
+
+id$ desplazar 4
+
+0E1or6T9and7id4
+
+$ red. F→id
+96
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+0E1
+0E1or6
+
+Entrada
+
+Acción
+
+or id and id$ desplazar 6
+id and id$
+
+desplazar 4
+
+0E1or6id4
+
+and id$ red. F→id
+
+0E1or6F3
+
+and id$ red. T→F
+
+0E1or6T9
+
+and id$
+
+0E1or6T9and7
+
+desplazar 7
+
+id$ desplazar 4
+
+0E1or6T9and7id4
+
+$
+
+0E1or6T9and7F10
+
+$ red. T→T and F
+
+red. F→id
+97
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+0E1or6
+
+Entrada
+
+Acción
+
+id and id$ desplazar 4
+
+0E1or6id4
+
+and id$
+
+0E1or6F3
+
+and id$ red. T→F
+
+0E1or6T9
+
+and id$ desplazar 7
+
+red. F→id
+
+0E1or6T9and7
+
+id$
+
+desplazar 4
+
+0E1or6T9and7id4
+
+$
+
+red. F→id
+
+0E1or6T9and7F10
+
+$ red. T→T and F
+
+0E1or6T9
+
+$ red. E→E or T
+98
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+acción
+Estado
+
+or
+
+and
+
+0
+
+ir_a
+
+id
+
+(
+
+d4
+
+d5
+
+)
+
+$
+
+1
+
+d6
+
+2
+
+r2
+
+d7
+
+r2
+
+r2
+
+3
+
+r4
+
+r4
+
+r4
+
+r4
+
+4
+
+r5
+
+r5
+
+r5
+
+r5
+
+E
+
+T
+
+F
+
+1
+
+2
+
+3
+
+8
+
+2
+
+3
+
+9
+
+3
+
+Acept
+
+5
+
+d4
+
+d5
+
+6
+
+d4
+
+d5
+
+7
+
+d4
+
+d5
+
+10
+
+8
+
+d6
+
+d11
+
+9
+
+r1
+
+d7
+
+r1
+
+r1
+
+10
+
+r3
+
+r3
+
+r3
+
+r3
+
+11
+
+r6
+
+r6
+
+r6
+
+r6
+
+Pila
+
+Entrada
+
+Acción
+
+0E1or6id4
+
+and id$ red. F→id
+
+0E1or6F3
+
+and id$
+
+0E1or6T9
+
+and id$ desplazar 7
+
+0E1or6T9and7
+
+red. T→F
+
+id$ desplazar 4
+
+0E1or6T9and7id4
+
+$
+
+0E1or6T9and7F10
+
+$ red. T→T and F
+
+0E1or6T9
+
+$
+
+0E1
+
+$ aceptar
+
+red. F→id
+
+red. E→E or T
+99
+
+Tomado de Compiladores. Principios, Técnicas y Herramientas, Aho, Sethi, Ullman. Pearson
+
+Algoritmo SLR
+1) E → E or T
+2) E → T
+3) T → T and F
+4) T → F
+5) F → id
+6) F → (E)
+
+¿Cuál sería el Árbol de Análisis
+Sintáctico Ascendente?
+
+Posic
+
+Pila
+
+Entrada
+
+Acción
+
+1
+
+0
+
+id or id and id$ desplazar 4
+
+2
+
+0id4
+
+or id and id$ red. F→id
+
+3
+
+0F3
+
+or id and id$ red. T→F
+
+4
+
+0T2
+
+or id and id$ red. E→T
+
+5
+
+0E1
+
+or id and id$ desplazar 6
+
+6
+
+0E1or6
+
+id and id$ desplazar 4
+
+7
+
+0E1or6id4
+
+and id$ red. F→id
+
+8
+
+0E1or6F3
+
+and id$ red. T→F
+
+9
+
+0E1or6T9
+
+and id$ desplazar 7
+
+10
+
+0E1or6T9and7
+
+11
+
+0E1or6T9and7id4
+
+$
+
+red. F→id
+
+12
+
+0E1or6T9and7F10
+
+$
+
+red. T→T and F
+
+13
+
+0E1or6T9
+
+$
+
+red. E→E or T
+
+14
+
+0E1
+
+$
+
+aceptar
+
+id$ desplazar 4
+
+14 13
+12
+9,10,11
+8
+4
+5,6,7
+EE or T E or T and F E or T and id E or F and id E or id and id  T or id and id 
+1,2
+3
+F or id and id  id or id and id
+100
+
+
