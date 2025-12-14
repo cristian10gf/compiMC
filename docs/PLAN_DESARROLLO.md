@@ -90,7 +90,8 @@ Basándome en los wireframes proporcionados, el sistema está compuesto por las 
 │   ├── analizador-sintactico/
 │   │   ├── terminals-input.tsx                     # Input símbolos terminales
 │   │   ├── grammar-input.tsx                       # Input gramática (producciones)
-│   │   ├── precedence-table.tsx                    # Tabla de precedencia
+│   │   ├── precedence-table.tsx                    # Tabla de precedencia (manual/automático)
+│   │   ├── precedence-step-display.tsx             # Navegación paso a paso de precedencia (manual)
 │   │   ├── goto-table.tsx                          # Tabla Ir
 │   │   ├── productions-table.tsx                   # Tabla de producciones
 │   │   ├── first-follow-table.tsx                  # Tabla de Primeros/Siguientes (ASD)
@@ -239,6 +240,24 @@ interface ParseStep {
   input: string[];
   output: string;
   action: string;
+}
+
+interface PrecedenceRelation {
+  symbol1: string; // Símbolo izquierdo
+  symbol2: string; // Símbolo derecho
+  relation: '<' | '>' | '=' | '·'; // Relación de precedencia
+}
+
+interface PrecedenceStep {
+  stepNumber: number;
+  production: Production; // Producción analizada
+  relations: PrecedenceRelation[]; // Relaciones encontradas en este paso
+  explanation: string; // Explicación del razonamiento
+}
+
+interface PrecedenceTable {
+  symbols: string[]; // Todos los símbolos de la gramática
+  relations: Map<string, Map<string, '<' | '>' | '=' | '·'>>; // Matriz de relaciones
 }
 ```
 
@@ -645,25 +664,50 @@ function parseStringLL(grammar: Grammar, table: ParsingTable, input: string): Pa
 
 **Archivo**: `lib/algorithms/syntax/ascendente.ts`
 
-**Descripción**: Implementa parsing ascendente (LR)
+**Descripción**: Implementa parsing ascendente (LR) con soporte para detección manual y automática de precedencia
 
 **Pasos del Algoritmo**:
 1. Recibir gramática
-2. Calcular tabla de precedencia
+2. Calcular tabla de precedencia (manual o automática)
+   - **Modo Manual**: Usuario construye paso a paso las relaciones de precedencia
+   - **Modo Automático**: Sistema genera automáticamente todas las relaciones
 3. Construir tabla Ir (goto)
 4. Generar tabla de acciones (shift/reduce)
 5. Validar gramática LR
 
 **Métodos principales**:
 ```typescript
-function analyzeAscendente(grammar: Grammar): {
+function analyzeAscendente(grammar: Grammar, mode: 'manual' | 'automatic'): {
   precedenceTable: PrecedenceTable,
   gotoTable: GotoTable,
-  actionTable: ActionTable
+  actionTable: ActionTable,
+  steps?: PrecedenceStep[] // Solo para modo manual
 }
-function calculatePrecedence(grammar: Grammar): PrecedenceTable
+function calculatePrecedenceManual(grammar: Grammar): PrecedenceStep[]
+function calculatePrecedenceAutomatic(grammar: Grammar): PrecedenceTable
 function buildGotoTable(grammar: Grammar): GotoTable
 function parseStringLR(grammar: Grammar, tables: any, input: string): ParseStep[]
+```
+
+**Tipos adicionales para Precedencia**:
+```typescript
+interface PrecedenceRelation {
+  symbol1: string; // Símbolo izquierdo
+  symbol2: string; // Símbolo derecho
+  relation: '<' | '>' | '=' | '·'; // Relación de precedencia
+}
+
+interface PrecedenceStep {
+  stepNumber: number;
+  production: Production; // Producción analizada
+  relations: PrecedenceRelation[]; // Relaciones encontradas
+  explanation: string; // Explicación del paso
+}
+
+interface PrecedenceTable {
+  symbols: string[]; // Símbolos de la gramática
+  relations: Map<string, Map<string, '<' | '>' | '=' | '·'>>; // Tabla de relaciones
+}
 ```
 
 ---
@@ -1282,6 +1326,33 @@ const cytoscapeConfig = {
 │            │                          │              │
 │            │   [Precedencia] [Ir]     │              │
 │            │                          │              │
+│            │ (Tab Precedencia activa) │              │
+│            │   [o] Manual             │              │
+│            │   [ ] Automático         │              │
+│            │                          │              │
+│            │   + Paso a Paso          │              │
+│            │   (solo modo manual)     │              │
+│            │   ┌────────────────────┐ │              │
+│            │   │Producción analizada│ │              │
+│            │   │E -> E or T         │ │              │
+│            │   │                    │ │              │
+│            │   │Relaciones nuevas:  │ │              │
+│            │   │ E < or             │ │              │
+│            │   │ or > T             │ │              │
+│            │   └────────────────────┘ │              │
+│            │   [◀] [▶] (navegación) │              │
+│            │                          │              │
+│            │   + Tabla de Precedencia │              │
+│            │   ┌────────────────────┐ │              │
+│            │   │ \ │ E │or│ T │and │ │              │
+│            │   │───┼───┼──┼───┼────│ │              │
+│            │   │ E │ · │ < │ · │ < │ │              │
+│            │   │or │ > │ · │ > │ · │ │              │
+│            │   │ T │ > │ > │ · │ < │ │              │
+│            │   │and│ > │ > │ > │ · │ │              │
+│            │   └────────────────────┘ │              │
+│            │   (editable en manual)   │              │
+│            │                          │              │
 │            │   + Valores              │              │
 │            │   ┌────────────────────┐ │              │
 │            │   │No term│Primer│Sig. │ │              │
@@ -1328,20 +1399,50 @@ const cytoscapeConfig = {
    - Botones [+] [-] para agregar/quitar producciones
 3. **Botón Analizar**: Procesa la gramática
 4. **Tabs**: `[Precedencia]` y `[Ir]`
-5. **Sección Valores** (colapsable):
+5. **Sección Precedencia** (Tab activa):
+   - **Selector de Modo**:
+     - Radio button: `[o] Manual` / `[ ] Automático`
+   - **Modo Manual**:
+     - **Paso a Paso** (colapsable): Muestra cada producción analizada y las relaciones de precedencia derivadas
+       - Navegación: `[◀] [▶]` entre pasos
+       - Explicación textual de cada relación
+       - Destacado visual de símbolos analizados
+     - **Tabla de Precedencia**: Matriz editable donde usuario puede ver/modificar relaciones
+       - Cabecera: todos los símbolos (terminales y no terminales)
+       - Celdas editables con dropdown: `<`, `>`, `=`, `·` (ninguna)
+       - Actualización en tiempo real al navegar pasos
+   - **Modo Automático**:
+     - Salta directamente a la Tabla de Precedencia completa
+     - Tabla de solo lectura con todas las relaciones generadas
+     - No muestra navegación paso a paso
+6. **Sección Valores** (colapsable):
    - Tabla: No terminal | Primeros | Siguientes
-6. **Tabla M** (colapsable):
+7. **Tabla M** (colapsable):
    - Tabla de parsing
    - Cabecera con terminales
    - Filas con no terminales
-7. **Sección Reconocer Cadena** (colapsable):
+8. **Sección Reconocer Cadena** (colapsable):
    - Input para cadena a reconocer
    - Botón [enviar]
    - Tabla: Pila | Entrada | Salida
    - Navegación paso a paso: `[◀] [▶]`
-8. **Footer**
+9. **Footer**
 
-**Nota**: "cuando se extraiga la opcion manual, se puede ver el paso a paso si se genera se salta a la tabla de precedencia con las nuevas relaciones que puede actualizar cuando se extraiga la opcion automático"
+**Flujo de Interacción**:
+1. Usuario ingresa gramática y símbolos terminales
+2. Hace clic en **[Analizar]**
+3. Selecciona modo **Manual** o **Automático**:
+   - **Manual**: 
+     - Sistema genera pasos de análisis de precedencia
+     - Usuario navega paso a paso viendo cómo se derivan las relaciones
+     - Tabla de precedencia se actualiza con cada paso
+     - Usuario puede editar relaciones manualmente si detecta errores
+   - **Automático**:
+     - Sistema genera automáticamente todas las relaciones
+     - Muestra tabla de precedencia completa inmediatamente
+     - No hay navegación paso a paso
+4. Usuario puede cambiar entre modos en cualquier momento
+5. Tabla de precedencia se usa para el análisis sintáctico posterior
 
 ---
 
@@ -1763,16 +1864,17 @@ pnpm add -D @types/cytoscape
 ### Sprint 5 - Análisis Sintáctico (Semana 5)
 1. ⏳ Algoritmo First y Follow
 2. ⏳ Algoritmo parsing descendente (LL)
-3. ⏳ Algoritmo parsing ascendente (LR)
+3. ⏳ Algoritmo parsing ascendente (LR) con precedencia manual/automática
 4. ⏳ Componentes sintácticos:
    - `TerminalsInput`
    - `GrammarInput`
    - `FirstFollowTable`
    - `ParsingTable`
-   - `PrecedenceTable`
+   - `PrecedenceTable` (con modo manual y automático)
+   - `PrecedenceStepDisplay` (navegación paso a paso para modo manual)
    - `StackTraceTable`
 5. ⏳ Página `/asd` (Descendente)
-6. ⏳ Página `/asa` (Ascendente)
+6. ⏳ Página `/asa` (Ascendente con selector manual/automático)
 
 ### Sprint 6 - Compilador Completo (Semana 6)
 1. ⏳ Implementar análisis léxico para compilador
@@ -1823,7 +1925,11 @@ pnpm add -D @types/cytoscape
 - [ ] Análisis ascendente (LR)
 - [ ] Cálculo de First y Follow
 - [ ] Construcción de tabla de parsing M
-- [ ] Tabla de precedencia
+- [ ] Tabla de precedencia con modo manual y automático
+  - [ ] Generación paso a paso (modo manual)
+  - [ ] Generación automática completa
+  - [ ] Edición manual de relaciones
+  - [ ] Navegación entre pasos de derivación
 - [ ] Tabla Ir (goto)
 - [ ] Simulación paso a paso con pila
 

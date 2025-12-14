@@ -27,6 +27,7 @@ components/
 │   ├── terminals-input.tsx
 │   ├── grammar-input.tsx
 │   ├── precedence-table.tsx
+│   ├── precedence-step-display.tsx
 │   ├── goto-table.tsx
 │   ├── productions-table.tsx
 │   ├── first-follow-table.tsx
@@ -588,6 +589,169 @@ interface FirstFollowTableProps {
   </TableBody>
 </Table>
 ```
+
+---
+
+### PrecedenceTable
+
+**Ubicación**: `components/analizador-sintactico/precedence-table.tsx`
+
+**Props**:
+```typescript
+interface PrecedenceTableProps {
+  symbols: string[];
+  relations: Map<string, Map<string, '<' | '>' | '=' | '·'>>;
+  mode: 'manual' | 'automatic';
+  onCellChange?: (row: string, col: string, value: '<' | '>' | '=' | '·') => void;
+}
+```
+
+**Estructura**:
+```tsx
+<div className="precedence-table-container">
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead className="bg-slate-100">\</TableHead>
+        {symbols.map(symbol => (
+          <TableHead key={symbol} className="text-center">
+            {symbol}
+          </TableHead>
+        ))}
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {symbols.map(rowSymbol => (
+        <TableRow key={rowSymbol}>
+          <TableCell className="bg-slate-100 font-bold">
+            {rowSymbol}
+          </TableCell>
+          {symbols.map(colSymbol => {
+            const relation = relations.get(rowSymbol)?.get(colSymbol) || '·';
+            return (
+              <TableCell key={colSymbol} className="text-center">
+                {mode === 'manual' ? (
+                  <Select
+                    value={relation}
+                    onValueChange={(value) => 
+                      onCellChange?.(rowSymbol, colSymbol, value as '<' | '>' | '=' | '·')
+                    }
+                  >
+                    <SelectTrigger className="w-12 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="·">·</SelectItem>
+                      <SelectItem value="<">&lt;</SelectItem>
+                      <SelectItem value=">">&gt;</SelectItem>
+                      <SelectItem value="=">=</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className={`font-bold ${
+                    relation !== '·' ? 'text-blue-600' : 'text-gray-400'
+                  }`}>
+                    {relation}
+                  </span>
+                )}
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
+```
+
+**Características**:
+- **Modo Manual**: Celdas editables con dropdown para seleccionar relación
+- **Modo Automático**: Solo lectura, muestra relaciones generadas
+- Destacado visual de relaciones activas vs vacías
+- Actualización en tiempo real
+- Validación de relaciones conflictivas (opcional)
+
+---
+
+### PrecedenceStepDisplay
+
+**Ubicación**: `components/analizador-sintactico/precedence-step-display.tsx`
+
+**Props**:
+```typescript
+interface PrecedenceStepDisplayProps {
+  step: PrecedenceStep;
+  currentStepNumber: number;
+  totalSteps: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+```
+
+**Estructura**:
+```tsx
+<div className="precedence-step-display">
+  <Card className="mb-4">
+    <CardHeader>
+      <CardTitle className="text-sm">
+        Paso {currentStepNumber} de {totalSteps}
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="mb-3">
+        <span className="text-sm text-gray-600">Producción analizada:</span>
+        <div className="font-mono text-lg mt-1">
+          {step.production.left} → {step.production.right.join(' ')}
+        </div>
+      </div>
+      
+      <div className="mb-3">
+        <span className="text-sm text-gray-600">Relaciones encontradas:</span>
+        <div className="mt-2 space-y-1">
+          {step.relations.map((rel, idx) => (
+            <div key={idx} className="font-mono bg-blue-50 p-2 rounded">
+              <span className="font-bold text-blue-700">
+                {rel.symbol1} {rel.relation} {rel.symbol2}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+        {step.explanation}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <div className="flex justify-between items-center">
+    <Button
+      variant="outline"
+      onClick={onPrevious}
+      disabled={currentStepNumber === 1}
+    >
+      ◀ Anterior
+    </Button>
+    <span className="text-sm text-gray-600">
+      {currentStepNumber} / {totalSteps}
+    </span>
+    <Button
+      variant="outline"
+      onClick={onNext}
+      disabled={currentStepNumber === totalSteps}
+    >
+      Siguiente ▶
+    </Button>
+  </div>
+</div>
+```
+
+**Características**:
+- Muestra producción analizada en cada paso
+- Lista de relaciones de precedencia derivadas
+- Explicación textual del razonamiento
+- Navegación entre pasos con botones
+- Indicador de progreso
 
 ---
 
