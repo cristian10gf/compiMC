@@ -151,12 +151,20 @@ export function TokensTable({ tokens, className, itemsPerPage = 18 }: TokensTabl
                 >
                   Lexema {sortColumn === 'lexeme' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
-                <TableHead>Valor/Tipo</TableHead>
+                <TableHead>Tipo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedTokens.map((token, index) => {
                 const globalIndex = currentPage * itemsPerPage + index;
+                // Determinar el color según la categoría
+                const categoryColor = 
+                  token.category === 'identificador' 
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    : token.category === 'numero'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+
                 return (
                   <TableRow key={globalIndex}>
                     <TableCell className="text-muted-foreground">
@@ -165,9 +173,9 @@ export function TokensTable({ tokens, className, itemsPerPage = 18 }: TokensTabl
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={tokenTypeColors[token.type] || ''}
+                        className={categoryColor}
                       >
-                        {token.type}
+                        {token.numberedType || token.type}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -175,8 +183,10 @@ export function TokensTable({ tokens, className, itemsPerPage = 18 }: TokensTabl
                         {token.lexeme}
                       </code>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {token.value || '-'}
+                    <TableCell className="text-sm">
+                      <code className="font-mono">
+                        {token.category}
+                      </code>
                     </TableCell>
                   </TableRow>
                 );

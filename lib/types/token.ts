@@ -11,6 +11,8 @@ export interface Token {
   value?: any; // Valor opcional (ej: valor numérico para números)
   line?: number; // Línea donde aparece
   column?: number; // Columna donde aparece
+  numberedType?: string; // Tipo numerado (ej: "ID1", "NUM1", "POT")
+  category?: 'identificador' | 'numero' | 'operacion'; // Categoría del token
 }
 
 /**

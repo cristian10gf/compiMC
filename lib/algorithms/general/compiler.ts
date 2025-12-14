@@ -29,49 +29,101 @@ import { Token, LexicalAnalysisResult } from '@/lib/types/token';
 /**
  * Tipos de tokens reconocidos
  */
-const TOKEN_PATTERNS: Array<{ type: string; pattern: RegExp; priority: number }> = [
-  { type: 'NUMERO', pattern: /^[0-9]+(\.[0-9]+)?/, priority: 1 },
-  { type: 'IDENTIFICADOR', pattern: /^[a-zA-Z_][a-zA-Z0-9_]*/, priority: 2 },
-  { type: 'OPERADOR_POT', pattern: /^\^/, priority: 3 },
-  { type: 'OPERADOR_MUL', pattern: /^\*/, priority: 4 },
-  { type: 'OPERADOR_DIV', pattern: /^\//, priority: 4 },
-  { type: 'OPERADOR_SUM', pattern: /^\+/, priority: 5 },
-  { type: 'OPERADOR_REST', pattern: /^-/, priority: 5 },
-  { type: 'ASIGNACION', pattern: /^:=/, priority: 3 },
-  { type: 'IGUAL', pattern: /^=/, priority: 6 },
-  { type: 'PAREN_IZQ', pattern: /^\(/, priority: 7 },
-  { type: 'PAREN_DER', pattern: /^\)/, priority: 7 },
-  { type: 'ESPACIO', pattern: /^\s+/, priority: 10 },
+interface TokenPattern {
+  type: string;
+  pattern?: RegExp; // Opcional: si no hay, usa literal
+  literal?: string; // Texto literal para match exacto
+  priority: number;
+  category: 'identificador' | 'numero' | 'operacion';
+  symbol?: string; // Símbolo para mostrar (ej: "POT", "MUL")
+}
+
+const DEFAULT_TOKEN_PATTERNS: TokenPattern[] = [
+  { type: 'NUMERO', pattern: /^[0-9]+(\.[0-9]+)?/, priority: 1, category: 'numero' },
+  { type: 'IDENTIFICADOR', pattern: /^[a-zA-Z_][a-zA-Z0-9_]*/, priority: 2, category: 'identificador' },
+  { type: 'OPERADOR_POT', pattern: /^\^/, priority: 3, category: 'operacion', symbol: 'POT' },
+  { type: 'OPERADOR_MUL', pattern: /^\*/, priority: 4, category: 'operacion', symbol: 'MUL' },
+  { type: 'OPERADOR_DIV', pattern: /^\//, priority: 4, category: 'operacion', symbol: 'DIV' },
+  { type: 'OPERADOR_SUM', pattern: /^\+/, priority: 5, category: 'operacion', symbol: 'SUM' },
+  { type: 'OPERADOR_REST', pattern: /^-/, priority: 5, category: 'operacion', symbol: 'REST' },
+  { type: 'ASIGNACION', pattern: /^:=/, priority: 3, category: 'operacion', symbol: 'AS' },
+  { type: 'IGUAL', pattern: /^=/, priority: 6, category: 'operacion', symbol: 'IGUAL' },
+  { type: 'PAREN_IZQ', pattern: /^\(/, priority: 7, category: 'operacion', symbol: '(' },
+  { type: 'PAREN_DER', pattern: /^\)/, priority: 7, category: 'operacion', symbol: ')' },
+  { type: 'ESPACIO', pattern: /^\s+/, priority: 10, category: 'operacion' },
 ];
 
 /**
  * Fase 1: Análisis Léxico
  * Convierte el código fuente en una secuencia de tokens
  */
-export function lexicalAnalysis(source: string): LexicalAnalysisResult {
+export function lexicalAnalysis(
+  source: string, 
+  customPatterns?: TokenPattern[]
+): LexicalAnalysisResult {
   const tokens: Token[] = [];
   const errors: string[] = [];
   let position = 0;
+
+  // Contadores para numeración
+  const counters: Record<string, number> = {
+    identificador: 1,
+    numero: 1,
+  };
+  // Mapa para mantener el mismo número de ID para identificadores iguales
+  const identifierMap: Map<string, string> = new Map();
+  // Usar patrones personalizados y por defecto
+  const patterns = DEFAULT_TOKEN_PATTERNS.concat(customPatterns || []);
 
   while (position < source.length) {
     let matched = false;
 
     // Intentar matchear con cada patrón
-    for (const { type, pattern } of TOKEN_PATTERNS) {
+    for (const { type, pattern, literal, category, symbol } of patterns) {
       const substring = source.substring(position);
-      const match = pattern.exec(substring);
+      let match: RegExpExecArray | null = null;
+      let lexeme = '';
+
+      // Intentar match con regex o literal
+      if (pattern) {
+        match = pattern.exec(substring);
+        if (match) lexeme = match[0];
+      } else if (literal) {
+        // Match exacto de texto literal
+        if (substring.startsWith(literal)) {
+          match = [literal] as any;
+          lexeme = literal;
+        }
+      }
 
       if (match) {
-        const lexeme = match[0];
 
         // Ignorar espacios en blanco
         if (type !== 'ESPACIO') {
+          let numberedType = symbol || type;
+          
+          // Numerar identificadores y números
+          if (category === 'identificador') {
+            // Para identificadores, usar el mismo número si ya apareció
+            if (identifierMap.has(lexeme)) {
+              numberedType = identifierMap.get(lexeme)!;
+            } else {
+              numberedType = `ID${counters.identificador++}`;
+              identifierMap.set(lexeme, numberedType);
+            }
+          } else if (category === 'numero') {
+            // Para números, siempre incrementar (no reutilizar)
+            numberedType = `NUM${counters.numero++}`;
+          }
+
           tokens.push({
             type,
             lexeme,
             value: type === 'NUMERO' ? parseFloat(lexeme) : lexeme,
             line: 1,
             column: position,
+            numberedType,
+            category,
           });
         }
 
@@ -486,6 +538,45 @@ export function generateObjectCode(optimized: OptimizationStep[]): ObjectCodeIns
 
   return objectCode;
 }
+
+/**
+ * Convierte tokens personalizados simples a TokenPattern
+ */
+export function createCustomTokenPatterns(
+  tokens: Array<{ symbol: string; regex?: string }>
+): TokenPattern[] {
+  return tokens
+    .filter(t => t.symbol.trim() !== '') // Solo tokens con símbolo
+    .map((token, index) => {
+      const basePattern: TokenPattern = {
+        type: `CUSTOM_${token.symbol.toUpperCase()}`,
+        priority: 0, // Alta prioridad para que se evalúen primero
+        category: 'operacion',
+        symbol: token.symbol,
+      };
+
+      if (token.regex && token.regex.trim() !== '') {
+        // Con regex
+        try {
+          basePattern.pattern = new RegExp(`^${token.regex}`);
+        } catch (e) {
+          // Si el regex es inválido, usar literal
+          basePattern.literal = token.symbol;
+        }
+      } else {
+        // Sin regex: match exacto del símbolo
+        basePattern.literal = token.symbol;
+      }
+
+      return basePattern;
+    });
+}
+
+/**
+ * Exportar patrones y tipos para componentes
+ */
+export { DEFAULT_TOKEN_PATTERNS };
+export type { TokenPattern };
 
 /**
  * Pipeline Completo del Compilador

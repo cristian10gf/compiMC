@@ -11,6 +11,7 @@
 
 import { useState, useCallback } from 'react';
 import { useCompiler as useCompilerContext } from '@/lib/context/compiler-context';
+import { useHistory as useHistoryContext } from '@/lib/context/history-context';
 import { CompilerResult, Token } from '@/lib/types';
 import {
   lexicalAnalysis,
@@ -18,6 +19,7 @@ import {
   generateIntermediateCode,
   optimizeCode,
   generateObjectCode,
+  TokenPattern,
 } from '@/lib/algorithms/general/compiler';
 
 export interface UseCompilerFullReturn {
@@ -31,7 +33,7 @@ export interface UseCompilerFullReturn {
 
   // Funciones
   setSourceCode: (code: string) => void;
-  compile: (mode: 'analisis' | 'sintesis') => Promise<void>;
+  compile: (mode: 'analisis' | 'sintesis', customPatterns?: TokenPattern[]) => Promise<void>;
   compilePhase: (phase: 'lexical' | 'syntax' | 'intermediate' | 'optimization' | 'codegen') => Promise<void>;
   clearCompiler: () => void;
   clearError: () => void;
@@ -49,6 +51,8 @@ export function useCompilerFull(): UseCompilerFullReturn {
     setCompilerProgress,
   } = useCompilerContext();
 
+  const { addEntry } = useHistoryContext();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +66,7 @@ export function useCompilerFull(): UseCompilerFullReturn {
   /**
    * Compila el código completo
    */
-  const compile = useCallback(async (mode: 'analisis' | 'sintesis') => {
+  const compile = useCallback(async (mode: 'analisis' | 'sintesis', customPatterns?: TokenPattern[]) => {
     if (!compiler.sourceCode || compiler.sourceCode.trim() === '') {
       setError('No hay código fuente para compilar');
       return;
@@ -76,7 +80,7 @@ export function useCompilerFull(): UseCompilerFullReturn {
       // Fase 1: Análisis Léxico
       setCompilerPhase('lexical');
       setCompilerProgress(20);
-      const lexicalResult = await lexicalAnalysis(compiler.sourceCode);
+      const lexicalResult = await lexicalAnalysis(compiler.sourceCode, customPatterns);
       
       if (lexicalResult.tokens.length === 0) {
         throw new Error('No se generaron tokens en el análisis léxico');
@@ -89,7 +93,7 @@ export function useCompilerFull(): UseCompilerFullReturn {
 
       // Si solo análisis, parar aquí
       if (mode === 'analisis') {
-        setCompilerResult({
+        const analysisResult: CompilerResult = {
           success: true,
           syntaxTree: syntaxTree || undefined,
           lexical: lexicalResult,
@@ -98,9 +102,22 @@ export function useCompilerFull(): UseCompilerFullReturn {
           optimization: [],
           objectCode: [],
           errors: [],
-        });
+        };
+        
+        setCompilerResult(analysisResult);
         setCompilerPhase('complete');
         setCompilerProgress(100);
+        
+        // Guardar en historial
+        addEntry({
+          type: 'compiler',
+          input: compiler.sourceCode,
+          result: analysisResult,
+          metadata: {
+            success: true,
+          },
+        });
+        
         setIsProcessing(false);
         return;
       }
@@ -135,6 +152,16 @@ export function useCompilerFull(): UseCompilerFullReturn {
       setCompilerResult(result);
       setCompilerPhase('complete');
       setCompilerProgress(100);
+      
+      // Guardar en historial
+      addEntry({
+        type: 'compiler',
+        input: compiler.sourceCode,
+        result,
+        metadata: {
+          success: true,
+        },
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error durante la compilación';
       setError(errorMessage);
