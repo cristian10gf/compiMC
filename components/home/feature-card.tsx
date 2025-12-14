@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Card de característica para la página home
  */

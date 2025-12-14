@@ -1,0 +1,9 @@
+/**
+ * Exportaciones de componentes de análisis léxico
+ */
+
+export { AutomataGraph } from './automata-graph';
+export { SyntaxTreeVisual } from './syntax-tree-visual';
+export { TransitionTable } from './transition-table';
+export { StringRecognition } from './string-recognition';
+export { LanguageInput } from './language-input';
