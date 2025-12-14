@@ -5,6 +5,7 @@ import { CompilerProvider } from "@/lib/context/compiler-context";
 import { HistoryProvider } from "@/lib/context/history-context";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import { AppLayout } from '@/components/layout';
 
 const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'});
 
@@ -41,7 +42,9 @@ export default function RootLayout({
         >
           <CompilerProvider>
             <HistoryProvider>
-              {children}
+              <AppLayout>
+                {children}
+              </AppLayout>
               <Toaster />
             </HistoryProvider>
           </CompilerProvider>

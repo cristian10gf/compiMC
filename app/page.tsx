@@ -1,36 +1,17 @@
-'use client';
-
-import { AppLayout, HeroSection } from '@/components/layout';
 import { FeatureGrid } from '@/components/home';
+import { HeroSection } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Github } from 'lucide-react';
-import { useState } from 'react';
+import { BookOpen } from 'lucide-react';
 
 export default function HomePage() {
-  const [historyOpen, setHistoryOpen] = useState(false);
-
   return (
-    <AppLayout>
+    <>
       {/* Hero principal */}
       <HeroSection
         title="CompiMC"
         subtitle="Sistema Educativo de Análisis de Compiladores"
         description="Herramienta interactiva para el aprendizaje y simulación de análisis léxico, sintáctico y generación de código. Visualiza autómatas, árboles de derivación y tablas de parsing en tiempo real."
-        onHistoryToggle={() => setHistoryOpen(!historyOpen)}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="default" asChild>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github className="mr-2" />
-                <span className="hidden sm:inline">GitHub</span>
-              </a>
-            </Button>
-          </div>
-        }
+        showHistoryButton={true}
       />
 
       {/* Hero secundario */}
@@ -157,6 +138,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

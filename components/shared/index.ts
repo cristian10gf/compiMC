@@ -9,3 +9,4 @@ export { ResultStatus } from './result-status';
 export { CopyButton } from './copy-button';
 export { CopyButton as CopyButtonV2 } from './copy-button-v2';
 export { SymbolSlider, commonSymbols } from './symbol-slider';
+export { SegmentedControl, type SegmentOption } from './segmented-control';
