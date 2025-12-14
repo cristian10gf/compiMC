@@ -52,6 +52,7 @@ export interface ParsingTable {
  * Paso en el proceso de parsing
  */
 export interface ParseStep {
+  stepNumber: number; // Número del paso
   stack: string[]; // Contenido de la pila
   input: string[]; // Entrada restante
   output: string; // Producción aplicada o acción realizada
@@ -72,8 +73,9 @@ export interface PrecedenceRelation {
  */
 export interface PrecedenceStep {
   stepNumber: number; // Número del paso
-  relation: PrecedenceRelation; // Relación establecida
-  reasoning: string; // Razonamiento para establecer la relación
+  production: Production; // Producción asociada
+  relations: PrecedenceRelation[]; // Relaciones establecidas
+  reasoning?: string; // Razonamiento para establecer la relación
   explanation: string; // Explicación detallada del paso
 }
 
@@ -141,9 +143,10 @@ export interface LRAutomaton {
  * Resultado del análisis sintáctico
  */
 export interface ParsingResult {
-  success: boolean; // Si el análisis fue exitoso
+  accepted: boolean; // Si el análisis fue exitoso
   steps: ParseStep[]; // Pasos del proceso de parsing
-  parseTree?: ParseTreeNode; // Árbol de derivación
+  parseTree?: ParseTreeNode | null; // Árbol de derivación
+  output?: string; // Salida del proceso de parsing
   error?: string; // Mensaje de error si falló
 }
 

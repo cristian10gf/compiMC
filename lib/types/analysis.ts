@@ -45,6 +45,8 @@ export interface ObjectCodeInstruction {
  * Resultado completo de la compilación
  */
 export interface CompilerResult {
+  success: boolean; // Si la compilación fue exitosa
+  syntaxTree?: ASTNode; // Árbol sintáctico generado
   lexical: LexicalAnalysisResult; // Resultado del análisis léxico
   syntax: SyntaxAnalysisResult; // Resultado del análisis sintáctico
   intermediateCode: IntermediateCodeInstruction[]; // Código intermedio
@@ -66,7 +68,7 @@ export interface SyntaxAnalysisResult {
  * Error del compilador
  */
 export interface CompilerError {
-  phase: 'lexical' | 'syntax' | 'semantic' | 'optimization' | 'codegen'; // Fase donde ocurrió
+  phase: 'lexical' | 'syntax' | 'semantic' | 'optimization' | 'codegen' | 'unknown'; // Fase donde ocurrió
   message: string; // Mensaje de error
   line?: number; // Línea del error
   column?: number; // Columna del error
@@ -98,6 +100,7 @@ export interface SymbolTableEntry {
   name: string; // Nombre del símbolo
   type: string; // Tipo del símbolo
   scope: string; // Ámbito
+  line: number; // Línea de declaración
   value?: any; // Valor (si es constante)
   address?: string; // Dirección de memoria
 }
@@ -127,8 +130,9 @@ export interface CompilationState {
  */
 export interface ASTNode {
   id: string; // ID único
-  type: 'literal' | 'identifier' | 'binary' | 'unary' | 'assignment' | 'call'; // Tipo de nodo
+  type: 'literal' | 'identifier' | 'binary' | 'unary' | 'assignment' | 'call' | 'Number' | 'Identifier' | 'BinaryOp'; // Tipo de nodo
   value?: string | number; // Valor (para literales e identificadores)
+  name?: string; // Nombre (para identificadores)
   operator?: string; // Operador (para expresiones)
   left?: ASTNode; // Hijo izquierdo
   right?: ASTNode; // Hijo derecho

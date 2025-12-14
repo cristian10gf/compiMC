@@ -31,7 +31,7 @@ export function FeatureCard({
           {/* Icon with gradient background */}
           <div
             className={cn(
-              'mb-4 inline-flex size-12 items-center justify-center rounded-lg bg-gradient-to-br text-white',
+              'mb-4 inline-flex size-12 items-center justify-center rounded-lg bg-linear-to-br text-white',
               gradient
             )}
           >

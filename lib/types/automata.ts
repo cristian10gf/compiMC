@@ -31,7 +31,7 @@ export interface Automaton {
   states: State[]; // Lista de estados
   transitions: Transition[]; // Lista de transiciones
   alphabet: string[]; // Alfabeto del autómata
-  type: 'AFN' | 'AFD' | 'AFD-MIN'; // Tipo de autómata
+  type: 'NFA' | 'DFA' | 'EPSILON_NFA'; // Tipo de autómata
   name?: string; // Nombre descriptivo opcional
 }
 
@@ -50,11 +50,11 @@ export interface AutomatonConfig {
  */
 export interface RecognitionResult {
   accepted: boolean; // Si la cadena fue aceptada
-  path: RecognitionStep[]; // Camino de transiciones seguido
-  finalState: string; // Estado final alcanzado
-  currentIndex: number; // Índice actual en la cadena
-  error?: string; // Mensaje de error si falló
+  transitions: Array<{ from: string; symbol: string; to: string }>; // Lista de transiciones
+  currentState: string; // Estado final alcanzado
+  remainingInput: string; // Entrada restante
   message: string; // Mensaje final: "aceptada" o "rechazada"
+  steps: RecognitionStep[]; // Pasos detallados del reconocimiento
 }
 
 /**
@@ -66,7 +66,7 @@ export interface RecognitionStep {
   remainingInput: string; // Entrada restante
   symbol: string; // Símbolo leído
   nextState: string; // Siguiente estado
-  transitionId: string; // ID de la transición usada
+  action: string; // Acción realizada
 }
 
 /**
@@ -74,10 +74,9 @@ export interface RecognitionStep {
  */
 export interface TreeNode {
   id: string; // ID único del nodo
-  type: 'symbol' | 'operator' | 'epsilon'; // Tipo de nodo
+  type: 'SYMBOL' | 'CONCAT' | 'UNION' | 'STAR' | 'PLUS' | 'OPTIONAL' | 'EPSILON'; // Tipo de nodo
   value: string; // Valor del nodo (símbolo u operador)
-  left?: TreeNode; // Hijo izquierdo
-  right?: TreeNode; // Hijo derecho
+  children: TreeNode[]; // Hijos del nodo
   position?: number; // Posición en el árbol (para algoritmo de posiciones)
   nullable?: boolean; // Si el nodo puede generar epsilon
   firstpos?: Set<number>; // Conjunto de primeras posiciones
@@ -85,36 +84,37 @@ export interface TreeNode {
 }
 
 /**
- * Frontera para el algoritmo AF → ER
+ * Árbol sintáctico completo con funciones calculadas
  */
-export interface Frontier {
-  state: string; // Estado para el cual se calcula la frontera
-  transitions: FrontierTransition[]; // Transiciones desde este estado
+export interface SyntaxTree {
+  regex: string; // Expresión regular original
+  root: TreeNode; // Raíz del árbol
+  alphabet: string[]; // Alfabeto extraído
+  anulable: boolean; // Si la raíz puede generar ε
+  primeros: Set<number>; // Primeras posiciones de la raíz
+  ultimos: Set<number>; // Últimas posiciones de la raíz
+  siguientes: Map<number, Set<number>>; // Mapa de siguientes por posición
+  positions: Map<number, string>; // Mapa de posición → símbolo
 }
 
 /**
- * Transición de frontera
+ * Frontera para el algoritmo AF → ER
  */
-export interface FrontierTransition {
-  symbol: string; // Símbolo de la transición
-  targetState: string; // Estado destino
+export interface Frontier {
+  from: string; // Estado origen
+  to: string; // Estado destino
+  symbols: string[]; // Símbolos que llevan de from a to
+  expression: string; // Expresión regular que representa esta frontera
 }
 
 /**
  * Ecuación en el sistema para AF → ER
  */
 export interface Equation {
-  state: string; // Estado para el cual es la ecuación
-  expression: string; // Expresión regular resultante
-  terms: EquationTerm[]; // Términos de la ecuación
-}
-
-/**
- * Término de una ecuación
- */
-export interface EquationTerm {
-  coefficient: string; // Coeficiente (símbolo o expresión)
-  variable: string; // Variable (estado)
+  left: string; // Lado izquierdo (variable/estado)
+  right: string; // Lado derecho (expresión)
+  isFinal?: boolean; // Si es un estado final
+  isInitial?: boolean; // Si es el estado inicial
 }
 
 /**
@@ -123,18 +123,18 @@ export interface EquationTerm {
 export interface EquationStep {
   stepNumber: number; // Número del paso
   description: string; // Descripción del paso
-  equation: string; // Ecuación actual
-  substitution?: string; // Sustitución aplicada
-  result: string; // Resultado del paso
+  equations: string[]; // Lista de ecuaciones en este paso
+  action: string; // Acción realizada (Arden, Sustitución, etc.)
+  highlightedVariable?: string; // Variable destacada en este paso
+  explanation?: string; // Explicación adicional
 }
 
 /**
  * Tabla de transiciones para construcción de autómatas
  */
 export interface TransitionTable {
-  states: string[]; // Lista de estados
-  alphabet: string[]; // Alfabeto
-  transitions: Map<string, Map<string, string | string[]>>; // Estado → Símbolo → Estado(s) destino
+  headers: string[]; // Encabezados de la tabla (Estado, símbolos)
+  rows: Array<{ [key: string]: string | string[] }>; // Filas de la tabla
 }
 
 /**
