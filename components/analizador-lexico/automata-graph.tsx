@@ -23,6 +23,7 @@ import { Automaton, State, Transition } from '@/lib/types/automata';
 import { Button } from '@/components/ui/button';
 import { Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGraph } from '@/hooks';
 
 interface AutomataGraphProps {
   automaton: Automaton;
@@ -71,7 +72,7 @@ const nodeTypes = {
 };
 
 /**
- * Convierte el autómata a formato React Flow
+ * Convierte el autómata a formato React Flow (mantener para compatibilidad temporal)
  */
 function automatonToFlow(automaton: Automaton) {
   const nodes: Node[] = automaton.states.map((state, index) => ({

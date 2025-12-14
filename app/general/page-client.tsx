@@ -6,37 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TokensTable, CodeTable, OptimizationTable } from '@/components/general';
 import { SyntaxTreeVisual } from '@/components/analizador-lexico';
 import { CollapsibleSection, SegmentedControl } from '@/components/shared';
-import { compile } from '@/lib/algorithms/general/compiler';
-import { useHistory } from '@/lib/context';
+import { useCompilerFull } from '@/hooks';
 import { Loader2 } from 'lucide-react';
 
 export default function GeneralClientPage() {
-  const [sourceCode, setSourceCode] = useState('a = b + c * d');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'analysis' | 'synthesis'>('analysis');
   
-  const { addEntry } = useHistory();
+  const { 
+    sourceCode,
+    result, 
+    isProcessing, 
+    error,
+    setSourceCode,
+    compile: compileCode,
+  } = useCompilerFull();
 
   const handleCompile = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const compilationResult = compile({ source: sourceCode, mode: 'analisis' });
-      setResult(compilationResult);
-
-      addEntry({
-        type: 'compiler',
-        input: sourceCode,
-        metadata: { success: true },
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error al compilar el código');
-    } finally {
-      setLoading(false);
-    }
+    await compileCode(activeTab === 'analysis' ? 'analisis' : 'sintesis');
   };
 
   return (
@@ -58,10 +44,10 @@ export default function GeneralClientPage() {
 
           <Button
             onClick={handleCompile}
-            disabled={!sourceCode || loading}
+            disabled={!sourceCode || isProcessing}
             className="w-full sm:w-auto"
           >
-            {loading ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
                 Compilando...
@@ -131,16 +117,16 @@ export default function GeneralClientPage() {
                 </CollapsibleSection>
               )}
 
-              {result.optimizationSteps && result.optimizationSteps.length > 0 && (
+              {result.optimization && result.optimization.length > 0 && (
                 <CollapsibleSection title="Optimización de Código" defaultOpen>
-                  <OptimizationTable steps={result.optimizationSteps} />
+                  <OptimizationTable steps={result.optimization as any} />
                 </CollapsibleSection>
               )}
 
-              {result.optimizedCode && result.optimizedCode.length > 0 && (
+              {result.optimization && result.optimization.length > 0 && (
                 <CollapsibleSection title="Código Optimizado" defaultOpen>
                   <CodeTable
-                    instructions={result.optimizedCode.map((inst: any) => ({ instruction: inst.instruction }))}
+                    instructions={result.optimization.map((inst: any) => ({ instruction: inst.instruction }))}
                     title="Código Optimizado"
                   />
                 </CollapsibleSection>

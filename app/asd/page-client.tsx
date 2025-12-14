@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GrammarInput, ParsingTable, StackTraceTable } from '@/components/analizador-sintactico';
 import { CollapsibleSection } from '@/components/shared';
-import { analyzeDescendente } from '@/lib/algorithms/syntax/descendente';
-import { useHistory } from '@/lib/context';
+import { useSyntaxAnalyzer } from '@/hooks';
 import { Loader2 } from 'lucide-react';
 import type { Grammar, Production } from '@/lib/types';
 
@@ -17,37 +16,27 @@ export default function ASDClientPage() {
     { id: 'prod-1', left: 'S', right: ['a', 'A'] },
   ]);
   const [inputString, setInputString] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
   
-  const { addEntry } = useHistory();
+  const { 
+    firstFollow, 
+    parsingTable, 
+    parsingResult,
+    isProcessing, 
+    error,
+    setGrammar,
+    analyzeLL,
+  } = useSyntaxAnalyzer();
 
   const handleAnalyze = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const grammar: Grammar = {
+      productions,
+      startSymbol: productions[0]?.left || 'S',
+      terminals: [],
+      nonTerminals: [],
+    };
 
-      const grammar: Grammar = {
-        productions,
-        startSymbol: productions[0]?.left || 'S',
-        terminals: [],
-        nonTerminals: [],
-      };
-
-      const analysisResult = analyzeDescendente(grammar);
-      setResult(analysisResult);
-
-      addEntry({
-        type: 'syntax-ll',
-        input: inputString,
-        metadata: { success: analysisResult.isLL1 },
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error en el análisis sintáctico');
-    } finally {
-      setLoading(false);
-    }
+    setGrammar(grammar);
+    await analyzeLL();
   };
 
   return (
@@ -81,10 +70,10 @@ export default function ASDClientPage() {
 
           <Button
             onClick={handleAnalyze}
-            disabled={!productions.length || !inputString || loading}
+            disabled={!productions.length || isProcessing}
             className="w-full sm:w-auto"
           >
-            {loading ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
                 Analizando...
@@ -102,7 +91,7 @@ export default function ASDClientPage() {
         </CardContent>
       </Card>
 
-      {result && (
+      {parsingTable && (
         <Tabs defaultValue="table" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="table">Tabla M</TabsTrigger>
@@ -112,28 +101,28 @@ export default function ASDClientPage() {
 
           <TabsContent value="table" className="mt-6">
             <CollapsibleSection title="Tabla de Análisis LL (M)" defaultOpen>
-              {result.parsingTable && <ParsingTable table={result.parsingTable} />}
+              {parsingTable && <ParsingTable table={parsingTable} />}
             </CollapsibleSection>
           </TabsContent>
 
           <TabsContent value="trace" className="mt-6">
             <CollapsibleSection title="Traza de Análisis" defaultOpen>
-              {result.steps && <StackTraceTable steps={result.steps} />}
+              {parsingResult?.steps && <StackTraceTable steps={parsingResult.steps} />}
             </CollapsibleSection>
           </TabsContent>
 
           <TabsContent value="sets" className="mt-6">
             <div className="space-y-6">
-              {result.firstSets && (
+              {firstFollow && (
                 <CollapsibleSection title="Conjuntos FIRST" defaultOpen>
                   <Card>
                     <CardContent className="pt-6">
                       <div className="space-y-2">
-                        {Object.entries(result.firstSets).map(([symbol, set]: [string, any]) => (
-                          <div key={symbol} className="flex items-start gap-3 text-sm">
-                            <code className="font-bold text-primary">{symbol}:</code>
+                        {firstFollow.map((ff) => (
+                          <div key={ff.nonTerminal} className="flex items-start gap-3 text-sm">
+                            <code className="font-bold text-primary">{ff.nonTerminal}:</code>
                             <code className="text-muted-foreground">
-                              {'{' + Array.from(set).join(', ') + '}'}
+                              {'{' + ff.first.join(', ') + '}'}
                             </code>
                           </div>
                         ))}
@@ -143,16 +132,16 @@ export default function ASDClientPage() {
                 </CollapsibleSection>
               )}
 
-              {result.followSets && (
+              {firstFollow && (
                 <CollapsibleSection title="Conjuntos FOLLOW" defaultOpen>
                   <Card>
                     <CardContent className="pt-6">
                       <div className="space-y-2">
-                        {Object.entries(result.followSets).map(([symbol, set]: [string, any]) => (
-                          <div key={symbol} className="flex items-start gap-3 text-sm">
-                            <code className="font-bold text-primary">{symbol}:</code>
+                        {firstFollow.map((ff) => (
+                          <div key={ff.nonTerminal} className="flex items-start gap-3 text-sm">
+                            <code className="font-bold text-primary">{ff.nonTerminal}:</code>
                             <code className="text-muted-foreground">
-                              {'{' + Array.from(set).join(', ') + '}'}
+                              {'{' + ff.follow.join(', ') + '}'}
                             </code>
                           </div>
                         ))}

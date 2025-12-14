@@ -7,44 +7,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LanguageInput, AutomataGraph, SyntaxTreeVisual, TransitionTable } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { buildSyntaxTree } from '@/lib/algorithms/lexical/regex-parser';
-import { buildAFDShort } from '@/lib/algorithms/lexical/afd-construction';
-import { useHistory } from '@/lib/context';
+import { useAutomata } from '@/hooks';
 import { Loader2 } from 'lucide-react';
 
 export default function AFDShortClientPage() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [regex, setRegex] = useState('');
-  const [loading, setLoading] = useState(false);
   const [syntaxTree, setSyntaxTree] = useState<any>(null);
-  const [automaton, setAutomaton] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
   
-  const { addEntry } = useHistory();
+  const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
 
   const handleAnalyze = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    // Construir árbol sintáctico
+    const tree = buildSyntaxTree(regex);
+    setSyntaxTree(tree);
 
-      // Construir árbol sintáctico
-      const tree = buildSyntaxTree(regex);
-      setSyntaxTree(tree);
-
-      // Construir AFD óptimo
-      const afd = buildAFDShort(regex);
-      setAutomaton(afd);
-
-      // Guardar en historial
-      addEntry({
-        type: 'lexical',
-        input: regex,
-        metadata: { success: true },
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error al construir el autómata');
-    } finally {
-      setLoading(false);
-    }
+    // Construir AFD óptimo usando el hook
+    await buildAutomaton({
+      regex,
+      languages,
+      algorithm: 'afd-short',
+    });
   };
 
   return (
@@ -79,10 +62,10 @@ export default function AFDShortClientPage() {
 
           <Button
             onClick={handleAnalyze}
-            disabled={!regex || loading}
+            disabled={!regex || isProcessing}
             className="w-full sm:w-auto"
           >
-            {loading ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
                 Analizando...
