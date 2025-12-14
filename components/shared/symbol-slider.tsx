@@ -29,7 +29,7 @@ export function SymbolSlider({
           variant={variant}
           size="sm"
           onClick={() => onSelect(symbol)}
-          className="min-w-[2.5rem] font-mono font-bold"
+          className="min-w-10 font-mono font-bold"
         >
           {symbol}
         </Button>

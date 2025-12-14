@@ -197,7 +197,7 @@ export function AutomataGraph({
   }, [automaton, nodes, edges]);
 
   return (
-    <div className={cn('relative w-full h-[500px] rounded-lg border bg-muted/20', className)}>
+    <div className={cn('relative w-full h-125 rounded-lg border bg-muted/20', className)}>
       <ReactFlow
         nodes={highlightedNodes}
         edges={highlightedEdges}
