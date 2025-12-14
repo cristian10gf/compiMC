@@ -43,9 +43,11 @@ export interface ParsingTableEntry {
  * Tabla de parsing M (para análisis descendente LL)
  */
 export interface ParsingTable {
-  [nonTerminal: string]: {
-    [terminal: string]: ParsingTableEntry;
-  };
+  entries: Array<{
+    nonTerminal: string;
+    terminal: string;
+    production: string | null;
+  }>;
 }
 
 /**
