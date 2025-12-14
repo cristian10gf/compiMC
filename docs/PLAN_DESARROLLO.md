@@ -872,7 +872,7 @@ const cytoscapeConfig = {
 - Animación de construcción
 - Navegación breadcrumb
 
-**Tecnología sugerida**: React Flow o D3.js
+**Tecnología sugerida**: React Flow
 
 ---
 
