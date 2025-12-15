@@ -24,19 +24,8 @@ import {
   SymbolTable,
   SymbolTableEntry,
 } from '@/lib/types/analysis';
-import { Token, LexicalAnalysisResult } from '@/lib/types/token';
+import { Token, LexicalAnalysisResult, TokenPattern } from '@/lib/types/token';
 
-/**
- * Tipos de tokens reconocidos
- */
-interface TokenPattern {
-  type: string;
-  pattern?: RegExp; // Opcional: si no hay, usa literal
-  literal?: string; // Texto literal para match exacto
-  priority: number;
-  category: 'identificador' | 'numero' | 'operacion';
-  symbol?: string; // Símbolo para mostrar (ej: "POT", "MUL")
-}
 
 const DEFAULT_TOKEN_PATTERNS: TokenPattern[] = [
   { type: 'NUMERO', pattern: /^[0-9]+(\.[0-9]+)?/, priority: 1, category: 'numero' },
@@ -267,6 +256,7 @@ function buildAST(tokens: Token[]): ASTNode | null {
         id: `node-${Date.now()}-${Math.random()}`,
         type: 'Number',
         value: token.value as number,
+        name: token.numberedType, // Usar ID numerado (NUM1, NUM2, etc.)
       };
     }
 
@@ -275,7 +265,7 @@ function buildAST(tokens: Token[]): ASTNode | null {
       return {
         id: `node-${Date.now()}-${Math.random()}`,
         type: 'Identifier',
-        name: token.lexeme,
+        name: token.numberedType, // Usar ID numerado (ID1, ID2, etc.)
       };
     }
 

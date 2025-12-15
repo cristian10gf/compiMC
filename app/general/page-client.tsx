@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TokensTable, CodeTable, OptimizationTable, SyntaxTreeGraph } from '@/components/general';
-import { SyntaxTreeVisual } from '@/components/analizador-lexico';
 import { CollapsibleSection, SegmentedControl } from '@/components/shared';
 import { useCompilerFull } from '@/hooks';
 import { createCustomTokenPatterns } from '@/lib/algorithms/general/compiler';
-import { Loader2, Plus, X, CheckCircle2, XCircle, Copy } from 'lucide-react';
+import { Loader2, Plus, X, CheckCircle2, XCircle } from 'lucide-react';
 
 interface CustomToken {
   id: string;

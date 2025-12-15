@@ -41,3 +41,15 @@ export interface LexerConfig {
   ignoreWhitespace?: boolean; // Si se deben ignorar espacios en blanco
   ignoreComments?: boolean; // Si se deben ignorar comentarios
 }
+
+/**
+ * Tipos de tokens reconocidos
+ */
+export interface TokenPattern {
+  type: string;
+  pattern?: RegExp; // Opcional: si no hay, usa literal
+  literal?: string; // Texto literal para match exacto
+  priority: number;
+  category: 'identificador' | 'numero' | 'operacion';
+  symbol?: string; // Símbolo para mostrar (ej: "POT", "MUL")
+}
