@@ -44,6 +44,7 @@ const DEFAULT_TOKEN_PATTERNS: TokenPattern[] = [
   { type: 'OPERADOR_POT', pattern: /^\^/, priority: 3, category: 'operacion', symbol: 'POT' },
   { type: 'OPERADOR_MUL', pattern: /^\*/, priority: 4, category: 'operacion', symbol: 'MUL' },
   { type: 'OPERADOR_DIV', pattern: /^\//, priority: 4, category: 'operacion', symbol: 'DIV' },
+  { type: 'OPERADOR_MOD', pattern: /^%/, priority: 4, category: 'operacion', symbol: 'MOD' },
   { type: 'OPERADOR_SUM', pattern: /^\+/, priority: 5, category: 'operacion', symbol: 'SUM' },
   { type: 'OPERADOR_REST', pattern: /^-/, priority: 5, category: 'operacion', symbol: 'REST' },
   { type: 'ASIGNACION', pattern: /^:=/, priority: 3, category: 'operacion', symbol: 'AS' },
@@ -165,6 +166,28 @@ function buildAST(tokens: Token[]): ASTNode | null {
     return token;
   };
 
+  // Parser de asignación (más bajo nivel de precedencia)
+  function parseAssignment(): ASTNode {
+    const left = parseExpression();
+
+    // Si hay un operador de asignación
+    if (current() && (current()!.type === 'IGUAL' || current()!.type === 'ASIGNACION')) {
+      const operator = current()!;
+      advance();
+      const right = parseAssignment(); // Asociatividad derecha
+
+      return {
+        id: `node-${Date.now()}-${Math.random()}`,
+        type: 'assignment',
+        operator: operator.lexeme,
+        left,
+        right,
+      };
+    }
+
+    return left;
+  }
+
   // Parser de expresiones con precedencia
   function parseExpression(): ASTNode {
     return parseAdditive();
@@ -193,7 +216,7 @@ function buildAST(tokens: Token[]): ASTNode | null {
   function parseMultiplicative(): ASTNode {
     let left = parsePower();
 
-    while (current() && ['OPERADOR_MUL', 'OPERADOR_DIV'].includes(current()!.type)) {
+    while (current() && ['OPERADOR_MUL', 'OPERADOR_DIV', 'OPERADOR_MOD'].includes(current()!.type)) {
       const operator = current()!;
       advance();
       const right = parsePower();
@@ -213,10 +236,11 @@ function buildAST(tokens: Token[]): ASTNode | null {
   function parsePower(): ASTNode {
     let left = parsePrimary();
 
-    while (current() && current()!.type === 'OPERADOR_POT') {
+    // La potencia es asociativa por la derecha
+    if (current() && current()!.type === 'OPERADOR_POT') {
       const operator = current()!;
       advance();
-      const right = parsePrimary();
+      const right = parsePower(); // Recursión para asociatividad derecha
 
       left = {
         id: `node-${Date.now()}-${Math.random()}`,
@@ -266,9 +290,9 @@ function buildAST(tokens: Token[]): ASTNode | null {
   }
 
   try {
-    return parseExpression();
+    return parseAssignment();
   } catch (error) {
-    console.error('Error de parsing:', error);
+    // Error silencioso - no mostrar en consola del usuario
     return null;
   }
 }

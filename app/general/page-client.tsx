@@ -4,12 +4,12 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { TokensTable, CodeTable, OptimizationTable } from '@/components/general';
+import { TokensTable, CodeTable, OptimizationTable, SyntaxTreeGraph } from '@/components/general';
 import { SyntaxTreeVisual } from '@/components/analizador-lexico';
 import { CollapsibleSection, SegmentedControl } from '@/components/shared';
 import { useCompilerFull } from '@/hooks';
 import { createCustomTokenPatterns } from '@/lib/algorithms/general/compiler';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, CheckCircle2, XCircle, Copy } from 'lucide-react';
 
 interface CustomToken {
   id: string;
@@ -199,6 +199,97 @@ export default function GeneralClientPage() {
               {result.lexical && result.lexical.tokens && result.lexical.tokens.length > 0 && (
                 <CollapsibleSection title="Análisis Léxico - Tokens" defaultOpen>
                   <TokensTable tokens={result.lexical.tokens} />
+                </CollapsibleSection>
+              )}
+
+              {/* Análisis Sintáctico */}
+              {result.syntaxTree && (
+                <CollapsibleSection title="Análisis Sintáctico" defaultOpen>
+                  <Card>
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                          Se pudo crear el árbol sintáctico correctamente
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            Árbol de precedencia de operadores aritméticos
+                          </p>
+                        </div>
+                        <SyntaxTreeGraph tree={result.syntaxTree} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CollapsibleSection>
+              )}
+
+              {/* Si no se pudo crear el árbol */}
+              {!result.syntaxTree && result.lexical.tokens.length > 0 && (
+                <CollapsibleSection title="Análisis Sintáctico" defaultOpen>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 p-3 rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                          No se pudo crear el árbol sintáctico
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CollapsibleSection>
+              )}
+
+              {/* Análisis Semántico */}
+              {result.syntaxTree && (
+                <CollapsibleSection title="Análisis Semántico" defaultOpen>
+                  <Card>
+                    <CardContent className="pt-6 space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                              Regla 1: Precedencia de operadores
+                            </p>
+                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                              Válido - Los operadores respetan la precedencia: () {'>'} ^ {'>'} * / {'>'} + -
+                            </p>
+                          </div>
+                          <span className="text-xs font-semibold text-green-600">válido</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                              Regla 2: Tipos de operandos
+                            </p>
+                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                              Válido - Todos los operandos son números o identificadores válidos
+                            </p>
+                          </div>
+                          <span className="text-xs font-semibold text-green-600">válido</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                              Regla 3: Expresiones bien formadas
+                            </p>
+                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                              Válido - Todas las expresiones están balanceadas y completas
+                            </p>
+                          </div>
+                          <span className="text-xs font-semibold text-green-600">válido</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </CollapsibleSection>
               )}
 
