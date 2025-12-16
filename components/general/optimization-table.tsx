@@ -20,10 +20,11 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { OptimizationAction } from '@/lib/types/analysis';
 
 interface OptimizationStep {
   instruction: string;
-  action: 'eliminado' | 'editado' | 'conservado';
+  action: OptimizationAction;
   reason?: string;
   originalInstruction?: string;
 }
@@ -35,10 +36,10 @@ interface OptimizationTableProps {
   itemsPerPage?: number;
 }
 
-const actionColors = {
-  eliminado: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  editado: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  conservado: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+const actionColors: Record<OptimizationAction, string> = {
+  Eliminado: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  Editado: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  Conservado: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
 };
 
 export function OptimizationTable({
@@ -56,9 +57,9 @@ export function OptimizationTable({
   );
 
   const stats = {
-    eliminado: steps.filter((s) => s.action === 'eliminado').length,
-    editado: steps.filter((s) => s.action === 'editado').length,
-    conservado: steps.filter((s) => s.action === 'conservado').length,
+    eliminado: steps.filter((s) => s.action === 'Eliminado').length,
+    editado: steps.filter((s) => s.action === 'Editado').length,
+    conservado: steps.filter((s) => s.action === 'Conservado').length,
   };
 
   return (
@@ -89,20 +90,20 @@ export function OptimizationTable({
       <CardContent>
         {/* Estadísticas */}
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="flex items-center gap-2 p-2 bg-red-50 dark:bg-red-950 rounded-md">
-            <Badge variant="outline" className={actionColors.eliminado}>
+          <div className="flex flex-col sm:flex-row items-center gap-2 p-2 bg-red-50 dark:bg-red-950 rounded-md">
+            <Badge variant="outline" className={actionColors.Eliminado}>
               Eliminadas
             </Badge>
             <span className="font-bold">{stats.eliminado}</span>
           </div>
-          <div className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded-md">
-            <Badge variant="outline" className={actionColors.editado}>
+          <div className="flex flex-col sm:flex-row items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-950 rounded-md">
+            <Badge variant="outline" className={actionColors.Editado}>
               Editadas
             </Badge>
             <span className="font-bold">{stats.editado}</span>
           </div>
-          <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded-md">
-            <Badge variant="outline" className={actionColors.conservado}>
+          <div className="flex flex-col sm:flex-row items-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded-md">
+            <Badge variant="outline" className={actionColors.Conservado}>
               Conservadas
             </Badge>
             <span className="font-bold">{stats.conservado}</span>
@@ -126,16 +127,16 @@ export function OptimizationTable({
                   <TableRow
                     key={globalIndex}
                     className={cn(
-                      step.action === 'eliminado' && 'bg-red-50/50 dark:bg-red-950/20'
+                      step.action === 'Eliminado' && 'bg-red-50/50 dark:bg-red-950/20'
                     )}
                   >
                     <TableCell className="text-center font-medium text-muted-foreground">
                       {globalIndex + 1}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <div className="flex flex-col gap-1">
                         <code className="text-sm font-mono">{step.instruction}</code>
-                        {step.originalInstruction && step.action === 'editado' && (
+                        {step.originalInstruction && step.action === 'Editado' && (
                           <code className="text-xs font-mono text-muted-foreground line-through">
                             {step.originalInstruction}
                           </code>

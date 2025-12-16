@@ -77,11 +77,11 @@ export function CodeTable({
                     <TableCell className="text-center font-medium text-muted-foreground">
                       {globalIndex + 1}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <code className="text-sm font-mono">{inst.instruction}</code>
                     </TableCell>
                     {instructions.some((i) => i.comment) && (
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {inst.comment || ''}
                       </TableCell>
                     )}
