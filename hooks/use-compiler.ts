@@ -16,6 +16,7 @@ import { CompilerResult, Token } from '@/lib/types';
 import {
   lexicalAnalysis,
   syntaxAnalysis,
+  semanticAnalysis,
   generateIntermediateCode,
   optimizeCode,
   generateObjectCode,
@@ -33,7 +34,7 @@ export interface UseCompilerFullReturn {
 
   // Funciones
   setSourceCode: (code: string) => void;
-  compile: (mode: 'analisis' | 'sintesis', customPatterns?: TokenPattern[]) => Promise<void>;
+  compile: (customPatterns?: TokenPattern[]) => Promise<void>;
   compilePhase: (phase: 'lexical' | 'syntax' | 'intermediate' | 'optimization' | 'codegen') => Promise<void>;
   clearCompiler: () => void;
   clearError: () => void;
@@ -64,9 +65,9 @@ export function useCompilerFull(): UseCompilerFullReturn {
   }, [setContextSourceCode]);
 
   /**
-   * Compila el código completo
+   * Compila el código completo (siempre hace análisis y síntesis)
    */
-  const compile = useCallback(async (mode: 'analisis' | 'sintesis', customPatterns?: TokenPattern[]) => {
+  const compile = useCallback(async (customPatterns?: TokenPattern[]) => {
     if (!compiler.sourceCode || compiler.sourceCode.trim() === '') {
       setError('No hay código fuente para compilar');
       return;
@@ -88,59 +89,33 @@ export function useCompilerFull(): UseCompilerFullReturn {
 
       // Fase 2: Análisis Sintáctico
       setCompilerPhase('syntax');
-      setCompilerProgress(40);
+      setCompilerProgress(30);
       const syntaxTree = await syntaxAnalysis(lexicalResult.tokens);
 
-      // Si solo análisis, parar aquí
-      if (mode === 'analisis') {
-        const analysisResult: CompilerResult = {
-          success: true,
-          syntaxTree: syntaxTree || undefined,
-          lexical: lexicalResult,
-          syntax: { parseTree: syntaxTree as any, success: true, errors: [] },
-          intermediateCode: [],
-          optimization: [],
-          objectCode: [],
-          errors: [],
-        };
-        
-        setCompilerResult(analysisResult);
-        setCompilerPhase('complete');
-        setCompilerProgress(100);
-        
-        // Guardar en historial
-        addEntry({
-          type: 'compiler',
-          input: compiler.sourceCode,
-          result: analysisResult,
-          metadata: {
-            success: true,
-          },
-        });
-        
-        setIsProcessing(false);
-        return;
-      }
+      // Fase 3: Análisis Semántico
+      setCompilerProgress(50);
+      const semanticTree = await semanticAnalysis(syntaxTree);
 
-      // Fase 3: Generación de Código Intermedio
+      // Fase 4: Generación de Código Intermedio
       setCompilerPhase('intermediate');
       setCompilerProgress(60);
-      const intermediateCode = await generateIntermediateCode(syntaxTree);
+      const intermediateCode = await generateIntermediateCode(semanticTree);
 
-      // Fase 4: Optimización
+      // Fase 5: Optimización
       setCompilerPhase('optimization');
       setCompilerProgress(80);
       const optimizations = await optimizeCode(intermediateCode);
 
-      // Fase 5: Generación de Código Objeto
+      // Fase 6: Generación de Código Objeto
       setCompilerPhase('codegen');
       setCompilerProgress(90);
       const objectCode = await generateObjectCode(optimizations);
 
-      // Resultado completo
+      // Resultado completo con TODAS las fases
       const result: CompilerResult = {
         success: true,
         syntaxTree: syntaxTree || undefined,
+        semanticTree: semanticTree || undefined,
         lexical: lexicalResult,
         syntax: { parseTree: syntaxTree as any, success: true, errors: [] },
         intermediateCode,
@@ -174,6 +149,7 @@ export function useCompilerFull(): UseCompilerFullReturn {
     setCompilerResult,
     setCompilerPhase,
     setCompilerProgress,
+    addEntry,
   ]);
 
   /**

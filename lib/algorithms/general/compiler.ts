@@ -288,10 +288,56 @@ function buildAST(tokens: Token[]): ASTNode | null {
 }
 
 /**
- * Fase 2 y 3: Análisis Sintáctico y Semántico
+ * Fase 2: Análisis Sintáctico
  */
 export function syntaxAnalysis(tokens: Token[]): ASTNode | null {
   return buildAST(tokens);
+}
+
+/**
+ * Fase 3: Análisis Semántico
+ * Aplica transformaciones semánticas al árbol:
+ * - Convierte nodos numéricos a entReal() excepto los exponentes de potencias
+ */
+export function semanticAnalysis(ast: ASTNode | null): ASTNode | null {
+  if (!ast) return null;
+
+  function transform(node: ASTNode, isExponent: boolean = false): ASTNode {
+    // Si es un nodo numérico y NO es exponente, convertir a entReal
+    if (node.type === 'Number' && !isExponent) {
+      return {
+        ...node,
+        type: 'entReal',
+        value: node.value,
+        name: node.name, // Mantener el ID numerado (NUM1, NUM2, etc.)
+      };
+    }
+
+    // Si es un operador binario, procesar hijos
+    if (node.type === 'BinaryOp') {
+      const isExponential = node.operator === '^';
+      return {
+        ...node,
+        left: transform(node.left!, false),
+        // El hijo derecho de ^ es exponente, no debe convertirse
+        right: transform(node.right!, isExponential),
+      };
+    }
+
+    // Si es asignación, procesar ambos lados
+    if (node.type === 'assignment') {
+      return {
+        ...node,
+        left: transform(node.left!, false),
+        right: transform(node.right!, false),
+      };
+    }
+
+    // Identificadores y otros nodos se mantienen igual
+    return node;
+  }
+
+  return transform(ast);
 }
 
 /**
@@ -304,15 +350,27 @@ export function generateIntermediateCode(ast: ASTNode | null): IntermediateCodeI
   let tempCounter = 1;
 
   function newTemp(): string {
-    return `t${tempCounter++}`;
+    return `temp${tempCounter++}`;
   }
 
   function generate(node: ASTNode): string {
     if (node.type === 'Number') {
+      // usar el valor numerico directamente
       return node.value!.toString();
     }
 
+    if (node.type === 'entReal') {
+      // Generar instrucción para conversión a real
+      const temp = newTemp();
+      instructions.push({
+        number: instructions.length + 1,
+        instruction: `${temp} := entReal(${node.value})`,
+      });
+      return temp;
+    }
+
     if (node.type === 'Identifier') {
+      // Usar el ID numerado (NUM1, ID1, etc.)
       return node.name!;
     }
 
@@ -323,10 +381,22 @@ export function generateIntermediateCode(ast: ASTNode | null): IntermediateCodeI
 
       instructions.push({
         number: instructions.length + 1,
-        instruction: `${temp} = ${left} ${node.operator} ${right}`,
+        instruction: `${temp} := ${left} ${node.operator} ${right}`,
       });
 
       return temp;
+    }
+
+    if (node.type === 'assignment') {
+      const left = generate(node.left!);
+      const right = generate(node.right!);
+
+      instructions.push({
+        number: instructions.length + 1,
+        instruction: `${left} := ${right}`,
+      });
+
+      return left;
     }
 
     return '';
@@ -340,109 +410,129 @@ export function generateIntermediateCode(ast: ASTNode | null): IntermediateCodeI
 /**
  * Fase 5: Optimización de Código
  * Aplica reglas de optimización:
- * - Eliminación de código muerto
- * - Propagación de constantes
- * - Reducción de fuerza
- * - Coalescencia de copias
+ * - Eliminar asignaciones simples sin operación (temp := valor)
+ * - Precalcular valores de entReal y propagarlos
+ * - Conservar instrucciones con operaciones (operador + asignación)
+ * - Eliminar temporal de asignación final
  */
 export function optimizeCode(code: IntermediateCodeInstruction[]): OptimizationStep[] {
   const optimized: OptimizationStep[] = [];
-  const usedTemps = new Set<string>();
+  const substitutionMap = new Map<string, string>(); // Mapa de reemplazos
 
-  // 1. Identificar temporales usados
-  for (let i = code.length - 1; i >= 0; i--) {
+  // Paso 1: Procesar instrucciones y aplicar reglas
+  for (let i = 0; i < code.length; i++) {
     const instruction = code[i].instruction;
-    const parts = instruction.split('=').map(p => p.trim());
+    const parts = instruction.split(':=').map(p => p.trim());
 
-    if (parts.length === 2) {
-      const temp = parts[0];
-      const expr = parts[1];
+    if (parts.length !== 2) continue;
 
-      // Si el temporal es usado, agregar instrucción
-      if (usedTemps.has(temp) || i === code.length - 1) {
-        optimized.unshift({
-          number: optimized.length + 1,
-          instruction,
-          action: 'Conservado',
-        });
+    const temp = parts[0];
+    let expr = parts[1];
+    const originalExpr = expr; // Guardar expresión original
 
-        // Agregar temporales usados en la expresión
-        const matches = expr.match(/t\d+/g);
-        if (matches) {
-          matches.forEach(t => usedTemps.add(t));
-        }
+    // Aplicar sustituciones previas
+    for (const [oldVar, newValue] of substitutionMap.entries()) {
+      const regex = new RegExp(`\\b${oldVar}\\b`, 'g');
+      expr = expr.replace(regex, newValue);
+    }
 
-        // Agregar variables
-        const varMatches = expr.match(/[a-z]/g);
-        if (varMatches) {
-          varMatches.forEach(v => usedTemps.add(v));
-        }
-      } else {
-        optimized.unshift({
-          number: optimized.length + 1,
-          instruction: `// ${instruction}`,
-          action: 'Eliminado (código muerto)',
-        });
-      }
+    // Detectar operadores aritméticos
+    const operators = expr.match(/[+\-*\/^%]/g) || [];
+    const wasModified = expr !== originalExpr; // Si la expresión cambió
+
+    // Regla 1: Instrucciones entReal - precalcular y sustituir
+    const entRealMatch = expr.match(/^entReal\((\d+(?:\.\d+)?)\)$/);
+    if (entRealMatch) {
+      const value = entRealMatch[1];
+      const realValue = `${parseFloat(value).toFixed(1)}`;
+      substitutionMap.set(temp, realValue);
+      
+      optimized.push({
+        number: optimized.length + 1,
+        instruction: `${instruction}`,
+        action: 'Eliminado',
+        reason: 'entReal precalculado',
+      });
+      continue;
+    }
+
+    // Regla 2: Instrucciones CON operación (tienen operador)
+    if (operators.length > 0) {
+      optimized.push({
+        number: optimized.length + 1,
+        instruction: `${temp} := ${expr}`,
+        action: wasModified ? 'Editado' : 'Conservado',
+        reason: wasModified ? 'Valores precalculados' : 'Operación + asignación',
+      });
+      continue;
+    }
+
+    // Regla 3: Asignaciones simples SIN operación - ELIMINAR (excepto última)
+    // Es una asignación simple: temp := valor (sin operador)
+    if (i === code.length - 1) {
+      // Es la última instrucción (asignación final)
+      optimized.push({
+        number: optimized.length + 1,
+        instruction: `${temp} := ${expr}`,
+        action: 'Conservado',
+        reason: 'Asignación final',
+      });
+    } else {
+      // No es la última, eliminar y guardar para sustitución
+      substitutionMap.set(temp, expr);
+      optimized.push({
+        number: optimized.length + 1,
+        instruction: `${temp} := ${expr}`,
+        action: 'Eliminado',
+        reason: 'Asignación simple',
+      });
     }
   }
 
-  // 2. Propagación de constantes
-  const constantMap = new Map<string, number>();
-
-  for (const step of optimized) {
-    const instruction = step.instruction;
-
-    if (instruction.startsWith('//')) continue;
-
-    const parts = instruction.split('=').map(p => p.trim());
-
-    if (parts.length === 2) {
-      const temp = parts[0];
-      const expr = parts[1];
-
-      // Si la expresión es solo un número, es una constante
-      if (/^[0-9]+$/.test(expr)) {
-        constantMap.set(temp, parseInt(expr));
-      }
-
-      // Sustituir constantes conocidas
-      let optimizedExpr = expr;
-      for (const [constTemp, value] of constantMap.entries()) {
-        const regex = new RegExp(`\\b${constTemp}\\b`, 'g');
-        optimizedExpr = optimizedExpr.replace(regex, value.toString());
-      }
-
-      if (optimizedExpr !== expr) {
-        step.instruction = `${temp} = ${optimizedExpr}`;
-        step.action = 'Propagación de constantes';
-      }
-    }
-  }
-
-  // 3. Evaluación de expresiones constantes
-  for (const step of optimized) {
-    const instruction = step.instruction;
-
-    if (instruction.startsWith('//')) continue;
-
-    const parts = instruction.split('=').map(p => p.trim());
-
-    if (parts.length === 2) {
-      const temp = parts[0];
-      const expr = parts[1];
-
-      // Si la expresión solo tiene números y operadores, evaluarla
-      if (/^[0-9\s\+\-\*\/\^\(\)]+$/.test(expr)) {
-        try {
-          // Convertir ^ a **
-          const jsExpr = expr.replace(/\^/g, '**');
-          const result = eval(jsExpr);
-          step.instruction = `${temp} = ${result}`;
-          step.action = 'Evaluado en tiempo de compilación';
-          constantMap.set(temp, result);
-        } catch (e) {
-          // Si falla la evaluación, mantener original
+  // Paso 2: Optimizar la asignación final
+  // Si la última instrucción es ID := temp, y temp tiene una expresión, combinarlas
+  if (optimized.length > 1) {
+    const lastIdx = optimized.length - 1;
+    const lastInstruction = optimized[lastIdx].instruction;
+    
+    if (!lastInstruction.startsWith('//')) {
+      const lastParts = lastInstruction.split(':=').map(p => p.trim());
+      
+      if (lastParts.length === 2) {
+        const finalVar = lastParts[0];
+        const finalExpr = lastParts[1];
+        
+        // Si finalExpr es un temp, buscar su definición
+        const tempMatch = finalExpr.match(/^temp\d+$/);
+        if (tempMatch) {
+          // Buscar la instrucción que define este temp
+          for (let i = optimized.length - 2; i >= 0; i--) {
+            const prevInstruction = optimized[i].instruction;
+            if (prevInstruction.startsWith('//')) continue;
+            
+            const prevParts = prevInstruction.split(':=').map(p => p.trim());
+            if (prevParts.length === 2 && prevParts[0] === finalExpr) {
+              // Encontramos la definición, combinar
+              const tempExpr = prevParts[1];
+              
+              // Eliminar la instrucción del temp
+              optimized[i] = {
+                number: optimized[i].number,
+                instruction: `${prevInstruction}`,
+                action: 'Eliminado',
+                reason: 'Combinado con asignación final',
+              };
+              
+              // Actualizar la asignación final
+              optimized[lastIdx] = {
+                number: optimized[lastIdx].number,
+                instruction: `${finalVar} := ${tempExpr}`,
+                action: 'Editado',
+                reason: 'Asignación final optimizada',
+              };
+              break;
+            }
+          }
         }
       }
     }
@@ -470,9 +560,9 @@ export function generateObjectCode(optimized: OptimizationStep[]): ObjectCodeIns
     const instruction = step.instruction;
 
     // Ignorar código comentado
-    if (instruction.startsWith('//')) continue;
+    if (step.action === 'Eliminado') continue;
 
-    const parts = instruction.split('=').map(p => p.trim());
+    const parts = instruction.split(':=').map(p => p.trim());
 
     if (parts.length === 2) {
       const dest = parts[0];
@@ -482,45 +572,31 @@ export function generateObjectCode(optimized: OptimizationStep[]): ObjectCodeIns
       const tokens = expr.split(/\s+/);
 
       if (tokens.length === 1) {
-        // Asignación simple: t1 = a
+        // Asignación simple: dest = source
         const source = tokens[0];
         const destReg = getRegister(dest);
 
-        if (/^[0-9]+$/.test(source)) {
-          // LOAD inmediato
-          objectCode.push({
-            number: objectCode.length + 1,
-            instruction: `LOAD ${destReg}, #${source}`,
-          });
-        } else {
-          // LOAD desde memoria
-          const sourceReg = getRegister(source);
-          objectCode.push({
-            number: objectCode.length + 1,
-            instruction: `MOV ${destReg}, ${sourceReg}`,
-          });
-        }
+        // MOV source, destReg
+        objectCode.push({
+          number: objectCode.length + 1,
+          instruction: `MOV ${source}, ${destReg}`,
+        });
       } else if (tokens.length === 3) {
-        // Operación binaria: t1 = a + b
+        // Operación binaria: dest = left op right
         const [left, operator, right] = tokens;
-        const destReg = getRegister(dest);
-        const leftReg = getRegister(left);
-        const rightReg = getRegister(right);
+        const leftReg = getRegister(`temp_left_${objectCode.length}`);
+        const rightReg = getRegister(`temp_right_${objectCode.length}`);
 
-        // Cargar operandos si es necesario
-        if (/^[0-9]+$/.test(left)) {
-          objectCode.push({
-            number: objectCode.length + 1,
-            instruction: `LOAD ${leftReg}, #${left}`,
-          });
-        }
+        // MOV operandos a registros
+        objectCode.push({
+          number: objectCode.length + 1,
+          instruction: `MOV ${left}, ${leftReg}`,
+        });
 
-        if (/^[0-9]+$/.test(right)) {
-          objectCode.push({
-            number: objectCode.length + 1,
-            instruction: `LOAD ${rightReg}, #${right}`,
-          });
-        }
+        objectCode.push({
+          number: objectCode.length + 1,
+          instruction: `MOV ${right}, ${rightReg}`,
+        });
 
         // Generar instrucción según operador
         let opcode = '';
@@ -532,19 +608,20 @@ export function generateObjectCode(optimized: OptimizationStep[]): ObjectCodeIns
             opcode = 'SUB';
             break;
           case '*':
-            opcode = 'MUL';
+            opcode = 'MULT';
             break;
           case '/':
             opcode = 'DIV';
             break;
           case '^':
-            opcode = 'POW';
+            opcode = 'EXPT';
             break;
         }
 
+        // Operación con resultado en paréntesis
         objectCode.push({
           number: objectCode.length + 1,
-          instruction: `${opcode} ${destReg}, ${leftReg}, ${rightReg}`,
+          instruction: `${opcode} ${leftReg}, ${rightReg} (${dest})`,
         });
       }
     }

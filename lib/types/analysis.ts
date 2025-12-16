@@ -28,9 +28,15 @@ export interface IntermediateCodeInstruction {
 export interface OptimizationStep {
   number: number; // Número de paso
   instruction: string; // Instrucción después de la optimización
-  action: string; // Acción realizada (ej: "eliminado", "coalescido", "plegado")
+  action: OptimizationAction; // Acción realizada (ej: "eliminado", "coalescido", "plegado")
   reason?: string; // Razón de la optimización
 }
+
+/**
+ * Tipos de acciones de optimización
+ */
+export type OptimizationAction = 'Eliminado' | 'Editado' | 'Conservado';
+
 
 /**
  * Instrucción de código objeto (ensamblador)
@@ -47,6 +53,7 @@ export interface ObjectCodeInstruction {
 export interface CompilerResult {
   success: boolean; // Si la compilación fue exitosa
   syntaxTree?: ASTNode; // Árbol sintáctico generado
+  semanticTree?: ASTNode; // Árbol semántico con transformaciones
   lexical: LexicalAnalysisResult; // Resultado del análisis léxico
   syntax: SyntaxAnalysisResult; // Resultado del análisis sintáctico
   intermediateCode: IntermediateCodeInstruction[]; // Código intermedio
@@ -130,7 +137,7 @@ export interface CompilationState {
  */
 export interface ASTNode {
   id: string; // ID único
-  type: 'literal' | 'identifier' | 'binary' | 'unary' | 'assignment' | 'call' | 'Number' | 'Identifier' | 'BinaryOp'; // Tipo de nodo
+  type: 'literal' | 'identifier' | 'binary' | 'unary' | 'assignment' | 'call' | 'Number' | 'Identifier' | 'BinaryOp' | 'entReal'; // Tipo de nodo
   value?: string | number; // Valor (para literales e identificadores)
   name?: string; // Nombre (para identificadores)
   operator?: string; // Operador (para expresiones)
