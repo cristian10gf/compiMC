@@ -9,8 +9,12 @@ import { useEffect, useRef, useState } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import { ASTNode } from '@/lib/types/analysis';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, Maximize2 } from 'lucide-react';
+import { Copy, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import cytoscape from 'cytoscape';
+import dagre from 'cytoscape-dagre';
+
+cytoscape.use( dagre );
 
 interface SyntaxTreeGraphProps {
   tree: ASTNode | null;
@@ -30,6 +34,8 @@ function astToCytoscape(node: ASTNode | null, parentId?: string): any[] {
     label = node.value?.toString() || '';
   } else if (node.type === 'Identifier') {
     label = node.name || '';
+  } else if (node.type === 'entReal') {
+    label = `entReal(${node.value})`;
   } else if (node.type === 'BinaryOp' || node.type === 'assignment') {
     label = node.operator || '';
   }
@@ -81,11 +87,14 @@ export function SyntaxTreeGraph({ tree, className }: SyntaxTreeGraphProps) {
       // Aplicar layout después de que los elementos se hayan agregado
       setTimeout(() => {
         cyRef.current.layout({
-          name: 'breadthfirst',
+          name: 'dagre',
           directed: true,
           spacingFactor: 1.5,
           padding: 30,
           avoidOverlap: true,
+          animationDuration: 500,
+          animationEasing: 'ease-in-out',
+          animate: true,
         }).run();
       }, 100);
     }
@@ -180,6 +189,17 @@ export function SyntaxTreeGraph({ tree, className }: SyntaxTreeGraphProps) {
       }
     },
     {
+      selector: 'node[type="entReal"]',
+      style: {
+        'background-color': '#dcfce7',
+        'border-color': '#22c55e',
+        'width': 60,
+        'height': 40,
+        'padding': '10px',
+        'text-wrap': 'none',
+      }
+    },
+    {
       selector: 'node[type="Identifier"]',
       style: {
         'background-color': '#fef3c7',
@@ -206,7 +226,7 @@ export function SyntaxTreeGraph({ tree, className }: SyntaxTreeGraphProps) {
           style={{ width: '100%', height: '100%' }}
           stylesheet={stylesheet}
           cy={(cy) => { cyRef.current = cy; }}
-          layout={{ name: 'breadthfirst' }}
+          layout={{ name: 'dagre' }}
         />
 
         {/* Controles */}
