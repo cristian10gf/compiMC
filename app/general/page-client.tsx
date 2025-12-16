@@ -297,6 +297,27 @@ export default function GeneralClientPage() {
 
           {activeTab === 'synthesis' && (
             <div className="space-y-6">
+              {/* Mostrar errores también en síntesis */}
+              {result.errors && result.errors.length > 0 && (
+                <CollapsibleSection title="Errores de Compilación" defaultOpen>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        {result.errors.map((error: any, idx: number) => (
+                          <div key={idx} className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm">
+                            <p className="font-medium text-destructive">{error.phase}: {error.severity}</p>
+                            <p className="text-destructive/80 mt-1">{error.message}</p>
+                            {error.line && (
+                              <p className="text-destructive/60 text-xs mt-1">Línea {error.line}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CollapsibleSection>
+              )}
+
               {result.intermediateCode && result.intermediateCode.length > 0 && (
                 <CollapsibleSection title="Generacion de Código Intermedio" defaultOpen>
                   <CodeTable

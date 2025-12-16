@@ -14,6 +14,7 @@ import { useCompiler as useCompilerContext } from '@/lib/context/compiler-contex
 import { useHistory as useHistoryContext } from '@/lib/context/history-context';
 import { CompilerResult, Token } from '@/lib/types';
 import {
+  compile as compileSource,
   lexicalAnalysis,
   syntaxAnalysis,
   semanticAnalysis,
@@ -66,6 +67,7 @@ export function useCompilerFull(): UseCompilerFullReturn {
 
   /**
    * Compila el código completo (siempre hace análisis y síntesis)
+   * Usa la función compile() de compiler.ts para evitar duplicación de lógica
    */
   const compile = useCallback(async (customPatterns?: TokenPattern[]) => {
     if (!compiler.sourceCode || compiler.sourceCode.trim() === '') {
@@ -81,51 +83,46 @@ export function useCompilerFull(): UseCompilerFullReturn {
       // Fase 1: Análisis Léxico
       setCompilerPhase('lexical');
       setCompilerProgress(20);
-      const lexicalResult = await lexicalAnalysis(compiler.sourceCode, customPatterns);
       
-      if (lexicalResult.tokens.length === 0) {
-        throw new Error('No se generaron tokens en el análisis léxico');
-      }
-
       // Fase 2: Análisis Sintáctico
+      await new Promise(resolve => setTimeout(resolve, 50)); // Para que se vea el progreso
       setCompilerPhase('syntax');
-      setCompilerProgress(30);
-      const syntaxTree = await syntaxAnalysis(lexicalResult.tokens);
-
-      // Fase 3: Análisis Semántico
-      setCompilerProgress(50);
-      const semanticTree = await semanticAnalysis(syntaxTree);
-
-      // Fase 4: Generación de Código Intermedio
+      setCompilerProgress(40);
+      
+      // Fase 3: Generación de Código Intermedio
+      await new Promise(resolve => setTimeout(resolve, 50));
       setCompilerPhase('intermediate');
       setCompilerProgress(60);
-      const intermediateCode = await generateIntermediateCode(semanticTree);
-
-      // Fase 5: Optimización
+      
+      // Fase 4: Optimización
+      await new Promise(resolve => setTimeout(resolve, 50));
       setCompilerPhase('optimization');
       setCompilerProgress(80);
-      const optimizations = await optimizeCode(intermediateCode);
-
-      // Fase 6: Generación de Código Objeto
+      
+      // Fase 5: Generación de Código Objeto
+      await new Promise(resolve => setTimeout(resolve, 50));
       setCompilerPhase('codegen');
       setCompilerProgress(90);
-      const objectCode = await generateObjectCode(optimizations);
 
-      // Resultado completo con TODAS las fases
-      const result: CompilerResult = {
-        success: true,
-        syntaxTree: syntaxTree || undefined,
-        semanticTree: semanticTree || undefined,
-        lexical: lexicalResult,
-        syntax: { parseTree: syntaxTree as any, success: true, errors: [] },
-        intermediateCode,
-        optimization: optimizations,
-        objectCode,
-        errors: [],
-      };
+      // Ejecutar el pipeline completo usando la función de compiler.ts
+      const result = await Promise.resolve(
+        compileSource({ source: compiler.sourceCode, mode: 'sintesis' }, customPatterns)
+      );
 
+      // Actualizar estado en el contexto
       setCompilerResult(result);
-      setCompilerPhase('complete');
+      
+      if (!result.success) {
+        // Si hay errores, establecer mensaje de error apropiado
+        const firstError = result.errors[0];
+        if (firstError) {
+          setError(`Error en ${firstError.phase}: ${firstError.message}`);
+        }
+        setCompilerPhase('idle');
+      } else {
+        setCompilerPhase('complete');
+      }
+      
       setCompilerProgress(100);
       
       // Guardar en historial
@@ -134,13 +131,31 @@ export function useCompilerFull(): UseCompilerFullReturn {
         input: compiler.sourceCode,
         result,
         metadata: {
-          success: true,
+          success: result.success,
         },
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error durante la compilación';
       setError(errorMessage);
       setCompilerPhase('idle');
+      
+      // Crear resultado con error para mostrar en la UI
+      const errorResult: CompilerResult = {
+        success: false,
+        lexical: { tokens: [], errors: [errorMessage] },
+        syntax: { parseTree: null, success: false, errors: [errorMessage] },
+        intermediateCode: [],
+        optimization: [],
+        objectCode: [],
+        errors: [{
+          phase: 'unknown' as const,
+          message: errorMessage,
+          line: 1,
+          severity: 'error' as const,
+        }],
+      };
+      
+      setCompilerResult(errorResult);
     } finally {
       setIsProcessing(false);
     }
@@ -171,15 +186,28 @@ export function useCompilerFull(): UseCompilerFullReturn {
         case 'lexical': {
           setCompilerPhase('lexical');
           const lexicalResult = await lexicalAnalysis(compiler.sourceCode);
+          
+          // Verificar errores léxicos
+          const hasErrors = lexicalResult.errors.length > 0;
+          
           setCompilerResult({
-            success: true,
+            success: !hasErrors,
             lexical: lexicalResult,
             syntax: { parseTree: null, success: false, errors: [] },
             intermediateCode: [],
             optimization: [],
             objectCode: [],
-            errors: [],
+            errors: hasErrors ? lexicalResult.errors.map(msg => ({
+              phase: 'lexical' as const,
+              message: msg,
+              line: 1,
+              severity: 'error' as const,
+            })) : [],
           });
+          
+          if (hasErrors) {
+            setError('Errores en el análisis léxico');
+          }
           break;
         }
 
@@ -189,11 +217,30 @@ export function useCompilerFull(): UseCompilerFullReturn {
           }
           setCompilerPhase('syntax');
           const syntaxTree = await syntaxAnalysis(compiler.compilerResult.lexical.tokens);
+          
+          // Verificar si se pudo construir el árbol
+          const hasError = !syntaxTree;
+          
           setCompilerResult({
             ...compiler.compilerResult,
+            success: !hasError,
             syntaxTree: syntaxTree || undefined,
-            syntax: { parseTree: syntaxTree as any, success: true, errors: [] },
+            syntax: { 
+              parseTree: syntaxTree as any, 
+              success: !hasError, 
+              errors: hasError ? ['Error al construir el árbol sintáctico'] : [] 
+            },
+            errors: hasError ? [{
+              phase: 'syntax' as const,
+              message: 'Error al construir el árbol sintáctico',
+              line: 1,
+              severity: 'error' as const,
+            }] : [],
           });
+          
+          if (hasError) {
+            setError('Error en el análisis sintáctico');
+          }
           break;
         }
 
@@ -239,6 +286,20 @@ export function useCompilerFull(): UseCompilerFullReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : `Error en fase ${phase}`;
       setError(errorMessage);
+      
+      // Propagar error al resultado si existe
+      if (compiler.compilerResult) {
+        setCompilerResult({
+          ...compiler.compilerResult,
+          success: false,
+          errors: [{
+            phase: 'unknown' as const,
+            message: errorMessage,
+            line: 1,
+            severity: 'error' as const,
+          }],
+        });
+      }
     } finally {
       setIsProcessing(false);
     }

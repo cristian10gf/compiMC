@@ -672,12 +672,12 @@ export type { TokenPattern };
 /**
  * Pipeline Completo del Compilador
  */
-export function compile(input: CompilerInput): CompilerResult {
+export function compile(input: CompilerInput, customPatterns?: TokenPattern[]): CompilerResult {
   const errors: CompilerError[] = [];
 
   try {
     // Fase 1: Análisis Léxico
-    const lexicalResult = lexicalAnalysis(input.source);
+    const lexicalResult = lexicalAnalysis(input.source, customPatterns);
 
     if (lexicalResult.errors.length > 0) {
       errors.push(
@@ -712,8 +712,11 @@ export function compile(input: CompilerInput): CompilerResult {
       };
     }
 
-    // Fase 3: Generación de Código Intermedio
-    const intermediateCode = generateIntermediateCode(ast);
+    // Fase 3: Análisis Semántico
+    const semanticTree = semanticAnalysis(ast);
+
+    // Fase 4: Generación de Código Intermedio
+    const intermediateCode = generateIntermediateCode(semanticTree);
 
     // Fase 4: Optimización
     const optimizedCode = optimizeCode(intermediateCode);
@@ -724,6 +727,7 @@ export function compile(input: CompilerInput): CompilerResult {
     return {
       success: errors.length === 0,
       syntaxTree: ast,
+      semanticTree: semanticTree || undefined,
       lexical: lexicalResult,
       syntax: { parseTree: null, success: true, errors: [] },
       intermediateCode,
