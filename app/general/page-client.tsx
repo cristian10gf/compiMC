@@ -43,7 +43,7 @@ export default function GeneralClientPage() {
   }, [customTokens]);
 
   const handleCompile = async () => {
-    await compileCode(activeTab === 'analysis' ? 'analisis' : 'sintesis', customPatterns);
+    await compileCode(customPatterns);
   };
 
   return (
@@ -243,49 +243,30 @@ export default function GeneralClientPage() {
               )}
 
               {/* Análisis Semántico */}
-              {result.syntaxTree && (
+              {result.semanticTree && (
                 <CollapsibleSection title="Análisis Semántico" defaultOpen>
                   <Card>
-                    <CardContent className="pt-6 space-y-3">
+                    <CardContent className="pt-6 space-y-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
                           <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                           <div className="flex-1">
                             <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                              Regla 1: Precedencia de operadores
+                              Transformación Semántica
                             </p>
                             <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                              Válido - Los operadores respetan la precedencia: () {'>'} ^ {'>'} * / {'>'} + -
+                              Conversión de números a tipo real: entReal(n) excepto exponentes
                             </p>
                           </div>
-                          <span className="text-xs font-semibold text-green-600">válido</span>
+                          <span className="text-xs font-semibold text-green-600">aplicado</span>
                         </div>
+                      </div>
 
-                        <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                              Regla 2: Tipos de operandos
-                            </p>
-                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                              Válido - Todos los operandos son números o identificadores válidos
-                            </p>
-                          </div>
-                          <span className="text-xs font-semibold text-green-600">válido</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 p-3 rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                              Regla 3: Expresiones bien formadas
-                            </p>
-                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                              Válido - Todas las expresiones están balanceadas y completas
-                            </p>
-                          </div>
-                          <span className="text-xs font-semibold text-green-600">válido</span>
-                        </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Árbol con transformaciones semánticas
+                        </p>
+                        <SyntaxTreeGraph tree={result.semanticTree} />
                       </div>
                     </CardContent>
                   </Card>
@@ -317,26 +298,30 @@ export default function GeneralClientPage() {
           {activeTab === 'synthesis' && (
             <div className="space-y-6">
               {result.intermediateCode && result.intermediateCode.length > 0 && (
-                <CollapsibleSection title="Código Intermedio (3 Direcciones)" defaultOpen>
+                <CollapsibleSection title="Generacion de Código Intermedio" defaultOpen>
                   <CodeTable
                     instructions={result.intermediateCode.map((inst: any) => ({ instruction: inst.instruction }))}
-                    title="Código de 3 Direcciones"
+                    title="Código Intermedio"
                   />
                 </CollapsibleSection>
               )}
 
               {result.optimization && result.optimization.length > 0 && (
-                <CollapsibleSection title="Optimización de Código" defaultOpen>
-                  <OptimizationTable steps={result.optimization as any} />
-                </CollapsibleSection>
-              )}
-
-              {result.optimization && result.optimization.length > 0 && (
-                <CollapsibleSection title="Código Optimizado" defaultOpen>
-                  <CodeTable
-                    instructions={result.optimization.map((inst: any) => ({ instruction: inst.instruction }))}
-                    title="Código Optimizado"
-                  />
+                <CollapsibleSection 
+                  title="Optimización" defaultOpen
+                  className='space-y-4 content-between'
+                >
+                  <OptimizationTable steps={result.optimization} />
+                  <div className="mt-6">
+                    <CollapsibleSection title="Código Optimizado final" defaultOpen>
+                      <CodeTable
+                        instructions={result.optimization
+                          .filter((inst: any) => inst.action !== 'Eliminado')
+                          .map((inst: any) => ({ instruction: inst.instruction }))}
+                        title="Código Optimizado"
+                      />
+                    </CollapsibleSection>
+                  </div>
                 </CollapsibleSection>
               )}
 
