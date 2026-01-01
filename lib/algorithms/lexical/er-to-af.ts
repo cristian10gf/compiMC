@@ -16,7 +16,7 @@
  * 7. Para r?: Opcional de N(r) = r|ε
  */
 
-import { Automaton, State, Transition, SyntaxTree, TreeNode, TransitionTable } from '@/lib/types/automata';
+import { Automaton, State, Transition, SyntaxTree, TreeNode, TransitionTable, NFAFragment } from '@/lib/types/automata';
 import { buildSyntaxTree, calculateAnulable, calculatePrimeros, calculateUltimos, calculateSiguientes } from './regex-parser';
 
 let stateCounter = 0;
@@ -62,12 +62,7 @@ function createTransition(from: string, to: string, symbol: string): Transition 
 /**
  * Fragmento de autómata (usado durante la construcción)
  */
-interface NFAFragment {
-  start: State;
-  accept: State;
-  states: State[];
-  transitions: Transition[];
-}
+
 
 /**
  * Construye AFN para ε (caso base)
@@ -133,11 +128,33 @@ function concatNFA(nfa1: NFAFragment, nfa2: NFAFragment): NFAFragment {
   nfa2.start.isInitial = false;
   nfa1.accept.isFinal = false;
 
-  const states = [...nfa1.states, ...nfa2.states];
+  // Unificar: el estado final de nfa1 (fr) se fusiona con el estado inicial de nfa2 (is)
+  // El estado fusionado será nfa1.accept
+  const mergedStateId = nfa1.accept.id;
+  const removedStateId = nfa2.start.id;
+
+  // Actualizar todas las transiciones de nfa2 que usan nfa2.start
+  // para que usen nfa1.accept en su lugar
+  const updatedNfa2Transitions = nfa2.transitions.map(t => {
+    if (t.from === removedStateId) {
+      return { ...t, from: mergedStateId, id: `${mergedStateId}-${t.symbol}-${t.to}` };
+    }
+    if (t.to === removedStateId) {
+      return { ...t, to: mergedStateId, id: `${t.from}-${t.symbol}-${mergedStateId}` };
+    }
+    return t;
+  });
+
+  // Estados: todos de nfa1 + todos de nfa2 excepto el estado inicial de nfa2
+  const states = [
+    ...nfa1.states,
+    ...nfa2.states.filter(s => s.id !== removedStateId)
+  ];
+
+  // Transiciones: todas de nfa1 + transiciones actualizadas de nfa2
   const transitions = [
     ...nfa1.transitions,
-    createTransition(nfa1.accept.id, nfa2.start.id, 'ε'),
-    ...nfa2.transitions,
+    ...updatedNfa2Transitions,
   ];
 
   return {
@@ -255,6 +272,31 @@ function buildNFAFromTree(node: TreeNode): NFAFragment {
 }
 
 /**
+ * Renombra los estados y transiciones para mejor claridad
+ **/ 
+function reenumerateStates(nfa: NFAFragment): NFAFragment {
+  const stateIdMap: Map<string, string> = new Map();
+  let counter = 0;
+
+  // Renombrar estados
+  for (const state of nfa.states) {
+    const newId = `q${counter++}`;
+    stateIdMap.set(state.id, newId);
+    state.id = newId;
+    state.label = newId;
+  }
+
+  // Actualizar transiciones
+  for (const transition of nfa.transitions) {
+    transition.from = stateIdMap.get(transition.from)!;
+    transition.to = stateIdMap.get(transition.to)!;
+    transition.id = `${transition.from}-${transition.symbol}-${transition.to}`;
+  }
+
+  return nfa;
+}
+
+/**
  * Convierte una expresión regular a un AFN usando el Método de Thompson
  */
 export function erToAFN(regex: string): Automaton {
@@ -266,12 +308,15 @@ export function erToAFN(regex: string): Automaton {
   // 2. Construir AFN desde el árbol
   const nfaFragment = buildNFAFromTree(syntaxTree.root);
 
-  // 3. Construir autómata completo
+  // 3. Renombrar estados y transiciones para mejor claridad
+  const renamedNfaFragment = reenumerateStates(nfaFragment);
+
+  // 4. Construir autómata completo
   return {
     id: `afn-${Date.now()}`,
     type: 'NFA',
-    states: nfaFragment.states,
-    transitions: nfaFragment.transitions,
+    states: renamedNfaFragment.states,
+    transitions: renamedNfaFragment.transitions,
     alphabet: syntaxTree.alphabet,
     name: `AFN de ${regex}`,
   };

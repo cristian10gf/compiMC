@@ -1,29 +1,22 @@
-'use client';
-
 import { HeroSection } from '@/components/layout';
 import { FeatureCard } from '@/components/home';
 import { Code2, GitBranch, Workflow, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
 
 export default function AnalizadorLexicoPage() {
-  const [showHistory, setShowHistory] = useState(false);
-
   return (
     <>
       <HeroSection
         title="Analizador Léxico"
-        subtitle="subtitulo y info de la seccion"
+        subtitle="Explora y construye autómatas finitos"
         description="Herramientas interactivas para el análisis léxico: construcción de autómatas finitos, conversión entre expresiones regulares y autómatas, y reconocimiento de cadenas."
-        showHistoryButton={true}
-        onHistoryToggle={() => setShowHistory(!showHistory)}
       />
 
       {/* Grid de opciones */}
       <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 sm:grid-cols-2">
           <FeatureCard
-            title="Construir AF de ER"
-            description="Construir Autómata Finito No Determinista desde Expresión Regular usando el método de Thompson"
+            title="Construir ER de AF"
+            description="Convertir un Autómata Finito (AF) en una Expresión Regular (ER) usando el Lemma de Arden"
             href="/analizador-lexico/af-to-er"
             icon={GitBranch}
             gradient="from-blue-500 to-cyan-500"

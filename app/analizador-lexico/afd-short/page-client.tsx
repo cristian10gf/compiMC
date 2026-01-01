@@ -6,28 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LanguageInput, AutomataGraph, SyntaxTreeVisual, TransitionTable } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
-import { buildSyntaxTree } from '@/lib/algorithms/lexical/regex-parser';
 import { useAutomata } from '@/hooks';
+import { useHistory } from '@/lib/context';
 import { Loader2 } from 'lucide-react';
 
 export default function AFDShortClientPage() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [regex, setRegex] = useState('');
-  const [syntaxTree, setSyntaxTree] = useState<any>(null);
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
+  const { addEntry } = useHistory();
 
   const handleAnalyze = async () => {
-    // Construir árbol sintáctico
-    const tree = buildSyntaxTree(regex);
-    setSyntaxTree(tree);
-
-    // Construir AFD óptimo usando el hook
-    await buildAutomaton({
+    // Construir AFD óptimo usando estados significativos
+    const tree = await buildAutomaton({
       regex,
       languages,
       algorithm: 'afd-short',
     });
+
+    if (tree && !error) {
+      addEntry({
+        type: 'lexical',
+        input: regex,
+        metadata: { 
+          success: true,
+          algorithm: 'AFD Óptimo (Estados Significativos)',
+        },
+      });
+    }
   };
 
   return (
@@ -68,10 +75,10 @@ export default function AFDShortClientPage() {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
-                Analizando...
+                Optimizando AFD...
               </>
             ) : (
-              'Construir AFD Óptimo'
+              'Construir AFD Óptimo (Estados Significativos)'
             )}
           </Button>
 
@@ -83,15 +90,41 @@ export default function AFDShortClientPage() {
         </CardContent>
       </Card>
 
-      {/* Results */}
-      {syntaxTree && (
+      {/* Árbol Sintáctico */}
+      {automaton && (
         <CollapsibleSection title="Árbol Sintáctico" defaultOpen>
-          <SyntaxTreeVisual tree={syntaxTree} showFunctions />
+          <SyntaxTreeVisual tree={automaton.syntaxTree} />
         </CollapsibleSection>
       )}
 
+      {/* Autómata */}
       {automaton && (
         <>
+          <CollapsibleSection title="Información del Autómata" defaultOpen>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Tipo:</span> AFD Óptimo
+                  </div>
+                  <div>
+                    <span className="font-medium">Estados:</span> {automaton.states.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Transiciones:</span> {automaton.transitions.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Alfabeto:</span> {automaton.alphabet.join(', ')}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Este AFD fue optimizado usando el algoritmo de estados significativos,
+                  identificando y fusionando estados equivalentes.
+                </p>
+              </CardContent>
+            </Card>
+          </CollapsibleSection>
+
           <CollapsibleSection title="Tabla de Transiciones" defaultOpen>
             <TransitionTable automaton={automaton} />
           </CollapsibleSection>

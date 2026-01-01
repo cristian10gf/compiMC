@@ -8,8 +8,9 @@
  * 4. Conversión de AFN a AFD
  */
 
-import { Automaton, State, Transition } from '@/lib/types/automata';
-import { erToAFN } from './er-to-af';
+import { Automaton, AutomatonResults, State, SubsetState, Transition } from '@/lib/types/automata';
+import { erToAFD, erToAFN } from './er-to-af';
+import { buildSyntaxTree } from './regex-parser';
 
 /**
  * Calcula la cerradura-ε de un conjunto de estados
@@ -77,6 +78,10 @@ export function afnToAfd(afn: Automaton): Automaton {
 
   // Función auxiliar para generar un nuevo ID de estado
   function newDStateId(): string {
+    const statesPosibles = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    if (stateCounter < statesPosibles.length) {
+      return statesPosibles[stateCounter++];
+    }
     return `q${stateCounter++}`;
   }
 
@@ -87,6 +92,7 @@ export function afnToAfd(afn: Automaton): Automaton {
   const initialClosure = epsilonClosure(new Set([initialState.id]), afn);
   const initialId = newDStateId();
   const initialKey = setToStateId(initialClosure);
+  const Subsets: SubsetState[] = [{ id: initialId, constituentStates: initialClosure }];
 
   dStates.set(initialId, initialClosure);
   unmarkedStates.push(initialId);
@@ -118,6 +124,7 @@ export function afnToAfd(afn: Automaton): Automaton {
           stateKeyToId.set(closureKey, newId);
           dStates.set(newId, closure);
           unmarkedStates.push(newId);
+          Subsets.push({ id: newId, constituentStates: closure });
         }
 
         const targetId = stateKeyToId.get(closureKey)!;
@@ -157,207 +164,173 @@ export function afnToAfd(afn: Automaton): Automaton {
     transitions: dTransitions,
     alphabet: afn.alphabet.filter(s => s !== 'ε'),
     name: `AFD de ${afn.name || 'AFN'}`,
+    subsetStates: Subsets,
   };
 }
 
 /**
- * Elimina estados inalcanzables de un AFD
+ * Identifica estados significativos de un AFN
+ * Un estado es significativo si tiene transiciones de salida diferentes de ε
+ * move(s, a) ≠ ∅, si s es significativo para algún a en Σ
  */
-export function removeUnreachableStates(afd: Automaton): Automaton {
-  const initialState = afd.states.find(s => s.isInitial);
-  if (!initialState) return afd;
+export function getSignificantStates(afn: Automaton): Set<string> {
+  const significant = new Set<string>();
 
-  // BFS para encontrar estados alcanzables
-  const reachable = new Set<string>();
-  const queue: string[] = [initialState.id];
-  reachable.add(initialState.id);
+  for (const state of afn.states) {
+    // Un estado es significativo si tiene transiciones no-epsilon
+    const hasNonEpsilonTransitions = afn.transitions.some(
+      t => t.from === state.id && t.symbol !== 'ε'
+    );
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+    if (hasNonEpsilonTransitions) {
+      significant.add(state.id);
+    }
 
-    // Buscar transiciones desde el estado actual
-    const outgoingTransitions = afd.transitions.filter(t => t.from === current);
-
-    for (const transition of outgoingTransitions) {
-      if (!reachable.has(transition.to)) {
-        reachable.add(transition.to);
-        queue.push(transition.to);
-      }
+    // add the final states as significant
+    if (state.isFinal) {
+      significant.add(state.id);
     }
   }
 
-  // Filtrar estados y transiciones
-  const newStates = afd.states.filter(s => reachable.has(s.id));
-  const newTransitions = afd.transitions.filter(
-    t => reachable.has(t.from) && reachable.has(t.to)
-  );
-
-  return {
-    ...afd,
-    states: newStates,
-    transitions: newTransitions,
-  };
+  return significant;
 }
 
 /**
- * Minimiza un AFD usando el algoritmo de particiones (Hopcroft)
+ * Optimiza un AFD identificando estados equivalentes (estados significativos)
+ * Algoritmo: Dos estados son equivalentes si tienen los mismos estados significativos
  */
-export function minimizeDFA(afd: Automaton): Automaton {
-  // 1. Eliminar estados inalcanzables
-  const cleanedAfd = removeUnreachableStates(afd);
+export function optimizeBySignificantStates(afd: Automaton, afn: Automaton): Automaton {
+  // 1. Identificar estados significativos
+  // En un AFD, todos los estados con transiciones son significativos
+  const significantStates = getSignificantStates(afn);
 
-  // 2. Crear particiones iniciales: estados finales y no finales
-  const finalStates = new Set(cleanedAfd.states.filter(s => s.isFinal).map(s => s.id));
-  const nonFinalStates = new Set(cleanedAfd.states.filter(s => !s.isFinal).map(s => s.id));
+  // 2. Obtener los estados significativos por estado
+  const stateSignificantMap: Map<string, Set<string>> = new Map();
+  const subconjuntos: SubsetState[] = afd.subsetStates || [];
 
-  let partitions: Set<string>[] = [];
-  if (finalStates.size > 0) partitions.push(finalStates);
-  if (nonFinalStates.size > 0) partitions.push(nonFinalStates);
+    
+  // Verificar cada subconjunto para ver si contiene estados significativos
+  for (const subset of subconjuntos) {
+    const sigSet = new Set<string>();
+    for (const stateId of subset.constituentStates) {
+      if (significantStates.has(stateId)) {
+        sigSet.add(stateId);
+      }
+    }
+    stateSignificantMap.set(subset.id, sigSet);
+  }
+  
+  // 3. Agrupar estados por su conjunto de estados significativos
+  const partitions: Set<string>[] = [];
 
-  // 3. Refinar particiones
-  let refined = true;
-  while (refined) {
-    refined = false;
-    const newPartitions: Set<string>[] = [];
+  for (const [stateId, sigSet] of stateSignificantMap.entries()) {
+    let foundPartition = false;
 
     for (const partition of partitions) {
-      if (partition.size === 1) {
-        newPartitions.push(partition);
-        continue;
-      }
+      const representative = Array.from(partition)[0];
+      const repSigSet = stateSignificantMap.get(representative)!;
 
-      // Agrupar estados por su comportamiento
-      const groups = new Map<string, Set<string>>();
-
-      for (const state of partition) {
-        // Crear firma del estado (a qué partición va con cada símbolo)
-        const signature: number[] = [];
-
-        for (const symbol of cleanedAfd.alphabet) {
-          const transition = cleanedAfd.transitions.find(
-            t => t.from === state && t.symbol === symbol
-          );
-
-          if (transition) {
-            // Encontrar a qué partición pertenece el estado destino
-            const targetPartitionIndex = partitions.findIndex(p => p.has(transition.to));
-            signature.push(targetPartitionIndex);
-          } else {
-            signature.push(-1); // No hay transición
-          }
-        }
-
-        const signatureKey = signature.join(',');
-        if (!groups.has(signatureKey)) {
-          groups.set(signatureKey, new Set());
-        }
-        groups.get(signatureKey)!.add(state);
-      }
-
-      // Si se dividió la partición, hay refinamiento
-      if (groups.size > 1) {
-        refined = true;
-      }
-
-      for (const group of groups.values()) {
-        newPartitions.push(group);
+      // Comparar conjuntos de estados significativos
+      if (
+        sigSet.size === repSigSet.size && 
+          Array.from(sigSet).every(s => repSigSet.has(s))
+      ) {
+        partition.add(stateId);
+        foundPartition = true;
+        break;
       }
     }
 
-    partitions = newPartitions;
+    if (!foundPartition) {
+      const newPartition = new Set<string>();
+      newPartition.add(stateId);
+      partitions.push(newPartition);
+    }
   }
 
-  // 4. Construir AFD minimizado
-  const stateMap = new Map<string, string>(); // Estado original -> Estado minimizado
-  const minStates: State[] = [];
-  const minTransitions: Transition[] = [];
+  // 4. Construir AFD optimizado, fusionando estados equivalentes
+  const stateMap = new Map<string, string>();
+  const optStates: State[] = [];
+  const optTransitions: Transition[] = [];
 
-  // Crear un estado por cada partición
-  partitions.forEach((partition, index) => {
-    const partitionId = `q${index}`;
+  for (const partition of partitions) {
     const representative = Array.from(partition)[0];
-    const originalState = cleanedAfd.states.find(s => s.id === representative)!;
-
-    // Mapear todos los estados de la partición al nuevo estado
-    for (const stateId of partition) {
-      stateMap.set(stateId, partitionId);
-    }
-
-    // El estado minimizado es inicial si algún estado de la partición lo era
-    const isInitial = Array.from(partition).some(
-      sid => cleanedAfd.states.find(s => s.id === sid)?.isInitial
-    );
-
-    // El estado minimizado es final si algún estado de la partición lo era
+    const isInitial = afd.states.find(s => s.id === representative)?.isInitial || false;
     const isFinal = Array.from(partition).some(
-      sid => cleanedAfd.states.find(s => s.id === sid)?.isFinal
+      stateId => afd.states.find(s => s.id === stateId)?.isFinal
     );
 
-    minStates.push({
-      id: partitionId,
-      label: partitionId,
+    const newStateId = `S${optStates.length}`;
+    optStates.push({
+      id: newStateId,
+      label: representative,
       isInitial,
       isFinal,
     });
-  });
 
-  // Crear transiciones del AFD minimizado
+    for (const stateId of partition) {
+      stateMap.set(stateId, newStateId);
+    }
+  }
+
+  // Crear transiciones del AFD optimizado
   const addedTransitions = new Set<string>();
 
-  for (const transition of cleanedAfd.transitions) {
-    const fromMin = stateMap.get(transition.from);
-    const toMin = stateMap.get(transition.to);
+  for (const transition of afd.transitions) {
+    const fromOpt = stateMap.get(transition.from);
+    const toOpt = stateMap.get(transition.to);
 
-    if (fromMin && toMin) {
-      const transitionKey = `${fromMin}-${transition.symbol}-${toMin}`;
+    if (fromOpt && toOpt) {
+      const transKey = `${fromOpt}-${transition.symbol}-${toOpt}`;
       
-      if (!addedTransitions.has(transitionKey)) {
-        minTransitions.push({
-          id: transitionKey,
-          from: fromMin,
-          to: toMin,
+      if (!addedTransitions.has(transKey)) {
+        optTransitions.push({
+          id: transKey,
+          from: fromOpt,
+          to: toOpt,
           symbol: transition.symbol,
         });
-        addedTransitions.add(transitionKey);
+        addedTransitions.add(transKey);
       }
     }
   }
 
   return {
-    id: `afd-min-${Date.now()}`,
+    id: `afd-opt-${Date.now()}`,
     type: 'DFA',
-    states: minStates,
-    transitions: minTransitions,
-    alphabet: cleanedAfd.alphabet,
-    name: `AFD Minimizado de ${cleanedAfd.name || 'AFD'}`,
+    states: optStates,
+    transitions: optTransitions,
+    alphabet: afd.alphabet,
+    name: `AFD Óptimo de ${afd.name || 'AFD'}`,
+    subsetStates: subconjuntos,
   };
 }
 
 /**
- * Construye AFD completo (no óptimo) desde una expresión regular
- * Incluye todos los estados posibles, incluso los inalcanzables
+ * Construye AFD completo (óptimo) desde una expresión regular
  */
-export function buildAFDFull(regex: string): Automaton {
+export function buildAFDFull(regex: string): AutomatonResults {
   // 1. Construir AFN
   const afn = erToAFN(regex);
 
-  // 2. Convertir a AFD (sin minimizar)
+  // 2. Convertir a AFD
   const afd = afnToAfd(afn);
 
-  return afd;
+  // 3. Minimizar
+  const afdMin = optimizeBySignificantStates(afd, afn);
+
+  return {
+    automatonAFN: afn,
+    automatonAFDNonOptimized: afd,
+    automatonAFD: afdMin,
+  }
 }
 
-/**
- * Construye AFD óptimo (minimizado) desde una expresión regular
- */
-export function buildAFDShort(regex: string): Automaton {
-  // 1. Construir AFD completo
-  const afdFull = buildAFDFull(regex);
-
-  // 2. Minimizar
-  const afdMin = minimizeDFA(afdFull);
-
-  return afdMin;
+export function buildAFDShort(regex: string): AutomatonResults {
+  return {
+    automatonAFD: erToAFD(regex),
+    syntaxTree: buildSyntaxTree(regex),
+  };
 }
 
 /**

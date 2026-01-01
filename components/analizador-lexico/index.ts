@@ -3,6 +3,7 @@
  */
 
 export { AutomataGraph } from './automata-graph';
+export { AutomataGraphCytoscape } from './automata-graph-cytoscape';
 export { SyntaxTreeVisual } from './syntax-tree-visual';
 export { TransitionTable } from './transition-table';
 export { StringRecognition } from './string-recognition';

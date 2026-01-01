@@ -23,17 +23,56 @@ interface LanguageInputProps {
 export function LanguageInput({
   languages,
   onChange,
-  placeholder = 'Ej: L={a,d}',
+  placeholder = 'Ej: a,d',
   className,
   maxLanguages = 10,
 }: LanguageInputProps) {
   const [inputValue, setInputValue] = useState('');
+  const [representante, setRepresentante] = useState('');
 
   const handleAdd = () => {
     const trimmed = inputValue.trim();
-    if (trimmed && !languages.includes(trimmed) && languages.length < maxLanguages) {
-      onChange([...languages, trimmed]);
+    const trimmedRep = representante.trim();
+    
+    if (trimmed && languages.length < maxLanguages) {
+      // Generar nombre automático del lenguaje
+      const nombreLenguaje = `L${languages.length + 1}`;
+      
+      // Normalizar elementos: eliminar espacios
+      const elementosArray = trimmed.split(',').map(e => e.trim()).filter(e => e);
+      const elementosNuevos = [...elementosArray].sort();
+      
+      // Validar que no exista un lenguaje con los mismos elementos
+      const existeIgual = languages.some(lang => {
+        // Extraer elementos del lenguaje existente (antes del |)
+        const match = lang.match(/\{([^|]+)/);
+        if (match) {
+          const elementosExistentes = match[1].split(',').map(e => e.trim()).sort();
+          return JSON.stringify(elementosExistentes) === JSON.stringify(elementosNuevos);
+        }
+        return false;
+      });
+      
+      if (existeIgual) {
+        alert('Ya existe un lenguaje con los mismos elementos');
+        return;
+      }
+      
+      // Determinar representante: usar el proporcionado o el primer elemento
+      let representanteElegido = trimmedRep || elementosArray[0];
+      
+      // Validar que el representante esté en los elementos
+      if (!elementosArray.includes(representanteElegido)) {
+        alert(`El representante "${representanteElegido}" debe ser uno de los elementos del lenguaje`);
+        return;
+      }
+      
+      // Formatear como L#={elementos | representante}
+      const formattedLanguage = `${nombreLenguaje}={${elementosArray.join(',')} | ${representanteElegido}}`;
+      
+      onChange([...languages, formattedLanguage]);
       setInputValue('');
+      setRepresentante('');
     }
   };
 
@@ -51,6 +90,14 @@ export function LanguageInput({
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center gap-2">
+        <Input
+          value={representante}
+          onChange={(e) => setRepresentante(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Rep."
+          className="w-20"
+          disabled={languages.length >= maxLanguages}
+        />
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

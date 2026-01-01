@@ -29,9 +29,18 @@ importers:
       cytoscape:
         specifier: ^3.33.1
         version: 3.33.1
+      cytoscape-cose-bilkent:
+        specifier: ^4.1.0
+        version: 4.1.0(cytoscape@3.33.1)
       cytoscape-dagre:
         specifier: ^2.5.0
         version: 2.5.0(cytoscape@3.33.1)
+      cytoscape-edge-editing:
+        specifier: ^5.0.0
+        version: 5.0.0(cytoscape@3.33.1)(konva@7.2.5)
+      cytoscape-edgehandles:
+        specifier: ^4.0.1
+        version: 4.0.1(cytoscape@3.33.1)
       lucide-react:
         specifier: ^0.561.0
         version: 0.561.0(react@19.2.1)
@@ -1920,6 +1929,9 @@ packages:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
     engines: {node: '>= 0.10'}
 
+  cose-base@1.0.3:
+    resolution: {integrity: sha512-s9whTXInMSgAp/NVXVNuVxVKzGH2qck3aQlVHxDCdAEPgtMKwc4Wq6/QKhgdEdgbLSi9rBTAcPoRa6JpiG4ksg==}
+
   cosmiconfig@9.0.0:
     resolution: {integrity: sha512-itvL5h8RETACmOTFc4UfIyB2RfEHi71Ax6E/PivVxq9NseKbOWpeyHEOIbmAw1rs8Ak0VursQNww7lf7YtUwzg==}
     engines: {node: '>=14'}
@@ -1941,10 +1953,26 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
+  cytoscape-cose-bilkent@4.1.0:
+    resolution: {integrity: sha512-wgQlVIUJF13Quxiv5e1gstZ08rnZj2XaLHGoFMYXz7SkNfCDOOteKBE6SYRfA9WxxI/iBc3ajfDoc6hb/MRAHQ==}
+    peerDependencies:
+      cytoscape: ^3.2.0
+
   cytoscape-dagre@2.5.0:
     resolution: {integrity: sha512-VG2Knemmshop4kh5fpLO27rYcyUaaDkRw+6PiX4bstpB+QFt0p2oauMrsjVbUamGWQ6YNavh7x2em2uZlzV44g==}
     peerDependencies:
       cytoscape: ^3.2.22
+
+  cytoscape-edge-editing@5.0.0:
+    resolution: {integrity: sha512-22Lqf++4yLmwVezRVuNGzqlTrl6bwq5uKh4BlxY2Psz7B5Z4zW21RgLIPNPH/NeRSo7nSnkV5/ecgo414OFtgQ==}
+    peerDependencies:
+      cytoscape: ^3.3.0
+      konva: ^7.0.3
+
+  cytoscape-edgehandles@4.0.1:
+    resolution: {integrity: sha512-uSYshkqRZ4luCxK295bEVTg46q4ZW+fwJhcIzMrtfNR7zeAnJ38Z48kUGeu5ibtXkgLbcZAg0YE4ED2dRuaePg==}
+    peerDependencies:
+      cytoscape: ^3.2.0
 
   cytoscape@3.33.1:
     resolution: {integrity: sha512-iJc4TwyANnOGR1OmWhsS9ayRS3s+XQ185FmuHObThD+5AeJCakAAbWv8KimMTt08xCCLNgneQwFp+JRJOr9qGQ==}
@@ -2821,12 +2849,18 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
+  konva@7.2.5:
+    resolution: {integrity: sha512-yk/li8rUF+09QNlOdkwbEId+QvfATMe/aMGVouWW1oFoUVTYWHsQuIAE6lWy11DK8mLJEJijkNAXC5K+NVlMew==}
+
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
 
   language-tags@1.0.9:
     resolution: {integrity: sha512-MbjN408fEndfiQXbFQ1vnd+1NoLDsnQW41410oQBXiyXDMYH5z505juWa4KUE1LqxRC7DgOgZDbKLxHIwm27hA==}
     engines: {node: '>=0.10'}
+
+  layout-base@1.0.2:
+    resolution: {integrity: sha512-8h2oVEZNktL4BH2JCOI90iD1yXwL6iNW7KcCKT2QZgQJR2vbqDsldCTPRU9NifTCqHZci57XvQQ15YTu+sTYPg==}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -2909,8 +2943,14 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash.memoize@4.1.2:
+    resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lodash.throttle@4.1.1:
+    resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
@@ -5774,6 +5814,10 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
+  cose-base@1.0.3:
+    dependencies:
+      layout-base: 1.0.2
+
   cosmiconfig@9.0.0(typescript@5.9.3):
     dependencies:
       env-paths: 2.2.1
@@ -5793,10 +5837,26 @@ snapshots:
 
   csstype@3.2.3: {}
 
+  cytoscape-cose-bilkent@4.1.0(cytoscape@3.33.1):
+    dependencies:
+      cose-base: 1.0.3
+      cytoscape: 3.33.1
+
   cytoscape-dagre@2.5.0(cytoscape@3.33.1):
     dependencies:
       cytoscape: 3.33.1
       dagre: 0.8.5
+
+  cytoscape-edge-editing@5.0.0(cytoscape@3.33.1)(konva@7.2.5):
+    dependencies:
+      cytoscape: 3.33.1
+      konva: 7.2.5
+
+  cytoscape-edgehandles@4.0.1(cytoscape@3.33.1):
+    dependencies:
+      cytoscape: 3.33.1
+      lodash.memoize: 4.1.2
+      lodash.throttle: 4.1.1
 
   cytoscape@3.33.1: {}
 
@@ -6799,11 +6859,15 @@ snapshots:
 
   kleur@4.1.5: {}
 
+  konva@7.2.5: {}
+
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
     dependencies:
       language-subtag-registry: 0.3.23
+
+  layout-base@1.0.2: {}
 
   levn@0.4.1:
     dependencies:
@@ -6865,7 +6929,11 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.memoize@4.1.2: {}
+
   lodash.merge@4.6.2: {}
+
+  lodash.throttle@4.1.1: {}
 
   lodash@4.17.21: {}
 

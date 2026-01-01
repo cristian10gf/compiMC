@@ -17,6 +17,7 @@ import {
   PrecedenceTable,
   GotoTable,
   ActionTable,
+  AutomatonResults,
 } from '@/lib/types';
 
 /**
@@ -25,7 +26,7 @@ import {
 interface LexicalState {
   regex: string; // Expresión regular actual
   languages: string[]; // Lenguajes definidos
-  automaton: Automaton | null; // Autómata generado
+  automaton: AutomatonResults | null; // Autómatas generados
   recognitionResult: RecognitionResult | null; // Resultado del reconocimiento
   afToErResult: { regex: string; steps: any[] } | null; // Resultado de AF → ER
 }
@@ -63,7 +64,7 @@ interface CompilerContextType {
   lexical: LexicalState;
   setRegex: (regex: string) => void;
   setLanguages: (languages: string[]) => void;
-  setAutomaton: (automaton: Automaton | null) => void;
+  setAutomaton: (automaton: AutomatonResults | null) => void;
   setRecognitionResult: (result: RecognitionResult | null) => void;
   setAfToErResult: (result: { regex: string; steps: any[] } | null) => void;
 
@@ -142,7 +143,7 @@ export function CompilerProvider({ children }: { children: ReactNode }) {
     setLexicalState((prev) => ({ ...prev, languages }));
   }, []);
 
-  const setAutomaton = useCallback((automaton: Automaton | null) => {
+  const setAutomaton = useCallback((automaton: AutomatonResults | null) => {
     setLexicalState((prev) => ({ ...prev, automaton }));
   }, []);
 

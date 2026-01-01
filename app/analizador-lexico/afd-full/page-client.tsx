@@ -4,44 +4,39 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LanguageInput, AutomataGraph, TransitionTable, SyntaxTreeVisual } from '@/components/analizador-lexico';
+import { LanguageInput, AutomataGraph, TransitionTable, AutomataGraphCytoscape } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
-import { buildSyntaxTree } from '@/lib/algorithms/lexical/regex-parser';
-import { buildAFDFull } from '@/lib/algorithms/lexical/afd-construction';
+import { useAutomata } from '@/hooks';
 import { useHistory } from '@/lib/context';
 import { Loader2 } from 'lucide-react';
 
 export default function AFDFullClientPage() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [regex, setRegex] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [tree, setTree] = useState<any>(null);
-  const [automaton, setAutomaton] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
   
+  const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
 
   const handleAnalyze = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    // Construir AFD Full mediante algoritmo de subconjuntos
+    const automaton = await buildAutomaton({
+      regex,
+      languages,
+      algorithm: 'afd-full',
+    });
 
-      // Construir AFD Full mediante subconjuntos
-      const syntaxTree = buildSyntaxTree(regex);
-      const afd = buildAFDFull(regex);
-      setTree(syntaxTree);
-      setAutomaton(afd);
-
+    if (automaton && !error) {
       addEntry({
         type: 'lexical',
         input: regex,
-        metadata: { success: true },
+        metadata: { 
+          success: true,
+          algorithm: 'AFD Full (Subconjuntos)',
+        },
       });
-    } catch (err: any) {
-      setError(err.message || 'Error al construir el autómata');
-    } finally {
-      setLoading(false);
     }
+
+    console.log(automaton);
   };
 
   return (
@@ -54,7 +49,7 @@ export default function AFDFullClientPage() {
           <LanguageInput
             languages={languages}
             onChange={setLanguages}
-            placeholder="Ej: L={a,d}"
+            placeholder="Ej: a,d,b"
             maxLanguages={5}
           />
 
@@ -75,16 +70,16 @@ export default function AFDFullClientPage() {
 
           <Button
             onClick={handleAnalyze}
-            disabled={!regex || loading}
+            disabled={!regex || isProcessing}
             className="w-full sm:w-auto"
           >
-            {loading ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
-                Construyendo...
+                Construyendo AFD...
               </>
             ) : (
-              'Construir AFD Full'
+              'Construir AFD Full (Subconjuntos)'
             )}
           </Button>
 
@@ -96,20 +91,38 @@ export default function AFDFullClientPage() {
         </CardContent>
       </Card>
 
-      {tree && (
-        <CollapsibleSection title="Árbol Sintáctico" defaultOpen>
-          <SyntaxTreeVisual tree={tree} />
-        </CollapsibleSection>
-      )}
-
-      {automaton && (
+      {/* Autómata */}
+      {automaton?.automatonAFN && (
         <>
-          <CollapsibleSection title="Tabla de Transiciones" defaultOpen>
-            <TransitionTable automaton={automaton} />
+          <CollapsibleSection title="Información del Autómata" defaultOpen>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Tipo:</span> {automaton.automatonAFN.type === 'DFA' ? 'AFD' : 'AFN'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Estados:</span> {automaton.automatonAFN.states.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Transiciones:</span> {automaton.automatonAFN.transitions.length}
+                  </div>
+                  <div>
+                    <span className="font-medium">Alfabeto:</span> {automaton.automatonAFN.alphabet.join(', ')}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </CollapsibleSection>
 
+          {automaton.automatonAFDNonOptimized && (
+            <CollapsibleSection title="Tabla de Transiciones" defaultOpen>
+              <TransitionTable automaton={automaton.automatonAFDNonOptimized} />
+            </CollapsibleSection>
+          )}
+
           <CollapsibleSection title="Grafo del AFD" defaultOpen>
-            <AutomataGraph automaton={automaton} />
+            <AutomataGraphCytoscape automaton={automaton.automatonAFD} />
           </CollapsibleSection>
         </>
       )}

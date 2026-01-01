@@ -23,6 +23,11 @@ export interface Transition {
   id: string; // ID único de la transición
 }
 
+export interface SubsetState {
+  id: string; // ID del estado subconjunto (ej: "{q0,q1}")
+  constituentStates: Set<string>; // Conjunto de estados originales que componen este estado
+}
+
 /**
  * Autómata finito completo
  */
@@ -33,6 +38,7 @@ export interface Automaton {
   alphabet: string[]; // Alfabeto del autómata
   type: 'NFA' | 'DFA' | 'EPSILON_NFA'; // Tipo de autómata
   name?: string; // Nombre descriptivo opcional
+  subsetStates?: SubsetState[]; // Estados subconjuntos (para AFD construido por subconjuntos)
 }
 
 /**
@@ -41,8 +47,22 @@ export interface Automaton {
 export interface AutomatonConfig {
   languages: string[]; // Lista de lenguajes (ej: ["L={a,d}", "L={a,d}*"])
   regex?: string; // Expresión regular (opcional)
-  algorithm: 'thompson' | 'afd-full' | 'afd-short'; // Algoritmo a usar
+  algorithm: 'afd-full' | 'afd-short'; // Algoritmo a usar
   showSteps?: boolean; // Si se deben mostrar los pasos intermedios
+}
+
+export interface NFAFragment {
+  start: State;
+  accept: State;
+  states: State[];
+  transitions: Transition[];
+}
+
+export interface AutomatonResults {
+  automatonAFN?: Automaton;
+  automatonAFD: Automaton;
+  syntaxTree?: SyntaxTree;
+  automatonAFDNonOptimized?: Automaton;
 }
 
 /**

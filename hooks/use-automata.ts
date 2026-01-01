@@ -10,15 +10,15 @@
  * Utiliza el CompilerContext para persistir el estado
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useCompiler } from '@/lib/context/compiler-context';
 import { 
   Automaton, 
   AutomatonConfig, 
   RecognitionResult,
   TransitionTable,
+  AutomatonResults
 } from '@/lib/types';
-import { erToAFN, erToAFD } from '@/lib/algorithms/lexical/er-to-af';
 import { buildAFDFull, buildAFDShort } from '@/lib/algorithms/lexical/afd-construction';
 import { recognizeStringDFA } from '@/lib/algorithms/lexical/string-recognition';
 import { afToER } from '@/lib/algorithms/lexical/af-to-er';
@@ -26,13 +26,13 @@ import { validateRegex } from '@/lib/algorithms/lexical/regex-parser';
 
 export interface UseAutomataReturn {
   // Estado
-  automaton: Automaton | null;
+  automaton: AutomatonResults | null;
   isProcessing: boolean;
   error: string | null;
   recognitionResult: RecognitionResult | null;
   
   // Funciones
-  buildAutomaton: (config: AutomatonConfig) => Promise<void>;
+  buildAutomaton: (config: AutomatonConfig) => Promise<AutomatonResults  | null>;
   testString: (input: string) => Promise<RecognitionResult | null>;
   getTransitionTable: () => TransitionTable | null;
   convertToER: () => Promise<{ regex: string; steps: any[] } | null>;
@@ -53,58 +53,55 @@ export function useAutomata(): UseAutomataReturn {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [syntaxTree, setSyntaxTree] = useState<Automaton | null>(null);
 
   /**
    * Construye un autómata basado en la configuración
+   * Retorna el árbol sintáctico construido
    */
-  const buildAutomaton = useCallback(async (config: AutomatonConfig) => {
+  const buildAutomaton = useCallback(async (config: AutomatonConfig): Promise<AutomatonResults  | null> => {
     setIsProcessing(true);
     setError(null);
+    setSyntaxTree(null);
 
     try {
       // Validar expresión regular si existe
-      if (config.regex) {
-        const validation = validateRegex(config.regex);
-        if (!validation.isValid) {
-          throw new Error(validation.errors.join(', '));
-        }
+      if (!config.regex) {
+        throw new Error('Se requiere una expresión regular');
       }
 
-      let automaton: Automaton;
+      const validation = validateRegex(config.regex);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
 
-      // Construir según el algoritmo especificado
+      let results : AutomatonResults
+
       switch (config.algorithm) {
-        case 'thompson':
-          if (!config.regex) {
-            throw new Error('Se requiere una expresión regular para el algoritmo de Thompson');
-          }
-          automaton = erToAFN(config.regex);
-          break;
-
         case 'afd-full':
-          if (!config.regex) {
-            throw new Error('Se requiere una expresión regular para construir AFD Full');
-          }
-          automaton = buildAFDFull(config.regex);
+          // AFD mediante thompson + subconjuntos + estados significativos
+          results = buildAFDFull(config.regex);
           break;
 
         case 'afd-short':
-          if (!config.regex) {
-            throw new Error('Se requiere una expresión regular para construir AFD Short');
-          }
-          automaton = buildAFDShort(config.regex);
+          // AFD optimizado mediante arbol sintáctico
+          results = buildAFDShort(config.regex);
           break;
 
         default:
           throw new Error(`Algoritmo no soportado: ${config.algorithm}`);
       }
 
-      // Guardar en el contexto
-      setAutomaton(automaton);
+      // 3. Guardar autómata en el contexto
+      setAutomaton(results);
+
+      return results;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido al construir el autómata';
       setError(errorMessage);
       setAutomaton(null);
+      setSyntaxTree(null);
+      return null;
     } finally {
       setIsProcessing(false);
     }
@@ -123,7 +120,7 @@ export function useAutomata(): UseAutomataReturn {
     setError(null);
 
     try {
-      const result = recognizeStringDFA(lexical.automaton, input);
+      const result = recognizeStringDFA(lexical.automaton.automatonAFD, input);
       setRecognitionResult(result);
       return result;
     } catch (err) {
@@ -141,7 +138,7 @@ export function useAutomata(): UseAutomataReturn {
   const getTransitionTable = useCallback((): TransitionTable | null => {
     if (!lexical.automaton) return null;
 
-    const { states, transitions, alphabet } = lexical.automaton;
+    const { states, transitions, alphabet } = lexical.automaton.automatonAFD;
 
     // Crear encabezados: Estado, símbolo1, símbolo2, ...
     const headers = ['Estado', ...alphabet];
@@ -184,7 +181,7 @@ export function useAutomata(): UseAutomataReturn {
     setError(null);
 
     try {
-      const result = afToER(lexical.automaton);
+      const result = afToER(lexical.automaton.automatonAFD);
       setAfToErResult(result);
       return result;
     } catch (err) {

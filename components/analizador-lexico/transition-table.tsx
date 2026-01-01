@@ -29,6 +29,12 @@ interface TransitionTableProps {
   itemsPerPage?: number;
 }
 
+interface TransitionTable {
+  [stateId: string]: {
+    [symbol: string]: string[]; // Lista de estados destino
+  };
+}
+
 export function TransitionTable({
   automaton,
   highlightState,
@@ -40,7 +46,7 @@ export function TransitionTable({
 
   // Construir la tabla de transiciones
   const transitionTable = useMemo(() => {
-    const table: Record<string, Record<string, string[]>> = {};
+    const table: TransitionTable = {};
 
     // Inicializar tabla
     automaton.states.forEach((state) => {
@@ -61,13 +67,9 @@ export function TransitionTable({
     return table;
   }, [automaton]);
 
-  // Ordenar estados: inicial primero, luego finales, luego normales
+  // Ordenar estados: inicial primero, luego normales, 
   const sortedStates = useMemo(() => {
     return [...automaton.states].sort((a, b) => {
-      if (a.isInitial) return -1;
-      if (b.isInitial) return 1;
-      if (a.isFinal && !b.isFinal) return -1;
-      if (!a.isFinal && b.isFinal) return 1;
       return a.id.localeCompare(b.id);
     });
   }, [automaton.states]);
