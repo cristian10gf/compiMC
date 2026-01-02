@@ -11,33 +11,24 @@
  * - Exportación a PNG
  */
 
-import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Automaton, Transition } from '@/lib/types/automata';
 import { Button } from '@/components/ui/button';
-import { Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, Maximize2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import CytoscapeComponent from 'react-cytoscapejs';
+import cytoscape from 'cytoscape';
+import coseBilkent from 'cytoscape-cose-bilkent';
 
-// Importación dinámica de Cytoscape para evitar errores de SSR
-import dynamic from 'next/dynamic';
-
-// Importar cytoscape y extensiones solo en el cliente
-let cytoscape: any = null;
-let coseBilkent: any = null;
-
-if (typeof window !== 'undefined') {
-  cytoscape = require('cytoscape');
-  coseBilkent = require('cytoscape-cose-bilkent');
-  
-  // Registrar la extensión solo una vez
-  if (cytoscape && coseBilkent && !(cytoscape as any).coseBilkentRegistered) {
-    cytoscape.use(coseBilkent);
-    (cytoscape as any).coseBilkentRegistered = true;
-  }
+// Registrar la extensión solo una vez
+if (!(cytoscape as any).coseBilkentRegistered) {
+  cytoscape.use(coseBilkent);
+  (cytoscape as any).coseBilkentRegistered = true;
 }
 
 interface AutomataGraphCytoscapeProps {
   automaton: Automaton;
-  highlightedPath?: string[]; // IDs de estados a resaltar
+  highlightedPath?: string[];
   onNodeClick?: (stateId: string) => void;
   onEdgeClick?: (transition: Transition) => void;
   className?: string;
@@ -67,7 +58,7 @@ function automatonToCytoscape(automaton: Automaton) {
     });
   });
   
-  // Convertir cada transición como una arista separada (sin agrupar)
+  // Convertir cada transición como una arista separada
   automaton.transitions.forEach((trans, index) => {
     const isSelfLoop = trans.from === trans.to;
     
@@ -89,8 +80,7 @@ function automatonToCytoscape(automaton: Automaton) {
 /**
  * Genera los estilos de Cytoscape adaptados al tema
  */
-function getStylesheet(isDarkMode: boolean): any[] {
-  // Colores adaptados al tema
+function getStylesheet(isDarkMode: boolean) {
   const colors = isDarkMode ? {
     nodeBg: '#1f2937',
     nodeBorder: '#fbbf24',
@@ -118,7 +108,6 @@ function getStylesheet(isDarkMode: boolean): any[] {
   };
 
   return [
-    // Nodos base
     {
       selector: 'node',
       style: {
@@ -134,10 +123,8 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'font-family': 'ui-monospace, monospace',
         'width': 50,
         'height': 50,
-        'text-outline-width': 0,
       },
     },
-    // Estado inicial
     {
       selector: 'node.initial',
       style: {
@@ -145,17 +132,14 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'border-color': colors.initialBorder,
       },
     },
-    // Estado final (doble borde)
     {
       selector: 'node.final',
       style: {
         'border-width': 3,
         'border-color': colors.finalBorder,
         'border-style': 'double',
-        'padding': '4px',
       },
     },
-    // Estado inicial y final
     {
       selector: 'node.initial.final',
       style: {
@@ -164,7 +148,6 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'border-style': 'double',
       },
     },
-    // Aristas base
     {
       selector: 'edge',
       style: {
@@ -189,7 +172,6 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'target-distance-from-node': 3,
       },
     },
-    // Self-loops
     {
       selector: 'edge.selfloop',
       style: {
@@ -199,10 +181,8 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'control-point-step-size': 60,
         'text-rotation': '0deg',
         'text-margin-y': -15,
-        'text-margin-x': 0,
       },
     },
-    // Nodo seleccionado
     {
       selector: 'node:selected',
       style: {
@@ -210,7 +190,6 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'border-width': 4,
       },
     },
-    // Arista seleccionada
     {
       selector: 'edge:selected',
       style: {
@@ -219,18 +198,14 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'width': 3,
       },
     },
-    // Nodo resaltado
     {
       selector: 'node.highlighted',
       style: {
         'border-color': colors.highlightBorder,
         'border-width': 5,
         'background-color': colors.highlightBg,
-        'transition-property': 'border-width, border-color, background-color',
-        'transition-duration': '0.3s',
       },
     },
-    // Arista resaltada
     {
       selector: 'edge.highlighted',
       style: {
@@ -238,35 +213,28 @@ function getStylesheet(isDarkMode: boolean): any[] {
         'target-arrow-color': colors.highlightBorder,
         'width': 4,
         'z-index': 999,
-        'transition-property': 'width, line-color',
-        'transition-duration': '0.3s',
       },
     },
   ];
 }
 
-function AutomataGraphCytoscapeInner({
+export function AutomataGraphCytoscape({
   automaton,
   highlightedPath = [],
   onNodeClick,
   onEdgeClick,
   className,
 }: AutomataGraphCytoscapeProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const cyRef = useRef<any>(null);
-  const [isClient, setIsClient] = useState(false);
+  const cyRef = useRef<cytoscape.Core | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  // Detectar si estamos en el cliente
+  // Detectar modo oscuro
   useEffect(() => {
-    setIsClient(true);
-    // Detectar modo oscuro
     const checkDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
     checkDarkMode();
     
-    // Observar cambios en el tema
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -276,92 +244,35 @@ function AutomataGraphCytoscapeInner({
     return () => observer.disconnect();
   }, []);
   
-  const elements = useMemo(
-    () => automatonToCytoscape(automaton),
-    [automaton]
-  );
+  // Convertir autómata a elementos
+  const elements = useMemo(() => automatonToCytoscape(automaton), [automaton]);
   
-  const stylesheet = useMemo(
-    () => getStylesheet(isDarkMode),
-    [isDarkMode]
-  );
+  // Obtener estilos según el tema
+  const stylesheet = useMemo(() => getStylesheet(isDarkMode), [isDarkMode]);
   
-  // Inicializar Cytoscape
+  // Aplicar layout cuando los elementos cambien
   useEffect(() => {
-    if (!isClient || !containerRef.current || !cytoscape) return;
-    
-    // Limpiar instancia anterior
-    if (cyRef.current) {
-      cyRef.current.destroy();
+    if (cyRef.current && elements.length > 0) {
+      setTimeout(() => {
+        cyRef.current?.layout({
+          name: 'cose-bilkent',
+          quality: 'proof',
+          nodeRepulsion: 6000,
+          idealEdgeLength: 120,
+          edgeElasticity: 0.45,
+          gravity: 0.25,
+          gravityRange: 3.8,
+          randomize: true,
+          fit: true,
+          padding: 50,
+          animate: true,
+          animationDuration: 800,
+          animationEasing: 'ease-out-cubic',
+          numIter: 2500,
+        } as any).run();
+      }, 100);
     }
-    
-    // Crear nueva instancia de Cytoscape
-    const cy = cytoscape({
-      container: containerRef.current,
-      elements: elements,
-      style: stylesheet,
-      layout: { name: 'preset' }, // Usaremos layout manual después
-      wheelSensitivity: 0.2,
-      minZoom: 0.3,
-      maxZoom: 3,
-      boxSelectionEnabled: false,
-      autounselectify: false,
-    });
-    
-    cyRef.current = cy;
-    
-    // Aplicar layout
-    const layout = cy.layout({
-      name: 'cose-bilkent',
-      quality: 'proof',
-      nodeRepulsion: 6000,
-      idealEdgeLength: 120,
-      edgeElasticity: 0.45,
-      gravity: 0.25,
-      gravityRange: 3.8,
-      randomize: true,
-      fit: true,
-      padding: 50,
-      animate: 'end',
-      animationDuration: 800,
-      animationEasing: 'ease-out-cubic',
-      numIter: 2500,
-      tile: false,
-      nestingFactor: 0.1,
-    } as any);
-    
-    layout.run();
-    
-    // Ajustar vista cuando termine el layout
-    cy.one('layoutstop', () => {
-      cy.fit(undefined, 40);
-    });
-    
-    // Event handlers
-    cy.on('tap', 'node', (evt: any) => {
-      const node = evt.target;
-      onNodeClick?.(node.id());
-    });
-    
-    cy.on('tap', 'edge', (evt: any) => {
-      const edge = evt.target;
-      if (edge.id() !== 'initial-arrow') {
-        const transition = automaton.transitions.find(
-          t => t.from === edge.data('source') && t.to === edge.data('target')
-        );
-        if (transition) {
-          onEdgeClick?.(transition);
-        }
-      }
-    });
-    
-    return () => {
-      if (cyRef.current) {
-        cyRef.current.destroy();
-        cyRef.current = null;
-      }
-    };
-  }, [isClient, elements, stylesheet, onNodeClick, onEdgeClick, automaton]);
+  }, [elements]);
   
   // Aplicar highlight
   useEffect(() => {
@@ -375,11 +286,10 @@ function AutomataGraphCytoscapeInner({
         cy.getElementById(id).addClass('highlighted');
       });
       
-      // Highlight edges conectados (buscar por source y target)
       for (let i = 0; i < highlightedPath.length - 1; i++) {
         const sourceId = highlightedPath[i];
         const targetId = highlightedPath[i + 1];
-        cy.edges().forEach((edge: any) => {
+        cy.edges().forEach((edge) => {
           if (edge.data('source') === sourceId && edge.data('target') === targetId) {
             edge.addClass('highlighted');
           }
@@ -390,106 +300,119 @@ function AutomataGraphCytoscapeInner({
   
   // Actualizar estilos cuando cambia el tema
   useEffect(() => {
-    if (cyRef.current && isClient) {
+    if (cyRef.current) {
       cyRef.current.style(stylesheet);
     }
-  }, [stylesheet, isClient]);
+  }, [stylesheet]);
   
-  const handleExport = useCallback(() => {
-    if (!cyRef.current) return;
+  // Configurar event handlers
+  const handleCy = (cy: cytoscape.Core) => {
+    cyRef.current = cy;
     
-    const bgColor = isDarkMode ? '#1f2937' : '#ffffff';
-    
-    const png = cyRef.current.png({
-      output: 'blob',
-      bg: bgColor,
-      full: true,
-      scale: 3,
+    cy.on('tap', 'node', (evt) => {
+      onNodeClick?.(evt.target.id());
     });
     
-    const url = URL.createObjectURL(png as Blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `automaton-${automaton.id}-${Date.now()}.png`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }, [automaton.id, isDarkMode]);
+    cy.on('tap', 'edge', (evt) => {
+      const edge = evt.target;
+      const transition = automaton.transitions.find(
+        t => t.from === edge.data('source') && t.to === edge.data('target')
+      );
+      if (transition) {
+        onEdgeClick?.(transition);
+      }
+    });
+  };
   
-  const handleZoomIn = useCallback(() => {
+  const handleZoomIn = () => {
     if (cyRef.current) {
       cyRef.current.zoom(cyRef.current.zoom() * 1.2);
       cyRef.current.center();
     }
-  }, []);
+  };
   
-  const handleZoomOut = useCallback(() => {
+  const handleZoomOut = () => {
     if (cyRef.current) {
       cyRef.current.zoom(cyRef.current.zoom() / 1.2);
       cyRef.current.center();
     }
-  }, []);
+  };
   
-  const handleFit = useCallback(() => {
+  const handleFit = () => {
     if (cyRef.current) {
       cyRef.current.fit(undefined, 40);
     }
-  }, []);
+  };
   
-  if (!isClient) {
-    return (
-      <div className={cn('relative w-full rounded-lg border bg-muted/20', className)}>
-        <div className="h-125 flex items-center justify-center">
-          <div className="text-muted-foreground">Cargando visualización...</div>
-        </div>
-      </div>
-    );
-  }
+  const handleExport = () => {
+    if (cyRef.current) {
+      const png = cyRef.current.png({
+        full: true,
+        scale: 2,
+        bg: isDarkMode ? '#1f2937' : '#ffffff',
+      });
+      const link = document.createElement('a');
+      link.href = png;
+      link.download = `automaton-${automaton.id}-${Date.now()}.png`;
+      link.click();
+    }
+  };
+  
+  const handleCopyImage = async () => {
+    if (cyRef.current) {
+      try {
+        const png = cyRef.current.png({
+          full: true,
+          scale: 2,
+          bg: isDarkMode ? '#1f2937' : '#ffffff',
+        });
+        
+        const response = await fetch(png);
+        const blob = await response.blob();
+        
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      } catch (err) {
+        console.error('Error al copiar imagen:', err);
+      }
+    }
+  };
   
   return (
     <div className={cn('relative w-full rounded-lg border bg-muted/20 overflow-hidden', className)}>
-      <div 
-        ref={containerRef}
-        className="w-full h-125"
-      />
+      <div className="w-full h-125">
+        <CytoscapeComponent
+          elements={elements}
+          style={{ width: '100%', height: '100%' }}
+          stylesheet={stylesheet}
+          cy={handleCy}
+          layout={{ name: 'preset' }}
+          minZoom={0.3}
+          maxZoom={3}
+          wheelSensitivity={0.2}
+          boxSelectionEnabled={false}
+          autounselectify={false}
+        />
+      </div>
       
-      {/* Controles de zoom */}
+      {/* Controles */}
       <div className="absolute top-2 right-2 flex gap-1 z-10">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleZoomIn}
-          className="shadow-md h-8 w-8 p-0"
-          title="Acercar"
-        >
+        <Button size="sm" variant="secondary" onClick={handleZoomIn} className="shadow-md h-8 w-8 p-0" title="Acercar">
           <ZoomIn className="h-4 w-4" />
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleZoomOut}
-          className="shadow-md h-8 w-8 p-0"
-          title="Alejar"
-        >
+        <Button size="sm" variant="secondary" onClick={handleZoomOut} className="shadow-md h-8 w-8 p-0" title="Alejar">
           <ZoomOut className="h-4 w-4" />
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleFit}
-          className="shadow-md h-8 w-8 p-0"
-          title="Ajustar vista"
-        >
+        <Button size="sm" variant="secondary" onClick={handleFit} className="shadow-md h-8 w-8 p-0" title="Ajustar vista">
           <Maximize2 className="h-4 w-4" />
         </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleExport}
-          className="shadow-md"
-          title="Exportar imagen"
-        >
+        <Button size="sm" variant="secondary" onClick={handleCopyImage} className="shadow-md h-8 w-8 p-0" title="Copiar imagen">
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="secondary" onClick={handleExport} className="shadow-md" title="Exportar imagen">
           <Download className="h-4 w-4 mr-1" />
-          Exportar
+          PNG
         </Button>
       </div>
       
@@ -512,18 +435,3 @@ function AutomataGraphCytoscapeInner({
     </div>
   );
 }
-
-// Exportar el componente con carga dinámica para evitar SSR
-export const AutomataGraphCytoscape = dynamic(
-  () => Promise.resolve(AutomataGraphCytoscapeInner),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="relative w-full rounded-lg border bg-muted/20">
-        <div className="h-125 flex items-center justify-center">
-          <div className="text-muted-foreground animate-pulse">Cargando visualización del autómata...</div>
-        </div>
-      </div>
-    ),
-  }
-);
