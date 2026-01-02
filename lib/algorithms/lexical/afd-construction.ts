@@ -331,9 +331,13 @@ export function buildAFDFull(regex: string): AutomatonResults {
 }
 
 export function buildAFDShort(regex: string): AutomatonResults {
+  // Construir árbol sintáctico aumentado (con # al final) para mostrar los valores correctos
+  const augmentedRegex = `(${regex})#`;
+  const syntaxTree = buildSyntaxTree(augmentedRegex);
+  
   return {
     automatonAFD: erToAFD(regex),
-    syntaxTree: buildSyntaxTree(regex),
+    syntaxTree,
   };
 }
 
