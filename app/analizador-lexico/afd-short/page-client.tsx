@@ -150,33 +150,10 @@ export default function AFDShortClientPage() {
             title="Funciones del Árbol (Posición, Siguiente)"
             icon={<Table2 className="h-5 w-5 text-blue-500" />}
             defaultOpen
+            className='space-y-4'
           >
-            <div className="space-y-4">
-              {/* Resumen de funciones */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                  <span className="text-blue-700 dark:text-blue-400 block font-medium">Primeros (raíz)</span>
-                  <span className="font-mono text-blue-600 dark:text-blue-300">
-                    {'{' + Array.from(automaton.syntaxTree.primeros).sort((a, b) => a - b).join(', ') + '}'}
-                  </span>
-                </div>
-                <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 border border-red-200 dark:border-red-800">
-                  <span className="text-red-700 dark:text-red-400 block font-medium">Últimos (raíz)</span>
-                  <span className="font-mono text-red-600 dark:text-red-300">
-                    {'{' + Array.from(automaton.syntaxTree.ultimos).sort((a, b) => a - b).join(', ') + '}'}
-                  </span>
-                </div>
-                <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800">
-                  <span className="text-green-700 dark:text-green-400 block font-medium">Estado Inicial</span>
-                  <span className="font-mono text-green-600 dark:text-green-300">
-                    Primeros(raíz) = {'{' + Array.from(automaton.syntaxTree.primeros).sort((a, b) => a - b).join(', ') + '}'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Tabla de posiciones y siguiente */}
-              <FollowposTable tree={automaton.syntaxTree} />
-            </div>
+            {/* Tabla de posiciones y siguiente */}
+            <FollowposTable tree={automaton.syntaxTree} />
           </CollapsibleSection>
 
           {/* ============================================= */}
