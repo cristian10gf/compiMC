@@ -11,8 +11,7 @@ import {
   SubsetStatesTable 
 } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
-import { useAutomata } from '@/hooks';
-import { useHistory } from '@/lib/context';
+import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, GitBranch, Layers, Minimize2 } from 'lucide-react';
 
 export default function AFDFullClientPage() {
@@ -40,12 +39,6 @@ export default function AFDFullClientPage() {
     });
     
     return removed;
-  }, [automaton]);
-
-  // Estados que permanecieron en el AFD óptimo (representantes de particiones)
-  const representativeStates = useMemo(() => {
-    if (!automaton?.automatonAFD) return [];
-    return automaton.automatonAFD.states.map(s => s.label);
   }, [automaton]);
 
   const handleAnalyze = async () => {
@@ -296,7 +289,7 @@ export default function AFDFullClientPage() {
               </CollapsibleSection>
 
               {/* Tabla de transiciones del AFD óptimo */}
-              <CollapsibleSection title="Tabla de Transiciones (Estado × Símbolo)" defaultOpen>
+              <CollapsibleSection title="Tabla de Transiciones (Estado x Símbolo)" defaultOpen>
                 <TransitionTable automaton={automaton.automatonAFD} />
               </CollapsibleSection>
 
