@@ -12,8 +12,7 @@ import {
   AutomataGraphCytoscape 
 } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
-import { useAutomata } from '@/hooks';
-import { useHistory } from '@/lib/context';
+import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, TreeDeciduous, Table2, GitGraph } from 'lucide-react';
 
 export default function AFDShortClientPage() {
