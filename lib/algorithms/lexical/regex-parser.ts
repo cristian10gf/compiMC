@@ -286,14 +286,14 @@ export function buildSyntaxTree(regex: string): SyntaxTree {
   // 5. Construir árbol
   const root = buildSyntaxTreeFromPostfix(postfix);
 
-  // 6. Calcular funciones
+  // 6. Asignar posiciones a los símbolos PRIMERO (necesario para siguientes)
+  const positions = assignPositions(root);
+
+  // 7. Calcular funciones (después de asignar posiciones)
   const anulable = calculateAnulable(root);
   const primeros = calculatePrimeros(root);
   const ultimos = calculateUltimos(root);
   const siguientes = calculateSiguientes(root);
-
-  // 7. Asignar posiciones a los símbolos
-  const positions = assignPositions(root);
 
   return {
     root,

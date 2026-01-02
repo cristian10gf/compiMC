@@ -29,19 +29,34 @@ export function resetStateCounter() {
 }
 
 /**
- * Genera un nuevo ID de estado
+ * Genera un nuevo ID de estado usando letras mayúsculas (A, B, C, ..., Z, AA, AB, ...)
  */
 function newStateId(): string {
-  return `q${stateCounter++}`;
+  const index = stateCounter++;
+  return numberToLetters(index);
+}
+
+/**
+ * Convierte un número a letras mayúsculas (0=A, 1=B, ..., 25=Z, 26=AA, 27=AB, ...)
+ */
+function numberToLetters(num: number): string {
+  let result = '';
+  let n = num;
+  do {
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return result;
 }
 
 /**
  * Crea un estado nuevo
  */
 function createState(isInitial: boolean = false, isFinal: boolean = false): State {
+  const id = newStateId();
   return {
-    id: newStateId(),
-    label: `q${stateCounter - 1}`,
+    id,
+    label: id,
     isInitial,
     isFinal,
   };
