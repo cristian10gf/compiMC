@@ -260,16 +260,16 @@ export function optimizeBySignificantStates(afd: Automaton, afn: Automaton): Aut
       stateId => afd.states.find(s => s.id === stateId)?.isFinal
     );
 
-    const newStateId = `S${optStates.length}`;
+    // Usar el representante (letra) como ID para mantener consistencia en las tablas
     optStates.push({
-      id: newStateId,
+      id: representative,
       label: representative,
       isInitial,
       isFinal,
     });
 
     for (const stateId of partition) {
-      stateMap.set(stateId, newStateId);
+      stateMap.set(stateId, representative);
     }
   }
 
@@ -295,6 +295,10 @@ export function optimizeBySignificantStates(afd: Automaton, afn: Automaton): Aut
     }
   }
 
+  // Filtrar subconjuntos para incluir solo los estados representativos (que quedaron en el AFD óptimo)
+  const representativeIds = new Set(optStates.map(s => s.id));
+  const filteredSubsets = subconjuntos.filter(s => representativeIds.has(s.id));
+
   return {
     id: `afd-opt-${Date.now()}`,
     type: 'DFA',
@@ -302,7 +306,7 @@ export function optimizeBySignificantStates(afd: Automaton, afn: Automaton): Aut
     transitions: optTransitions,
     alphabet: afd.alphabet,
     name: `AFD Óptimo de ${afd.name || 'AFD'}`,
-    subsetStates: subconjuntos,
+    subsetStates: filteredSubsets,
   };
 }
 
