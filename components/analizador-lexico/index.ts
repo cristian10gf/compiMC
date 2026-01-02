@@ -10,4 +10,5 @@ export { TransitionTable } from './transition-table';
 export { SubsetStatesTable } from './subset-states-table';
 export { FollowposTable } from './followpos-table';
 export { StringRecognition } from './string-recognition';
+export { StringRecognitionVisualizer } from './string-recognition-visualizer';
 export { LanguageInput } from './language-input';
