@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AutomataGraphCytoscape, StringRecognition } from '@/components/analizador-lexico';
+import { AutomataGraphCytoscape, StringRecognitionVisualizer } from '@/components/analizador-lexico';
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { useHistory, useAutomata } from '@/hooks';
 import { Loader2 } from 'lucide-react';
@@ -142,11 +142,13 @@ export default function ReconocerClientPage() {
             </CardContent>
           </Card>
 
-          {/* Sección final: Pasos de reconocimiento */}
+          {/* Sección final: Pasos de reconocimiento con visualización */}
           {recognitionResult && (
-            <StringRecognition 
-              key={`${inputString}-${recognitionResult.accepted}`} 
-              result={recognitionResult} 
+            <StringRecognitionVisualizer
+              className='h-full rounded-lg border bg-muted/20 overflow-hidden'
+              key={`${inputString}-${recognitionResult.accepted}`}
+              automaton={automaton.automatonAFD}
+              result={recognitionResult}
             />
           )}
         </>
