@@ -218,6 +218,7 @@ export function AutomataEditor({
   // Refs para acceder a valores actuales en los event handlers de Cytoscape
   const transitionModeRef = useRef(transitionMode);
   const transitionSourceRef = useRef(transitionSource);
+  const shouldFitAfterAddRef = useRef(false);
   
   // Mantener refs sincronizados con el estado
   useEffect(() => {
@@ -245,6 +246,11 @@ export function AutomataEditor({
       setTransitions(initialAutomaton.transitions);
       setStateCounter(initialAutomaton.states.length);
       isInitializedRef.current = true; // Marcar como inicializado para no llamar onChange
+      
+      // Hacer fit después de cargar
+      setTimeout(() => {
+        cyRef.current?.fit(undefined, 40);
+      }, 100);
     }
   }, [initialAutomaton]);
   
@@ -339,6 +345,7 @@ export function AutomataEditor({
       },
     };
     
+    shouldFitAfterAddRef.current = true;
     setStates(prev => [...prev, newState]);
     setStateCounter(prev => prev + 1);
   }, [stateCounter, states.length]);
@@ -497,6 +504,16 @@ export function AutomataEditor({
       setPendingTransition(null);
     }
   }, [pendingTransition, newTransitionSymbol]);
+
+  // Hacer fit cuando se añade un estado manualmente
+  useEffect(() => {
+    if (shouldFitAfterAddRef.current && cyRef.current) {
+      setTimeout(() => {
+        cyRef.current?.fit(undefined, 40);
+        shouldFitAfterAddRef.current = false;
+      }, 100);
+    }
+  }, [states.length]);
 
   // Actualizar estilos cuando cambia el tema
   useEffect(() => {
