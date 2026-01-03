@@ -46,6 +46,7 @@ export default function AFtoERClientPage() {
   
   // Estado del autómata
   const [automaton, setAutomaton] = useState<Automaton | null>(null);
+  const [resetKey, setResetKey] = useState(0);
   
   // Estado de procesamiento
   const [loading, setLoading] = useState(false);
@@ -93,6 +94,7 @@ export default function AFtoERClientPage() {
     setResult(null);
     setError(null);
     setCustomAlphabet([]);
+    setResetKey(prev => prev + 1);
   }, []);
 
   // Realizar la conversión
@@ -240,11 +242,13 @@ export default function AFtoERClientPage() {
           {/* Editor según el modo */}
           {inputMode === 'visual' ? (
             <AutomataEditor
+              key={`visual-${resetKey}`}
               onChange={handleAutomatonChange}
               initialAutomaton={automaton || undefined}
             />
           ) : (
             <TransitionTableEditor
+              key={`table-${resetKey}`}
               alphabet={alphabetMode === 'custom' ? customAlphabet : undefined}
               onChange={handleAutomatonChange}
               initialAutomaton={automaton || undefined}
