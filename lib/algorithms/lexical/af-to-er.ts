@@ -119,10 +119,17 @@ function splitByUnion(expr: string): string[] {
 }
 
 /**
- * Verifica si un término contiene una variable
+ * Verifica si un término contiene una variable (estado)
+ * Detecta variables como q0, q1, q2, A, B en expresiones como "aq2", "bq3", etc.
  */
 function containsVariable(term: string, variable: string): boolean {
-  const regex = new RegExp(`\\b${escapeRegExp(variable)}\\b`);
+  if (!term || !variable) return false;
+  
+  const escaped = escapeRegExp(variable);
+  // Buscar la variable que:
+  // 1. No esté seguida por más dígitos (para evitar q1 matcheando en q10)
+  // 2. Puede estar al final o seguida por operadores/espacios/paréntesis
+  const regex = new RegExp(`${escaped}(?![0-9a-zA-Z])|${escaped}$`);
   return regex.test(term);
 }
 
@@ -137,13 +144,18 @@ function escapeRegExp(str: string): string {
  * Extrae el coeficiente de un término recursivo
  * ej: "aX" -> { coefficient: "a", isPrefix: true }
  * ej: "Xa" -> { coefficient: "a", isPrefix: false }
+ * ej: "aq2" -> { coefficient: "a", isPrefix: true } (para variable q2)
  */
 function extractCoefficient(
   term: string, 
   variable: string
 ): { coefficient: string; isPrefix: boolean } | null {
-  const varRegex = new RegExp(`\\b${escapeRegExp(variable)}\\b`);
-  const match = varRegex.exec(term);
+  if (!containsVariable(term, variable)) return null;
+  
+  // Encontrar la posición de la variable
+  const escaped = escapeRegExp(variable);
+  const regex = new RegExp(`${escaped}(?![0-9a-zA-Z])|${escaped}$`);
+  const match = regex.exec(term);
   
   if (!match) return null;
   
@@ -334,8 +346,9 @@ function substituteVariable(
       return eq; // No sustituir en su propia ecuación
     }
 
-    // Sustituir en el lado derecho
-    const regex = new RegExp(`\\b${escapeRegExp(variable)}\\b`, 'g');
+    // Sustituir en el lado derecho usando la misma lógica de detección
+    const escaped = escapeRegExp(variable);
+    const regex = new RegExp(`${escaped}(?![0-9a-zA-Z])`, 'g');
     
     // Envolver replacement en paréntesis si es necesario
     const needsWrap = replacement.includes('|') || replacement.includes(' ');
@@ -352,7 +365,19 @@ function substituteVariable(
 }
 
 /**
+ * Reemplaza una variable en una expresión
+ */
+function replaceVariableInExpr(expr: string, variable: string, replacement: string): string {
+  const escaped = escapeRegExp(variable);
+  const regex = new RegExp(`${escaped}(?![0-9a-zA-Z])`, 'g');
+  const needsWrap = replacement.includes('|') || replacement.includes(' ');
+  const wrappedReplacement = needsWrap ? `(${replacement})` : replacement;
+  return expr.replace(regex, wrappedReplacement);
+}
+
+/**
  * Resuelve el sistema de ecuaciones paso a paso usando el método de Arden
+ * Procesa estados en orden descendente (qN -> q0) para eliminar dependencias
  */
 export function solveEquations(
   equations: Equation[],
@@ -377,35 +402,76 @@ export function solveEquations(
     explanation: 'Ecuaciones generadas a partir del autómata.\n→: estado inicial\n*: estado final\nε en el lado derecho indica que el estado es final (acepta la cadena vacía)',
   });
 
-  // Obtener orden de resolución:
-  // Resolver primero los estados que NO son iniciales, dejando el inicial para el final
-  // Esto permite que la expresión del estado inicial contenga todas las sustituciones
-  const stateOrder = [
-    // Primero: estados no iniciales y no finales
-    ...currentEquations.filter(eq => !eq.isFinal && !eq.isInitial),
-    // Segundo: estados finales que no son iniciales
-    ...currentEquations.filter(eq => eq.isFinal && !eq.isInitial),
-    // Último: el estado inicial (puede ser final también)
-    ...currentEquations.filter(eq => eq.isInitial),
-  ];
+  // Obtener todos los nombres de variables (estados)
+  const allVariables = currentEquations.map(eq => eq.left);
+  
+  // Ordenar estados en orden descendente por número (q3, q2, q1, q0)
+  // Esto asegura que eliminamos dependencias de mayor a menor
+  const sortedVariables = [...allVariables].sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, '')) || 0;
+    const numB = parseInt(b.replace(/\D/g, '')) || 0;
+    return numB - numA; // Descendente
+  });
+  
+  // Encontrar el estado inicial (objetivo final)
+  const initialState = currentEquations.find(eq => eq.isInitial);
+  const initialVariable = initialState?.left || sortedVariables[sortedVariables.length - 1];
+  
+  // Mover el estado inicial al final del procesamiento
+  const processingOrder = sortedVariables.filter(v => v !== initialVariable);
+  processingOrder.push(initialVariable);
 
-  const resolvedVars = new Set<string>();
+  steps.push({
+    stepNumber: stepNumber++,
+    description: 'Orden de procesamiento determinado',
+    equations: [`Orden: ${processingOrder.join(' → ')}`],
+    action: 'Ordenamiento',
+    highlightedVariable: '',
+    explanation: `Se procesarán los estados en orden descendente, dejando el estado inicial (${initialVariable}) para el final.\nEsto permite eliminar todas las dependencias progresivamente.`,
+  });
 
-  // Resolver cada ecuación
-  for (const targetEq of stateOrder) {
-    const variable = targetEq.left;
-    
-    if (resolvedVars.has(variable)) continue;
-    
+  const resolvedExpressions = new Map<string, string>();
+
+  // Resolver cada ecuación en orden
+  for (const variable of processingOrder) {
     let eq = currentEquations.find(e => e.left === variable)!;
+    let currentRight = eq.right;
     
-    // Verificar si tiene recursión
-    if (containsVariable(eq.right, variable)) {
-      const ardenResult = applyArdenLemmaImproved(eq.right, variable);
+    // Paso 1: Sustituir todas las variables ya resueltas en esta ecuación
+    for (const [resolvedVar, resolvedExpr] of resolvedExpressions) {
+      if (containsVariable(currentRight, resolvedVar)) {
+        currentRight = replaceVariableInExpr(currentRight, resolvedVar, resolvedExpr);
+        currentRight = simplifyRegex(currentRight);
+      }
+    }
+    
+    // Actualizar la ecuación con las sustituciones
+    if (currentRight !== eq.right) {
+      currentEquations = currentEquations.map(e =>
+        e.left === variable ? { ...e, right: currentRight } : e
+      );
+      
+      steps.push({
+        stepNumber: stepNumber++,
+        description: `Sustituir variables resueltas en ${variable}`,
+        equations: currentEquations.map(e => `${e.left} = ${e.right}`),
+        action: 'Sustitución',
+        highlightedVariable: variable,
+        explanation: `Reemplazar variables ya resueltas en la ecuación de ${variable}`,
+      });
+      
+      eq = currentEquations.find(e => e.left === variable)!;
+      currentRight = eq.right;
+    }
+    
+    // Paso 2: Aplicar Arden si hay recursión (la variable aparece en su propia ecuación)
+    if (containsVariable(currentRight, variable)) {
+      const ardenResult = applyArdenLemmaImproved(currentRight, variable);
       
       if (ardenResult.applied) {
+        currentRight = ardenResult.result;
         currentEquations = currentEquations.map(e =>
-          e.left === variable ? { ...e, right: ardenResult.result } : e
+          e.left === variable ? { ...e, right: currentRight } : e
         );
         
         steps.push({
@@ -416,73 +482,124 @@ export function solveEquations(
           highlightedVariable: variable,
           explanation: `${variable} = α${variable} | β donde α = ${ardenResult.alpha}, β = ${ardenResult.beta}\nPor Arden: ${variable} = α*β = ${ardenResult.result}`,
         });
-        
-        eq = currentEquations.find(e => e.left === variable)!;
       }
     }
     
-    // Sustituir esta variable en todas las demás ecuaciones
-    const replacement = eq.right;
+    // Paso 3: Verificar que no queden otras variables no resueltas
+    // Si quedan, sustituir iterativamente (de mayor a menor índice)
+    let iterations = 0;
+    const maxIterations = allVariables.length * 3;
     
-    if (replacement !== '∅' && replacement !== variable) {
-      currentEquations = substituteVariable(currentEquations, variable, replacement);
-      
-      steps.push({
-        stepNumber: stepNumber++,
-        description: `Sustituir ${variable} en las demás ecuaciones`,
-        equations: currentEquations.map(e => `${e.left} = ${e.right}`),
-        action: 'Sustitución',
-        highlightedVariable: variable,
-        explanation: `Reemplazar ${variable} por (${replacement}) en todas las ecuaciones`,
+    // Ordenar las otras variables para sustituir de mayor a menor
+    const otherVarsSorted = allVariables
+      .filter(v => v !== variable)
+      .sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, '')) || 0;
+        const numB = parseInt(b.replace(/\D/g, '')) || 0;
+        return numB - numA;
       });
-    }
     
-    resolvedVars.add(variable);
-    
-    // Verificar si alguna ecuación ganó recursión después de la sustitución
-    for (const checkEq of currentEquations) {
-      if (!resolvedVars.has(checkEq.left) && containsVariable(checkEq.right, checkEq.left)) {
-        const ardenResult = applyArdenLemmaImproved(checkEq.right, checkEq.left);
-        
-        if (ardenResult.applied) {
-          currentEquations = currentEquations.map(e =>
-            e.left === checkEq.left ? { ...e, right: ardenResult.result } : e
-          );
+    while (iterations < maxIterations && containsAnyVariable(currentRight, otherVarsSorted)) {
+      let changed = false;
+      
+      for (const otherVar of otherVarsSorted) {
+        if (containsVariable(currentRight, otherVar)) {
+          // Buscar la expresión de esta variable
+          const resolvedExpr = resolvedExpressions.get(otherVar);
+          const otherEq = currentEquations.find(e => e.left === otherVar);
+          const replacement = resolvedExpr || otherEq?.right;
           
-          steps.push({
-            stepNumber: stepNumber++,
-            description: `Aplicar Lema de Arden a ${checkEq.left} (nueva recursión)`,
-            equations: currentEquations.map(e => `${e.left} = ${e.right}`),
-            action: 'Arden',
-            highlightedVariable: checkEq.left,
-            explanation: `${checkEq.left} adquirió recursión tras la sustitución. Aplicar Arden.`,
-          });
+          if (replacement && replacement !== '∅' && replacement !== otherVar) {
+            const newRight = replaceVariableInExpr(currentRight, otherVar, replacement);
+            
+            if (newRight !== currentRight) {
+              currentRight = simplifyRegex(newRight);
+              changed = true;
+              
+              steps.push({
+                stepNumber: stepNumber++,
+                description: `Sustituir ${otherVar} en ${variable}`,
+                equations: [`${variable} = ${currentRight}`],
+                action: 'Sustitución',
+                highlightedVariable: variable,
+                explanation: `Reemplazar ${otherVar} por (${replacement})`,
+              });
+              
+              // Verificar si se creó recursión después de la sustitución
+              if (containsVariable(currentRight, variable)) {
+                const ardenResult = applyArdenLemmaImproved(currentRight, variable);
+                if (ardenResult.applied) {
+                  currentRight = ardenResult.result;
+                  
+                  steps.push({
+                    stepNumber: stepNumber++,
+                    description: `Aplicar Arden a ${variable} (recursión creada)`,
+                    equations: [`${variable} = ${currentRight}`],
+                    action: 'Arden',
+                    highlightedVariable: variable,
+                    explanation: `Recursión detectada, aplicar Arden`,
+                  });
+                }
+              }
+            }
+          }
         }
       }
+      
+      if (!changed) break;
+      iterations++;
+    }
+    
+    // Actualizar ecuación final para esta variable
+    currentRight = simplifyRegex(currentRight);
+    currentEquations = currentEquations.map(e =>
+      e.left === variable ? { ...e, right: currentRight } : e
+    );
+    
+    // Guardar la expresión resuelta
+    resolvedExpressions.set(variable, currentRight);
+    
+    // Mostrar paso de resolución final
+    if (!containsAnyVariable(currentRight, allVariables) || variable === initialVariable) {
+      steps.push({
+        stepNumber: stepNumber++,
+        description: `${variable} resuelto completamente`,
+        equations: currentEquations.map(e => `${e.left} = ${e.right}`),
+        action: 'Resolución',
+        highlightedVariable: variable,
+        explanation: `La ecuación de ${variable} ya no contiene dependencias de otros estados: ${variable} = ${currentRight}`,
+      });
     }
   }
 
-  // Determinar la expresión regular final
-  // Con el método de transiciones salientes + ε en finales, la ER es la del estado inicial
-  let finalRegex = '';
-  const initialState = currentEquations.find(eq => eq.isInitial);
+  // Obtener la expresión final del estado inicial
+  let finalRegex = resolvedExpressions.get(initialVariable) || '∅';
   
-  if (initialState) {
-    finalRegex = initialState.right;
-  } else {
-    // Fallback: unir estados finales
-    const finalStates = currentEquations.filter(eq => eq.isFinal);
-    if (finalStates.length === 1) {
-      finalRegex = finalStates[0].right;
-    } else if (finalStates.length > 1) {
-      const expressions = finalStates.map(eq => eq.right).filter(r => r !== '∅');
-      finalRegex = expressions.length === 1 ? expressions[0] : `(${expressions.join(' | ')})`;
-    } else {
-      finalRegex = '∅';
+  // Verificación final: asegurar que no queden variables
+  let finalIterations = 0;
+  while (containsAnyVariable(finalRegex, allVariables) && finalIterations < 10) {
+    for (const [varName, varExpr] of resolvedExpressions) {
+      if (containsVariable(finalRegex, varName)) {
+        finalRegex = replaceVariableInExpr(finalRegex, varName, varExpr);
+        finalRegex = simplifyRegex(finalRegex);
+      }
     }
+    finalIterations++;
   }
-
+  
   finalRegex = simplifyRegex(finalRegex);
+
+  // Verificar si aún quedan variables (error en el algoritmo)
+  if (containsAnyVariable(finalRegex, allVariables)) {
+    steps.push({
+      stepNumber: stepNumber++,
+      description: 'Advertencia: Variables no resueltas',
+      equations: [`ER parcial = ${finalRegex}`],
+      action: 'Advertencia',
+      highlightedVariable: '',
+      explanation: 'La expresión aún contiene referencias a estados. Esto puede indicar un ciclo no resuelto.',
+    });
+  }
 
   steps.push({
     stepNumber: stepNumber,
@@ -494,6 +611,13 @@ export function solveEquations(
   });
 
   return { steps, finalRegex };
+}
+
+/**
+ * Verifica si una expresión contiene alguna de las variables dadas
+ */
+function containsAnyVariable(expr: string, variables: string[]): boolean {
+  return variables.some(v => containsVariable(expr, v));
 }
 
 /**
