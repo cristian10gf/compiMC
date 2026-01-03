@@ -80,7 +80,7 @@ function automatonToCytoscape(automaton: Automaton) {
 /**
  * Genera los estilos de Cytoscape adaptados al tema
  */
-function getStylesheet(isDarkMode: boolean) {
+function getStylesheet(isDarkMode: boolean): any[] {
   const colors = isDarkMode ? {
     nodeBg: '#1f2937',
     nodeBorder: '#fbbf24',
@@ -252,26 +252,43 @@ export function AutomataGraphCytoscape({
   
   // Aplicar layout cuando los elementos cambien
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     if (cyRef.current && elements.length > 0) {
-      setTimeout(() => {
-        cyRef.current?.layout({
-          name: 'cose-bilkent',
-          quality: 'proof',
-          nodeRepulsion: 6000,
-          idealEdgeLength: 120,
-          edgeElasticity: 0.45,
-          gravity: 0.25,
-          gravityRange: 3.8,
-          randomize: true,
-          fit: true,
-          padding: 50,
-          animate: true,
-          animationDuration: 800,
-          animationEasing: 'ease-out-cubic',
-          numIter: 2500,
-        } as any).run();
+      timeoutId = setTimeout(() => {
+        // Verificar que cy sigue existiendo y no ha sido destruido
+        const cy = cyRef.current;
+        if (cy && !cy.destroyed()) {
+          try {
+            cy.layout({
+              name: 'cose-bilkent',
+              quality: 'proof',
+              nodeRepulsion: 6000,
+              idealEdgeLength: 120,
+              edgeElasticity: 0.45,
+              gravity: 0.25,
+              gravityRange: 3.8,
+              randomize: true,
+              fit: true,
+              padding: 50,
+              animate: true,
+              animationDuration: 800,
+              animationEasing: 'ease-out-cubic',
+              numIter: 2500,
+            } as any).run();
+          } catch (e) {
+            // Ignorar errores si el componente se desmontó
+            console.debug('Layout cancelled - component unmounted');
+          }
+        }
       }, 100);
     }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [elements]);
   
   // Aplicar highlight
