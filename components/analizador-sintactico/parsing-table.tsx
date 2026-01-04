@@ -27,6 +27,7 @@ interface ParsingTableProps {
   onCellClick?: (nonTerminal: string, terminal: string, production: string | null) => void;
   className?: string;
   itemsPerPage?: number;
+  nonTerminalOrder?: string[]; // Orden de los no terminales según las producciones
 }
 
 export function ParsingTable({
@@ -35,10 +36,18 @@ export function ParsingTable({
   onCellClick,
   className,
   itemsPerPage = 10,
+  nonTerminalOrder,
 }: ParsingTableProps) {
   const [currentPage, setCurrentPage] = useState(0);
 
-  const nonTerminals = Array.from(new Set(table.entries.map((e: { nonTerminal: string }) => e.nonTerminal)));
+  // Obtener no terminales en orden de aparición en entries, o usar el orden proporcionado
+  const uniqueNonTerminals = Array.from(new Set(table.entries.map((e: { nonTerminal: string }) => e.nonTerminal)));
+  
+  // Si se proporciona un orden, usarlo; de lo contrario mantener el orden de entries
+  const nonTerminals = nonTerminalOrder 
+    ? nonTerminalOrder.filter(nt => uniqueNonTerminals.includes(nt))
+    : uniqueNonTerminals;
+    
   const terminals = Array.from(new Set(table.entries.map((e: { terminal: string }) => e.terminal)));
 
   // Paginación por no terminales
@@ -81,7 +90,7 @@ export function ParsingTable({
             <TableBody>
               {paginatedNonTerminals.map((nonTerminal: string) => (
                 <TableRow key={nonTerminal}>
-                  <TableCell className="font-medium bg-muted sticky left-0">
+                  <TableCell className="font-medium bg-muted sticky left-0 flex justify-center content-center">
                     {nonTerminal}
                   </TableCell>
                   {terminals.map((terminal: string) => {
@@ -95,14 +104,14 @@ export function ParsingTable({
                         key={terminal}
                         className={cn(
                           'text-center cursor-pointer transition-all text-sm',
-                          production && 'bg-blue-50 dark:bg-blue-950',
+                          production && 'bg-primary/10 dark:bg-primary/20',
                           isHighlighted && 'ring-2 ring-primary ring-offset-2',
-                          !production && 'text-muted-foreground'
+                          !production && 'text-muted-foreground bg-muted/30'
                         )}
                         onClick={() => onCellClick?.(nonTerminal as string, terminal as string, production)}
                       >
                         {production ? (
-                          <code className="font-mono text-xs">{production}</code>
+                          <code className="font-mono text-xs text-primary">{production}</code>
                         ) : (
                           '-'
                         )}
