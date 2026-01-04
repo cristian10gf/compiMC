@@ -287,7 +287,13 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
 
       // ordena los noterminales segun el orden de definicion de las producciones      
       const orderedNonTerminals = Array.from(new Set(workingGrammar.productions.map(p => p.left)));
+      const orderedTerminals = Array.from(new Set(
+        workingGrammar.productions.flatMap(p => p.right)
+                                  .filter(s => !workingGrammar.nonTerminals.includes(s))
+      ));
+      
       workingGrammar.nonTerminals = orderedNonTerminals;
+      workingGrammar.terminals = orderedTerminals;
 
       // 3. Calcular PRIMERO y SIGUIENTE con reglas
       const firstFollow = generateFirstFollowWithRules(workingGrammar);
