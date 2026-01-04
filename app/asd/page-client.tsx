@@ -1,158 +1,263 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+/**
+ * Página cliente del Analizador Sintáctico Descendente (LL)
+ * 
+ * Secciones:
+ * 1. Input de gramática con terminales
+ * 2. Valores (PRIMERO y SIGUIENTE) con reglas de cálculo
+ * 3. Gramática transformada (sin recursividad izquierda, factorizada)
+ * 4. Tabla M de parsing
+ * 5. Reconocimiento de cadena con animación
+ */
+
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GrammarInput, ParsingTable, StackTraceTable } from '@/components/analizador-sintactico';
+import { Badge } from '@/components/ui/badge';
 import { CollapsibleSection } from '@/components/shared';
-import { useSyntaxAnalyzer } from '@/hooks';
-import { Loader2 } from 'lucide-react';
-import type { Grammar, Production } from '@/lib/types';
+import { 
+  GrammarInputEnhanced,
+  FirstFollowTable,
+  GrammarTransformations,
+  ParsingTable,
+  StringRecognitionLL,
+} from '@/components/analizador-sintactico';
+import { 
+  parseGrammarText,
+  transformGrammar,
+  generateFirstFollowWithRules,
+  buildParsingTable,
+  parseStringLL,
+  isLL1,
+  type FirstFollowWithRules,
+  type GrammarTransformation,
+} from '@/lib/algorithms/syntax/descendente';
+import type { Grammar, ParsingTable as ParsingTableType, ParsingResult } from '@/lib/types';
+import { 
+  Calculator, 
+  GitBranch, 
+  Table2, 
+  TextSearch,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
 
 export default function ASDClientPage() {
-  const [productions, setProductions] = useState<Production[]>([
-    { id: 'prod-1', left: 'S', right: ['a', 'A'] },
-  ]);
-  const [inputString, setInputString] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const { 
-    firstFollow, 
-    parsingTable, 
-    parsingResult,
-    isProcessing, 
-    error,
-    setGrammar,
-    analyzeLL,
-  } = useSyntaxAnalyzer();
+  // Estado del análisis
+  const [grammar, setGrammar] = useState<Grammar | null>(null);
+  const [transformation, setTransformation] = useState<GrammarTransformation | null>(null);
+  const [firstFollow, setFirstFollow] = useState<FirstFollowWithRules[] | null>(null);
+  const [parsingTable, setParsingTable] = useState<ParsingTableType | null>(null);
+  const [isLL1Grammar, setIsLL1Grammar] = useState<{ isLL1: boolean; conflicts: string[] } | null>(null);
 
-  const handleAnalyze = async () => {
-    const grammar: Grammar = {
-      productions,
-      startSymbol: productions[0]?.left || 'S',
-      terminals: [],
-      nonTerminals: [],
-    };
+  /**
+   * Maneja el análisis de la gramática
+   */
+  const handleAnalyze = useCallback(async (
+    grammarText: string,
+    terminals: string,
+    autoDetect: boolean
+  ) => {
+    setIsProcessing(true);
+    setError(null);
 
-    setGrammar(grammar);
-    await analyzeLL();
-  };
+    try {
+      // 1. Parsear la gramática
+      const parsedGrammar = parseGrammarText(grammarText, terminals, autoDetect);
+      
+      if (parsedGrammar.productions.length === 0) {
+        throw new Error('No se pudieron parsear las producciones. Verifica el formato.');
+      }
+
+      setGrammar(parsedGrammar);
+
+      // 2. Transformar la gramática (eliminar recursividad, factorizar)
+      const grammarTransformation = transformGrammar(parsedGrammar);
+      setTransformation(grammarTransformation);
+
+      // Usar la gramática transformada para los siguientes cálculos
+      const workingGrammar = grammarTransformation.factorized;
+
+      // 3. Calcular PRIMERO y SIGUIENTE con reglas
+      const firstFollowData = generateFirstFollowWithRules(workingGrammar);
+      setFirstFollow(firstFollowData);
+
+      // 4. Construir la tabla M
+      const table = buildParsingTable(workingGrammar);
+      setParsingTable(table);
+
+      // 5. Verificar si es LL(1)
+      const ll1Check = isLL1(workingGrammar);
+      setIsLL1Grammar(ll1Check);
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al analizar la gramática';
+      setError(errorMessage);
+      // Limpiar estado en caso de error
+      setGrammar(null);
+      setTransformation(null);
+      setFirstFollow(null);
+      setParsingTable(null);
+      setIsLL1Grammar(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  /**
+   * Maneja el reconocimiento de una cadena
+   */
+  const handleRecognize = useCallback(async (input: string): Promise<ParsingResult | null> => {
+    if (!transformation?.factorized || !parsingTable) {
+      setError('Primero debes analizar una gramática');
+      return null;
+    }
+
+    try {
+      const result = parseStringLL(transformation.factorized, parsingTable, input);
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al reconocer la cadena';
+      setError(errorMessage);
+      return null;
+    }
+  }, [transformation, parsingTable]);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Definición de la Gramática</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <GrammarInput
-            productions={productions}
-            onChange={setProductions}
-          />
-        </CardContent>
-      </Card>
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Input de gramática */}
+      <GrammarInputEnhanced
+        onAnalyze={handleAnalyze}
+        isProcessing={isProcessing}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Analizar Cadena</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Cadena de Entrada</label>
-            <Input
-              value={inputString}
-              onChange={(e) => setInputString(e.target.value)}
-              placeholder="Ej: a + b * c"
-              className="font-mono"
-            />
+      {/* Error */}
+      {error && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="pt-6">
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resultados */}
+      {grammar && (
+        <div className="space-y-4">
+          {/* Encabezado de resultados */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Resultados del Análisis</h2>
+            {isLL1Grammar && (
+              <Badge
+                variant={isLL1Grammar.isLL1 ? 'default' : 'destructive'}
+                className="flex items-center gap-1"
+              >
+                {isLL1Grammar.isLL1 ? (
+                  <>
+                    <CheckCircle2 className="h-3 w-3" />
+                    Gramática LL(1)
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-3 w-3" />
+                    No es LL(1)
+                  </>
+                )}
+              </Badge>
+            )}
           </div>
 
-          <Button
-            onClick={handleAnalyze}
-            disabled={!productions.length || isProcessing}
-            className="w-full sm:w-auto"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 animate-spin" />
-                Analizando...
-              </>
-            ) : (
-              'Analizar (LL)'
-            )}
-          </Button>
-
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
+          {/* Conflictos si los hay */}
+          {isLL1Grammar && !isLL1Grammar.isLL1 && isLL1Grammar.conflicts.length > 0 && (
+            <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Conflictos Detectados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm space-y-1 text-amber-600 dark:text-amber-400">
+                  {isLL1Grammar.conflicts.map((conflict, idx) => (
+                    <li key={idx} className="font-mono text-xs">
+                      • {conflict}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
 
-      {parsingTable && (
-        <Tabs defaultValue="table" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="table">Tabla M</TabsTrigger>
-            <TabsTrigger value="trace">Traza</TabsTrigger>
-            <TabsTrigger value="sets">Conjuntos</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="table" className="mt-6">
-            <CollapsibleSection title="Tabla de Análisis LL (M)" defaultOpen>
-              {parsingTable && <ParsingTable table={parsingTable} />}
+          {/* Sección 1: Gramática Transformada */}
+          {transformation && (
+            <CollapsibleSection
+              title="Gramática Sin Recursividad y Factorizada"
+              icon={<GitBranch className="h-5 w-5" />}
+              badge={
+                transformation.transformationSteps.filter(s => !s.startsWith('===')).length > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    {transformation.transformationSteps.filter(s => s.startsWith('  ')).length} cambios
+                  </Badge>
+                ) : undefined
+              }
+              defaultOpen
+            >
+              <GrammarTransformations
+                originalGrammar={transformation.originalGrammar}
+                transformedGrammar={transformation.factorized}
+                transformationSteps={transformation.transformationSteps}
+              />
             </CollapsibleSection>
-          </TabsContent>
+          )}
 
-          <TabsContent value="trace" className="mt-6">
-            <CollapsibleSection title="Traza de Análisis" defaultOpen>
-              {parsingResult?.steps && <StackTraceTable steps={parsingResult.steps} />}
+          {/* Sección 2: Valores (PRIMERO y SIGUIENTE) */}
+          {firstFollow && (
+            <CollapsibleSection
+              title="Valores (PRIMERO y SIGUIENTE)"
+              icon={<Calculator className="h-5 w-5" />}
+              badge={
+                <Badge variant="secondary" className="text-xs">
+                  {firstFollow.length} no terminales
+                </Badge>
+              }
+              defaultOpen
+            >
+              <FirstFollowTable data={firstFollow} />
             </CollapsibleSection>
-          </TabsContent>
+          )}
 
-          <TabsContent value="sets" className="mt-6">
-            <div className="space-y-6">
-              {firstFollow && (
-                <CollapsibleSection title="Conjuntos FIRST" defaultOpen>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="space-y-2">
-                        {firstFollow.map((ff) => (
-                          <div key={ff.nonTerminal} className="flex items-start gap-3 text-sm">
-                            <code className="font-bold text-primary">{ff.nonTerminal}:</code>
-                            <code className="text-muted-foreground">
-                              {'{' + ff.first.join(', ') + '}'}
-                            </code>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CollapsibleSection>
-              )}
+          {/* Sección 3: Tabla M */}
+          {parsingTable && (
+            <CollapsibleSection
+              title="Tabla M de Parsing"
+              icon={<Table2 className="h-5 w-5" />}
+              badge={
+                <Badge variant="secondary" className="text-xs">
+                  {parsingTable.entries?.filter(e => e.production).length || 0} entradas
+                </Badge>
+              }
+              defaultOpen
+            >
+              <ParsingTable table={parsingTable} />
+            </CollapsibleSection>
+          )}
 
-              {firstFollow && (
-                <CollapsibleSection title="Conjuntos FOLLOW" defaultOpen>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="space-y-2">
-                        {firstFollow.map((ff) => (
-                          <div key={ff.nonTerminal} className="flex items-start gap-3 text-sm">
-                            <code className="font-bold text-primary">{ff.nonTerminal}:</code>
-                            <code className="text-muted-foreground">
-                              {'{' + ff.follow.join(', ') + '}'}
-                            </code>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CollapsibleSection>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+          {/* Sección 4: Reconocimiento de Cadena */}
+          {parsingTable && (
+            <CollapsibleSection
+              title="Reconocer Cadena"
+              icon={<TextSearch className="h-5 w-5" />}
+              defaultOpen
+            >
+              <StringRecognitionLL
+                onRecognize={handleRecognize}
+                isProcessing={isProcessing}
+              />
+            </CollapsibleSection>
+          )}
+        </div>
       )}
     </div>
   );
