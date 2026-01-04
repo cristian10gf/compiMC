@@ -7,6 +7,8 @@
  * 3. Construcción de la Tabla M de parsing predictivo
  * 4. Simulación del análisis sintáctico predictivo no recursivo
  * 5. Verificación de gramáticas LL(1)
+ * 6. Eliminación de recursividad por izquierda
+ * 7. Factorización por izquierda
  * 
  * Reglas para FIRST:
  * - Si X es terminal, FIRST(X) = {X}
@@ -29,6 +31,44 @@ import {
   ParseStep,
   ParsingResult,
 } from '@/lib/types/grammar';
+
+/**
+ * Resultado del cálculo de First con reglas aplicadas
+ */
+export interface FirstCalculationStep {
+  nonTerminal: string;
+  rule: string;
+  values: string[];
+  explanation: string;
+}
+
+/**
+ * Resultado del cálculo de Follow con reglas aplicadas
+ */
+export interface FollowCalculationStep {
+  nonTerminal: string;
+  rule: string;
+  values: string[];
+  explanation: string;
+}
+
+/**
+ * Resultado de First/Follow con reglas de cálculo
+ */
+export interface FirstFollowWithRules extends FirstFollow {
+  firstRules: FirstCalculationStep[];
+  followRules: FollowCalculationStep[];
+}
+
+/**
+ * Resultado de transformación de gramática
+ */
+export interface GrammarTransformation {
+  originalGrammar: Grammar;
+  withoutLeftRecursion: Grammar;
+  factorized: Grammar;
+  transformationSteps: string[];
+}
 
 /**
  * Calcula el conjunto FIRST de un símbolo
@@ -222,13 +262,15 @@ export function generateFirstFollow(grammar: Grammar): FirstFollow[] {
 export function buildParsingTable(grammar: Grammar): ParsingTable {
   const first = calculateFirst(grammar);
   const follow = calculateFollow(grammar, first);
-  const table: ParsingTable = {};
+  
+  // Tabla interna para construcción
+  const internalTable: Record<string, Record<string, { production: Production | null; action?: 'accept' | 'error' }>> = {};
 
   // Inicializar tabla
   for (const nonTerminal of grammar.nonTerminals) {
-    table[nonTerminal] = {};
+    internalTable[nonTerminal] = {};
     for (const terminal of [...grammar.terminals, '$']) {
-      table[nonTerminal][terminal] = { production: null, action: 'error' };
+      internalTable[nonTerminal][terminal] = { production: null, action: 'error' };
     }
   }
 
@@ -264,11 +306,99 @@ export function buildParsingTable(grammar: Grammar): ParsingTable {
     // Regla 1: Para cada a en FIRST(α), agregar A → α a M[A, a]
     for (const terminal of firstAlpha) {
       if (terminal !== 'ε') {
-        table[left][terminal] = { production, action: undefined };
+        internalTable[left][terminal] = { production, action: undefined };
       }
     }
 
     // Regla 2: Si ε ∈ FIRST(α), para cada b en FOLLOW(A), agregar A → α a M[A, b]
+    if (firstAlpha.has('ε')) {
+      const followSet = follow.get(left);
+      if (followSet) {
+        for (const terminal of followSet) {
+          if (terminal === '$') {
+            internalTable[left]['$'] = { production, action: 'accept' };
+          } else {
+            internalTable[left][terminal] = { production, action: undefined };
+          }
+        }
+      }
+    }
+  }
+
+  // Convertir a formato de entries para el componente
+  const entries: Array<{ nonTerminal: string; terminal: string; production: string | null }> = [];
+  
+  for (const nonTerminal of grammar.nonTerminals) {
+    for (const terminal of [...grammar.terminals, '$']) {
+      const entry = internalTable[nonTerminal][terminal];
+      let productionStr: string | null = null;
+      
+      if (entry.production) {
+        productionStr = `${entry.production.left} → ${entry.production.right.join('')}`;
+      }
+      
+      entries.push({
+        nonTerminal,
+        terminal,
+        production: productionStr,
+      });
+    }
+  }
+
+  return { entries };
+}
+
+/**
+ * Construye la Tabla M interna (para uso interno)
+ */
+function buildInternalParsingTable(grammar: Grammar): Record<string, Record<string, { production: Production | null; action?: 'accept' | 'error' }>> {
+  const first = calculateFirst(grammar);
+  const follow = calculateFollow(grammar, first);
+  
+  const table: Record<string, Record<string, { production: Production | null; action?: 'accept' | 'error' }>> = {};
+
+  // Inicializar tabla
+  for (const nonTerminal of grammar.nonTerminals) {
+    table[nonTerminal] = {};
+    for (const terminal of [...grammar.terminals, '$']) {
+      table[nonTerminal][terminal] = { production: null, action: 'error' };
+    }
+  }
+
+  // Llenar tabla
+  for (const production of grammar.productions) {
+    const { left, right } = production;
+
+    // Calcular FIRST(α)
+    const firstAlpha = new Set<string>();
+    let allNullable = true;
+
+    for (const symbol of right) {
+      const symbolFirst = first.get(symbol);
+      if (!symbolFirst) continue;
+
+      for (const item of symbolFirst) {
+        if (item !== 'ε') {
+          firstAlpha.add(item);
+        }
+      }
+
+      if (!symbolFirst.has('ε')) {
+        allNullable = false;
+        break;
+      }
+    }
+
+    if (allNullable || (right.length === 1 && right[0] === 'ε')) {
+      firstAlpha.add('ε');
+    }
+
+    for (const terminal of firstAlpha) {
+      if (terminal !== 'ε') {
+        table[left][terminal] = { production, action: undefined };
+      }
+    }
+
     if (firstAlpha.has('ε')) {
       const followSet = follow.get(left);
       if (followSet) {
@@ -291,19 +421,7 @@ export function buildParsingTable(grammar: Grammar): ParsingTable {
  * Una gramática es LL(1) si cada entrada de la tabla M tiene a lo más una producción
  */
 export function isLL1(grammar: Grammar): { isLL1: boolean; conflicts: string[] } {
-  const table = buildParsingTable(grammar);
   const conflicts: string[] = [];
-
-  // Verificar cada entrada de la tabla
-  for (const nonTerminal of grammar.nonTerminals) {
-    for (const terminal of [...grammar.terminals, '$']) {
-      const entry = table[nonTerminal][terminal];
-      
-      // Esta verificación es simplificada. En una implementación real,
-      // se verificaría si hay múltiples producciones para la misma entrada.
-      // Aquí asumimos que la construcción de la tabla ya maneja esto.
-    }
-  }
 
   // Verificar ambigüedades en FIRST/FOLLOW
   const first = calculateFirst(grammar);
@@ -325,7 +443,7 @@ export function isLL1(grammar: Grammar): { isLL1: boolean; conflicts: string[] }
 
         if (intersection.size > 0) {
           conflicts.push(
-            `Conflicto en ${nonTerminal}: FIRST(${productions[i].right.join(' ')}) ∩ FIRST(${productions[j].right.join(' ')}) = {${Array.from(intersection).join(', ')}}`
+            `Conflicto en ${nonTerminal}: FIRST(${productions[i].right.join('')}) ∩ FIRST(${productions[j].right.join('')}) = {${Array.from(intersection).join(', ')}}`
           );
         }
 
@@ -391,6 +509,9 @@ export function parseStringLL(
   table: ParsingTable,
   input: string
 ): ParsingResult {
+  // Construir tabla interna desde el formato de entries
+  const internalTable = buildInternalParsingTable(grammar);
+  
   const steps: ParseStep[] = [];
   const stack: string[] = ['$', grammar.startSymbol];
   const inputSymbols = input.split(' ').filter(s => s !== '');
@@ -427,7 +548,7 @@ export function parseStringLL(
           accepted: true,
           steps,
           output: output.join('\n'),
-          parseTree: null, // TODO: Construir árbol
+          parseTree: null,
         };
       } else {
         steps.push({
@@ -476,8 +597,8 @@ export function parseStringLL(
         };
       }
     } else {
-      // El tope es un no terminal
-      const entry = table[top]?.[currentInput];
+      // El tope es un no terminal - usar tabla interna
+      const entry = internalTable[top]?.[currentInput];
 
       if (!entry || entry.action === 'error' || !entry.production) {
         steps.push({
@@ -539,4 +660,607 @@ export function analyzeDescendente(grammar: Grammar) {
     isLL1: ll1Check.isLL1,
     conflicts: ll1Check.conflicts,
   };
+}
+
+/**
+ * Genera un nuevo nombre para un no terminal prima (A')
+ */
+function generatePrimeSymbol(base: string, existingSymbols: Set<string>): string {
+  let candidate = base + "'";
+  while (existingSymbols.has(candidate)) {
+    candidate += "'";
+  }
+  return candidate;
+}
+
+/**
+ * Elimina la recursividad por izquierda de una gramática
+ * 
+ * Método:
+ * Para cada producción A → Aα₁ | Aα₂ | ... | Aαₙ | β₁ | β₂ | ... | βₘ
+ * Se transforma en:
+ * A → β₁A' | β₂A' | ... | βₘA'
+ * A' → α₁A' | α₂A' | ... | αₙA' | ε
+ */
+export function eliminateLeftRecursion(grammar: Grammar): {
+  grammar: Grammar;
+  steps: string[];
+} {
+  const steps: string[] = [];
+  const newProductions: Production[] = [];
+  const newNonTerminals = new Set(grammar.nonTerminals);
+  let prodCounter = 1;
+
+  // Agrupar producciones por no terminal
+  const productionsByNT = new Map<string, Production[]>();
+  for (const prod of grammar.productions) {
+    if (!productionsByNT.has(prod.left)) {
+      productionsByNT.set(prod.left, []);
+    }
+    productionsByNT.get(prod.left)!.push(prod);
+  }
+
+  for (const nonTerminal of grammar.nonTerminals) {
+    const prods = productionsByNT.get(nonTerminal) || [];
+    
+    // Separar producciones con y sin recursividad izquierda
+    const recursive: Production[] = [];
+    const nonRecursive: Production[] = [];
+
+    for (const prod of prods) {
+      if (prod.right.length > 0 && prod.right[0] === nonTerminal) {
+        recursive.push(prod);
+      } else {
+        nonRecursive.push(prod);
+      }
+    }
+
+    // Si no hay recursividad, mantener producciones originales
+    if (recursive.length === 0) {
+      for (const prod of prods) {
+        newProductions.push({
+          id: `p${prodCounter++}`,
+          left: prod.left,
+          right: [...prod.right],
+        });
+      }
+      continue;
+    }
+
+    // Crear nuevo no terminal A'
+    const primeSymbol = generatePrimeSymbol(nonTerminal, newNonTerminals);
+    newNonTerminals.add(primeSymbol);
+
+    steps.push(`Eliminando recursividad en ${nonTerminal}:`);
+    steps.push(`  Se crea nuevo no terminal: ${primeSymbol}`);
+
+    // Transformar producciones no recursivas: A → βA'
+    if (nonRecursive.length === 0) {
+      // Si no hay producciones no recursivas, agregar A → A'
+      newProductions.push({
+        id: `p${prodCounter++}`,
+        left: nonTerminal,
+        right: [primeSymbol],
+      });
+      steps.push(`  ${nonTerminal} → ${primeSymbol}`);
+    } else {
+      for (const prod of nonRecursive) {
+        const newRight = prod.right[0] === 'ε' 
+          ? [primeSymbol] 
+          : [...prod.right, primeSymbol];
+        newProductions.push({
+          id: `p${prodCounter++}`,
+          left: nonTerminal,
+          right: newRight,
+        });
+        steps.push(`  ${nonTerminal} → ${newRight.join(' ')}`);
+      }
+    }
+
+    // Transformar producciones recursivas: A' → αA' | ε
+    for (const prod of recursive) {
+      const alpha = prod.right.slice(1); // Quitar el primer símbolo (A)
+      const newRight = alpha.length > 0 ? [...alpha, primeSymbol] : [primeSymbol];
+      newProductions.push({
+        id: `p${prodCounter++}`,
+        left: primeSymbol,
+        right: newRight,
+      });
+      steps.push(`  ${primeSymbol} → ${newRight.join(' ')}`);
+    }
+
+    // Agregar producción épsilon para A'
+    newProductions.push({
+      id: `p${prodCounter++}`,
+      left: primeSymbol,
+      right: ['ε'],
+    });
+    steps.push(`  ${primeSymbol} → ε`);
+  }
+
+  // Recalcular terminales (excluyendo nuevos no terminales)
+  const newTerminals = new Set(grammar.terminals);
+
+  return {
+    grammar: {
+      terminals: Array.from(newTerminals),
+      nonTerminals: Array.from(newNonTerminals),
+      productions: newProductions,
+      startSymbol: grammar.startSymbol,
+    },
+    steps,
+  };
+}
+
+/**
+ * Factoriza por izquierda una gramática
+ * 
+ * Método:
+ * Para producciones A → αβ₁ | αβ₂ | ... | αβₙ | γ
+ * Se transforma en:
+ * A → αA' | γ
+ * A' → β₁ | β₂ | ... | βₙ
+ */
+export function leftFactorize(grammar: Grammar): {
+  grammar: Grammar;
+  steps: string[];
+} {
+  const steps: string[] = [];
+  let currentProductions = [...grammar.productions];
+  const newNonTerminals = new Set(grammar.nonTerminals);
+  let changed = true;
+  let iterations = 0;
+  const maxIterations = 100;
+
+  while (changed && iterations < maxIterations) {
+    changed = false;
+    iterations++;
+    const nextProductions: Production[] = [];
+
+    // Agrupar por no terminal
+    const productionsByNT = new Map<string, Production[]>();
+    for (const prod of currentProductions) {
+      if (!productionsByNT.has(prod.left)) {
+        productionsByNT.set(prod.left, []);
+      }
+      productionsByNT.get(prod.left)!.push(prod);
+    }
+
+    for (const [nonTerminal, prods] of productionsByNT) {
+      if (prods.length < 2) {
+        nextProductions.push(...prods);
+        continue;
+      }
+
+      // Encontrar prefijo común más largo
+      const prefixGroups = new Map<string, Production[]>();
+      
+      for (const prod of prods) {
+        const firstSymbol = prod.right[0] || 'ε';
+        if (!prefixGroups.has(firstSymbol)) {
+          prefixGroups.set(firstSymbol, []);
+        }
+        prefixGroups.get(firstSymbol)!.push(prod);
+      }
+
+      // Procesar cada grupo de prefijos
+      for (const [prefix, group] of prefixGroups) {
+        // Si el grupo tiene solo una producción o es epsilon, no factorizar
+        if (group.length < 2 || prefix === 'ε') {
+          nextProductions.push(...group);
+          continue;
+        }
+
+        // Encontrar el prefijo común más largo entre todas las producciones del grupo
+        let commonPrefix: string[] = [...group[0].right];
+        
+        for (let i = 1; i < group.length; i++) {
+          const currentRight = group[i].right;
+          let j = 0;
+          while (j < commonPrefix.length && j < currentRight.length && commonPrefix[j] === currentRight[j]) {
+            j++;
+          }
+          commonPrefix = commonPrefix.slice(0, j);
+        }
+
+        if (commonPrefix.length === 0) {
+          nextProductions.push(...group);
+          continue;
+        }
+
+        // Crear nuevo no terminal
+        const primeSymbol = generatePrimeSymbol(nonTerminal, newNonTerminals);
+        newNonTerminals.add(primeSymbol);
+
+        steps.push(`Factorizando ${nonTerminal} con prefijo común "${commonPrefix.join(' ')}":`);
+
+        // Nueva producción A → α A'
+        nextProductions.push({
+          id: `p${Date.now()}-1`,
+          left: nonTerminal,
+          right: [...commonPrefix, primeSymbol],
+        });
+        steps.push(`  ${nonTerminal} → ${[...commonPrefix, primeSymbol].join(' ')}`);
+
+        // Nuevas producciones A' → β₁ | β₂ | ... (usando Set para evitar duplicados)
+        const addedSuffixes = new Set<string>();
+        for (const prod of group) {
+          const suffix = prod.right.slice(commonPrefix.length);
+          const newRight = suffix.length > 0 ? suffix : ['ε'];
+          const suffixKey = newRight.join(' ');
+          
+          if (!addedSuffixes.has(suffixKey)) {
+            addedSuffixes.add(suffixKey);
+            nextProductions.push({
+              id: `p${Date.now()}-${Math.random()}`,
+              left: primeSymbol,
+              right: newRight,
+            });
+            steps.push(`  ${primeSymbol} → ${newRight.join(' ')}`);
+          }
+        }
+
+        changed = true;
+      }
+    }
+
+    currentProductions = nextProductions;
+  }
+
+  // Renumerar producciones
+  const finalProductions = currentProductions.map((prod, idx) => ({
+    ...prod,
+    id: `p${idx + 1}`,
+  }));
+
+  return {
+    grammar: {
+      terminals: [...grammar.terminals],
+      nonTerminals: Array.from(newNonTerminals),
+      productions: finalProductions,
+      startSymbol: grammar.startSymbol,
+    },
+    steps,
+  };
+}
+
+/**
+ * Elimina producciones duplicadas de una gramática
+ */
+function removeDuplicateProductions(grammar: Grammar): Grammar {
+  const seen = new Set<string>();
+  const uniqueProductions: Production[] = [];
+  
+  for (const prod of grammar.productions) {
+    const key = `${prod.left}->${prod.right.join(' ')}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueProductions.push(prod);
+    }
+  }
+  
+  // Renumerar
+  const finalProductions = uniqueProductions.map((prod, idx) => ({
+    ...prod,
+    id: `p${idx + 1}`,
+  }));
+  
+  return {
+    ...grammar,
+    productions: finalProductions,
+  };
+}
+
+/**
+ * Transforma una gramática eliminando recursividad izquierda y factorizando
+ */
+export function transformGrammar(grammar: Grammar): GrammarTransformation {
+  const transformationSteps: string[] = [];
+
+  // Paso 1: Eliminar recursividad izquierda
+  transformationSteps.push('=== Eliminación de Recursividad por Izquierda ===');
+  const { grammar: grammarNoRecursion, steps: recursionSteps } = eliminateLeftRecursion(grammar);
+  transformationSteps.push(...recursionSteps);
+
+  if (recursionSteps.length === 0) {
+    transformationSteps.push('No se encontró recursividad por izquierda.');
+  }
+
+  // Paso 2: Factorizar por izquierda
+  transformationSteps.push('\n=== Factorización por Izquierda ===');
+  const { grammar: grammarFactorized, steps: factorSteps } = leftFactorize(grammarNoRecursion);
+  transformationSteps.push(...factorSteps);
+
+  if (factorSteps.length === 0) {
+    transformationSteps.push('No se requiere factorización por izquierda.');
+  }
+
+  // Paso 3: Eliminar producciones duplicadas
+  const finalGrammar = removeDuplicateProductions(grammarFactorized);
+
+  return {
+    originalGrammar: grammar,
+    withoutLeftRecursion: grammarNoRecursion,
+    factorized: finalGrammar,
+    transformationSteps,
+  };
+}
+
+/**
+ * Genera First/Follow con las reglas de cálculo para cada paso
+ */
+export function generateFirstFollowWithRules(grammar: Grammar): FirstFollowWithRules[] {
+  const first = calculateFirst(grammar);
+  const follow = calculateFollow(grammar, first);
+
+  return grammar.nonTerminals.map(nonTerminal => {
+    const firstRules: FirstCalculationStep[] = [];
+    const followRules: FollowCalculationStep[] = [];
+
+    // Generar reglas para FIRST
+    const prods = grammar.productions.filter(p => p.left === nonTerminal);
+    for (const prod of prods) {
+      const rightStr = prod.right.join(' ');
+      if (prod.right.length === 1 && prod.right[0] === 'ε') {
+        firstRules.push({
+          nonTerminal,
+          rule: `${nonTerminal} → ε`,
+          values: ['ε'],
+          explanation: `Regla 2: Si X → ε, agregar ε a PRIMERO(${nonTerminal})`,
+        });
+      } else {
+        const firstSymbol = prod.right[0];
+        if (grammar.terminals.includes(firstSymbol)) {
+          firstRules.push({
+            nonTerminal,
+            rule: `${nonTerminal} → ${rightStr}`,
+            values: [firstSymbol],
+            explanation: `Regla 1: ${firstSymbol} es terminal, se agrega a PRIMERO(${nonTerminal})`,
+          });
+        } else {
+          const symbolFirst = first.get(firstSymbol);
+          if (symbolFirst) {
+            firstRules.push({
+              nonTerminal,
+              rule: `${nonTerminal} → ${rightStr}`,
+              values: Array.from(symbolFirst).filter(s => s !== 'ε'),
+              explanation: `Regla 3: PRIMERO(${firstSymbol}) se agrega a PRIMERO(${nonTerminal})`,
+            });
+          }
+        }
+      }
+    }
+
+    // Generar reglas para FOLLOW
+    if (nonTerminal === grammar.startSymbol) {
+      followRules.push({
+        nonTerminal,
+        rule: 'Símbolo inicial',
+        values: ['$'],
+        explanation: 'Regla 1: Agregar $ a SIGUIENTE del símbolo inicial',
+      });
+    }
+
+    // Buscar apariciones del no terminal en lados derechos
+    for (const prod of grammar.productions) {
+      for (let i = 0; i < prod.right.length; i++) {
+        if (prod.right[i] === nonTerminal) {
+          if (i < prod.right.length - 1) {
+            // Hay símbolos después
+            const beta = prod.right.slice(i + 1);
+            const betaFirst = new Set<string>();
+            let allNullable = true;
+
+            for (const symbol of beta) {
+              const symbolFirst = first.get(symbol);
+              if (symbolFirst) {
+                for (const item of symbolFirst) {
+                  if (item !== 'ε') betaFirst.add(item);
+                }
+                if (!symbolFirst.has('ε')) {
+                  allNullable = false;
+                  break;
+                }
+              }
+            }
+
+            if (betaFirst.size > 0) {
+              followRules.push({
+                nonTerminal,
+                rule: `${prod.left} → ${prod.right.join(' ')}`,
+                values: Array.from(betaFirst),
+                explanation: `Regla 2: PRIMERO(${beta.join(' ')}) sin ε se agrega a SIGUIENTE(${nonTerminal})`,
+              });
+            }
+
+            if (allNullable) {
+              const leftFollow = follow.get(prod.left);
+              if (leftFollow && leftFollow.size > 0) {
+                followRules.push({
+                  nonTerminal,
+                  rule: `${prod.left} → ${prod.right.join(' ')}`,
+                  values: Array.from(leftFollow),
+                  explanation: `Regla 3: SIGUIENTE(${prod.left}) se agrega porque β puede derivar ε`,
+                });
+              }
+            }
+          } else {
+            // Al final de la producción
+            const leftFollow = follow.get(prod.left);
+            if (leftFollow && leftFollow.size > 0 && prod.left !== nonTerminal) {
+              followRules.push({
+                nonTerminal,
+                rule: `${prod.left} → ${prod.right.join(' ')}`,
+                values: Array.from(leftFollow),
+                explanation: `Regla 3: ${nonTerminal} está al final, SIGUIENTE(${prod.left}) se agrega`,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      nonTerminal,
+      first: Array.from(first.get(nonTerminal) || []),
+      follow: Array.from(follow.get(nonTerminal) || []),
+      firstRules,
+      followRules,
+    };
+  });
+}
+
+/**
+ * Parsea una gramática desde texto
+ * Formato: E -> E+T | T (símbolos sin espacios, | para alternativas)
+ * No terminales: letras mayúsculas
+ */
+export function parseGrammarText(
+  grammarText: string, 
+  terminalsInput: string,
+  autoDetectTerminals: boolean = false
+): Grammar {
+  const lines = grammarText.trim().split('\n').filter(line => line.trim());
+  const productions: Production[] = [];
+  const nonTerminals = new Set<string>();
+  const detectedTerminals = new Set<string>();
+  let startSymbol = '';
+  let prodCounter = 1;
+
+  // Parsear terminales de entrada
+  let inputTerminals: Set<string>;
+  if (!autoDetectTerminals && terminalsInput.trim()) {
+    inputTerminals = new Set(
+      terminalsInput.split(',').map(t => t.trim()).filter(t => t)
+    );
+  } else {
+    inputTerminals = new Set();
+  }
+
+  for (const line of lines) {
+    // Parsear línea: A -> α | β
+    const arrowMatch = line.match(/^\s*([A-Z][A-Z']*)\s*(?:->|→)\s*(.+)$/);
+    if (!arrowMatch) continue;
+
+    const left = arrowMatch[1].trim();
+    const rightPart = arrowMatch[2].trim();
+
+    // Primer no terminal es el símbolo inicial
+    if (!startSymbol) startSymbol = left;
+    nonTerminals.add(left);
+
+    // Separar alternativas por |
+    const alternatives = rightPart.split('|').map(alt => alt.trim());
+
+    for (const alt of alternatives) {
+      if (!alt) continue;
+
+      // Parsear símbolos de la alternativa
+      // Reconocer: letras mayúsculas con primas como no terminales
+      // Todo lo demás como terminales
+      const symbols: string[] = [];
+      let remaining = alt;
+
+      while (remaining.length > 0) {
+        // Intentar reconocer un no terminal (mayúscula con posibles primas)
+        const ntMatch = remaining.match(/^([A-Z][A-Z']*)/);
+        if (ntMatch) {
+          symbols.push(ntMatch[1]);
+          nonTerminals.add(ntMatch[1]);
+          remaining = remaining.slice(ntMatch[1].length);
+          continue;
+        }
+
+        // Intentar reconocer epsilon
+        if (remaining.startsWith('ε') || remaining.startsWith('epsilon') || remaining.startsWith('∈')) {
+          symbols.push('ε');
+          remaining = remaining.slice(remaining.startsWith('ε') ? 1 : remaining.startsWith('∈') ? 1 : 7);
+          continue;
+        }
+
+        // Intentar reconocer terminal multi-caracter conocido
+        let matched = false;
+        for (const terminal of inputTerminals) {
+          if (remaining.startsWith(terminal)) {
+            symbols.push(terminal);
+            detectedTerminals.add(terminal);
+            remaining = remaining.slice(terminal.length);
+            matched = true;
+            break;
+          }
+        }
+        if (matched) continue;
+
+        // Si es autodetección, tomar caracteres especiales como terminales individuales
+        if (autoDetectTerminals) {
+          // Reconocer palabras reservadas/identificadores minúsculas
+          const wordMatch = remaining.match(/^([a-z]+[a-z0-9]*)/);
+          if (wordMatch) {
+            symbols.push(wordMatch[1]);
+            detectedTerminals.add(wordMatch[1]);
+            remaining = remaining.slice(wordMatch[1].length);
+            continue;
+          }
+        }
+
+        // Tomar el siguiente caracter como terminal
+        const char = remaining[0];
+        if (char !== ' ' && char !== '\t') {
+          symbols.push(char);
+          detectedTerminals.add(char);
+        }
+        remaining = remaining.slice(1);
+      }
+
+      if (symbols.length > 0) {
+        productions.push({
+          id: `p${prodCounter++}`,
+          left,
+          right: symbols,
+        });
+      }
+    }
+  }
+
+  // Determinar terminales finales
+  let terminals: string[];
+  if (autoDetectTerminals) {
+    terminals = Array.from(detectedTerminals).filter(t => t !== 'ε' && !nonTerminals.has(t));
+  } else {
+    terminals = Array.from(inputTerminals);
+  }
+
+  return {
+    terminals,
+    nonTerminals: Array.from(nonTerminals),
+    productions,
+    startSymbol,
+  };
+}
+
+/**
+ * Convierte una gramática a formato de texto
+ */
+export function grammarToText(grammar: Grammar): string {
+  const lines: string[] = [];
+  
+  // Agrupar producciones por no terminal
+  const productionsByNT = new Map<string, string[]>();
+  
+  for (const prod of grammar.productions) {
+    if (!productionsByNT.has(prod.left)) {
+      productionsByNT.set(prod.left, []);
+    }
+    productionsByNT.get(prod.left)!.push(prod.right.join(''));
+  }
+
+  // Generar texto manteniendo el orden de los no terminales
+  for (const nt of grammar.nonTerminals) {
+    const alternatives = productionsByNT.get(nt);
+    if (alternatives && alternatives.length > 0) {
+      lines.push(`${nt} → ${alternatives.join(' | ')}`);
+    }
+  }
+
+  return lines.join('\n');
 }
