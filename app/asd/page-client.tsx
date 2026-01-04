@@ -187,7 +187,7 @@ export default function ASDClientPage() {
           )}
 
           {/* Sección 4: Reconocimiento de Cadena */}
-          {state.parsingTable && (
+          {state.parsingTable && state.workingGrammar && (
             <CollapsibleSection
               title="Reconocer Cadena"
               icon={<TextSearch className="h-5 w-5" />}
@@ -195,6 +195,7 @@ export default function ASDClientPage() {
             >
               <StringRecognitionLL
                 onRecognize={handleRecognize}
+                terminals={state.workingGrammar.terminals}
                 isProcessing={isProcessing}
               />
             </CollapsibleSection>
