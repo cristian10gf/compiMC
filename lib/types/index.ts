@@ -4,6 +4,7 @@
 
 export * from './automata';
 export * from './grammar';
+export * from './syntax-analysis';
 export * from './token';
 export * from './graph';
 export * from './analysis';

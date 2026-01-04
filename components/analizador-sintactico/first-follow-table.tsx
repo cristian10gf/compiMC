@@ -30,7 +30,7 @@ import {
 import { CopyButton } from '@/components/shared/copy-button';
 import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { FirstFollowWithRules } from '@/lib/algorithms/syntax/descendente';
+import type { FirstFollowWithRules } from '@/lib/types/syntax-analysis';
 
 interface FirstFollowTableProps {
   data: FirstFollowWithRules[];

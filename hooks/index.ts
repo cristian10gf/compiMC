@@ -13,17 +13,6 @@ export {
   useDescendenteAnalysis,
   useAscendenteAnalysis,
 } from './use-syntax-analysis';
-export type { 
-  UseSyntaxAnalysisReturn,
-  SyntaxAnalysisState,
-  SyntaxAnalysisType,
-  AscendenteMode,
-  DescendenteAnalysisState,
-  AscendenteAnalysisState,
-  RecognitionState,
-  DescendenteOptions,
-  AscendenteOptions,
-} from './use-syntax-analysis';
 
 export { useCompilerFull } from './use-compiler';
 export type { UseCompilerFullReturn } from './use-compiler';

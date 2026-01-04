@@ -32,43 +32,20 @@ import {
   ParsingResult,
 } from '@/lib/types/grammar';
 
-/**
- * Resultado del cálculo de First con reglas aplicadas
- */
-export interface FirstCalculationStep {
-  nonTerminal: string;
-  rule: string;
-  values: string[];
-  explanation: string;
-}
+import type {
+  FirstCalculationStep,
+  FollowCalculationStep,
+  FirstFollowWithRules,
+  GrammarTransformation,
+} from '@/lib/types/syntax-analysis';
 
-/**
- * Resultado del cálculo de Follow con reglas aplicadas
- */
-export interface FollowCalculationStep {
-  nonTerminal: string;
-  rule: string;
-  values: string[];
-  explanation: string;
-}
-
-/**
- * Resultado de First/Follow con reglas de cálculo
- */
-export interface FirstFollowWithRules extends FirstFollow {
-  firstRules: FirstCalculationStep[];
-  followRules: FollowCalculationStep[];
-}
-
-/**
- * Resultado de transformación de gramática
- */
-export interface GrammarTransformation {
-  originalGrammar: Grammar;
-  withoutLeftRecursion: Grammar;
-  factorized: Grammar;
-  transformationSteps: string[];
-}
+// Re-exportar tipos para compatibilidad hacia atrás
+export type {
+  FirstCalculationStep,
+  FollowCalculationStep,
+  FirstFollowWithRules,
+  GrammarTransformation,
+};
 
 /**
  * Calcula el conjunto FIRST de un símbolo

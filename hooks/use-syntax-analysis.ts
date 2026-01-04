@@ -22,6 +22,19 @@ import type {
   ParsingResult,
   PrecedenceStep,
 } from '@/lib/types/grammar';
+import type {
+  FirstFollowWithRules,
+  GrammarTransformation,
+  SyntaxAnalysisType,
+  AscendenteMode,
+  DescendenteAnalysisState,
+  AscendenteAnalysisState,
+  RecognitionState,
+  SyntaxAnalysisState,
+  DescendenteOptions,
+  AscendenteOptions,
+  UseSyntaxAnalysisReturn,
+} from '@/lib/types/syntax-analysis';
 import {
   parseGrammarText,
   transformGrammar,
@@ -30,8 +43,6 @@ import {
   buildParsingTable,
   parseStringLL,
   isLL1,
-  type FirstFollowWithRules,
-  type GrammarTransformation,
 } from '@/lib/algorithms/syntax/descendente';
 import {
   calculatePrecedenceManual,
@@ -39,135 +50,6 @@ import {
   parseStringPrecedence,
   isOperatorGrammar,
 } from '@/lib/algorithms/syntax/ascendente';
-
-// ============================================================================
-// TIPOS
-// ============================================================================
-
-/**
- * Tipo de análisis sintáctico
- */
-export type SyntaxAnalysisType = 'descendente' | 'ascendente';
-
-/**
- * Modo de análisis para ascendente
- */
-export type AscendenteMode = 'manual' | 'automatic';
-
-/**
- * Estado del análisis descendente
- */
-export interface DescendenteAnalysisState {
-  /** Gramática original */
-  originalGrammar: Grammar | null;
-  /** Resultado de la transformación de gramática */
-  transformation: GrammarTransformation | null;
-  /** Gramática de trabajo (transformada) */
-  workingGrammar: Grammar | null;
-  /** Datos de PRIMERO y SIGUIENTE con reglas */
-  firstFollow: FirstFollowWithRules[] | null;
-  /** Tabla M de parsing */
-  parsingTable: ParsingTable | null;
-  /** Verificación LL(1) */
-  ll1Check: { isLL1: boolean; conflicts: string[] } | null;
-}
-
-/**
- * Estado del análisis ascendente
- */
-export interface AscendenteAnalysisState {
-  /** Gramática */
-  grammar: Grammar | null;
-  /** Modo de análisis */
-  mode: AscendenteMode;
-  /** Pasos de construcción de precedencia (modo manual) */
-  precedenceSteps: PrecedenceStep[] | null;
-  /** Tabla de precedencia */
-  precedenceTable: PrecedenceTable | null;
-  /** Validación de gramática de operadores */
-  operatorValidation: { valid: boolean; errors: string[] } | null;
-}
-
-/**
- * Estado del reconocimiento de cadenas
- */
-export interface RecognitionState {
-  /** Resultado del último reconocimiento */
-  result: ParsingResult | null;
-  /** Historial de reconocimientos */
-  history: Array<{ input: string; result: ParsingResult; timestamp: Date }>;
-}
-
-/**
- * Estado completo del hook
- */
-export interface SyntaxAnalysisState {
-  /** Tipo de análisis actual */
-  analysisType: SyntaxAnalysisType | null;
-  /** Estado del análisis descendente */
-  descendente: DescendenteAnalysisState;
-  /** Estado del análisis ascendente */
-  ascendente: AscendenteAnalysisState;
-  /** Estado del reconocimiento */
-  recognition: RecognitionState;
-  /** Indica si hay un proceso en curso */
-  isProcessing: boolean;
-  /** Error actual */
-  error: string | null;
-}
-
-/**
- * Opciones para el análisis descendente
- */
-export interface DescendenteOptions {
-  /** Texto de la gramática */
-  grammarText: string;
-  /** Terminales (separados por espacios) */
-  terminals: string;
-  /** Autodetectar terminales */
-  autoDetectTerminals?: boolean;
-}
-
-/**
- * Opciones para el análisis ascendente
- */
-export interface AscendenteOptions {
-  /** Texto de la gramática */
-  grammarText: string;
-  /** Terminales (separados por espacios) */
-  terminals: string;
-  /** Modo de análisis */
-  mode?: AscendenteMode;
-  /** Autodetectar terminales */
-  autoDetectTerminals?: boolean;
-}
-
-/**
- * Retorno del hook
- */
-export interface UseSyntaxAnalysisReturn {
-  // Estado
-  state: SyntaxAnalysisState;
-  
-  // Análisis descendente
-  analyzeDescendente: (options: DescendenteOptions) => Promise<void>;
-  
-  // Análisis ascendente
-  analyzeAscendente: (options: AscendenteOptions) => Promise<void>;
-  
-  // Reconocimiento de cadenas
-  recognizeString: (input: string) => Promise<ParsingResult | null>;
-  
-  // Utilidades
-  parseGrammar: (grammarText: string, terminals: string, autoDetect?: boolean) => Grammar;
-  clearAnalysis: () => void;
-  clearError: () => void;
-  clearRecognitionHistory: () => void;
-  
-  // Computed
-  hasAnalysis: boolean;
-  currentGrammar: Grammar | null;
-}
 
 // ============================================================================
 // ESTADO INICIAL
