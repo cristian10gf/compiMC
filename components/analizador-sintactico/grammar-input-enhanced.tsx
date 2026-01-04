@@ -205,35 +205,38 @@ export function GrammarInputEnhanced({
           )}
         </div>
 
-        {/* Sección de Gramática */}
-        <div className="space-y-3">
-          <Label htmlFor="grammar" className="text-base font-medium">
-            Producciones de la Gramática
-          </Label>
-          <Textarea
-            id="grammar"
-            value={grammarText}
-            onChange={(e) => setGrammarText(e.target.value)}
-            placeholder="E -> E+T | T&#10;T -> T*F | F&#10;F -> (E) | id"
-            className="font-mono min-h-40 text-sm leading-relaxed"
-          />
-        </div>
+        {/* Sección de Gramática y Ejemplos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Gramática */}
+          <div className="space-y-3">
+            <Label htmlFor="grammar" className="text-base font-medium">
+              Producciones de la Gramática
+            </Label>
+            <Textarea
+              id="grammar"
+              value={grammarText}
+              onChange={(e) => setGrammarText(e.target.value)}
+              placeholder="E -> E+T | T&#10;T -> T*F | F&#10;F -> (E) | id"
+              className="font-mono min-h-40 text-sm leading-relaxed w-full"
+            />
+          </div>
 
-        {/* Ejemplos */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">Ejemplos Predefinidos</Label>
-          <div className="flex flex-wrap gap-2">
-            {EXAMPLES.map((ex, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                size="sm"
-                onClick={() => loadExample(idx)}
-                className="text-xs"
-              >
-                {ex.name}
-              </Button>
-            ))}
+          {/* Ejemplos */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Ejemplos Predefinidos</Label>
+            <div className="flex flex-wrap gap-2">
+              {EXAMPLES.map((ex, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadExample(idx)}
+                  className="text-xs"
+                >
+                  {ex.name}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
