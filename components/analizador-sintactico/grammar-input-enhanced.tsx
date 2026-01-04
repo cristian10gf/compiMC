@@ -32,7 +32,7 @@ const EXAMPLES = [
     name: 'Expresiones Aritméticas',
     grammar: `E -> E+T | T
 T -> T*F | F
-F -> (E) | id`,
+F -> id | (E)`,
     terminals: '+ * ( ) id',
   },
   {
