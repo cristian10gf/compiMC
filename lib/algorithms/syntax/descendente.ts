@@ -1127,11 +1127,11 @@ export function parseGrammarText(
   let startSymbol = '';
   let prodCounter = 1;
 
-  // Parsear terminales de entrada
+  // Parsear terminales de entrada (separados por espacios)
   let inputTerminals: Set<string>;
   if (!autoDetectTerminals && terminalsInput.trim()) {
     inputTerminals = new Set(
-      terminalsInput.split(',').map(t => t.trim()).filter(t => t)
+      terminalsInput.split(/\s+/).map(t => t.trim()).filter(t => t)
     );
   } else {
     inputTerminals = new Set();
@@ -1171,10 +1171,17 @@ export function parseGrammarText(
           continue;
         }
 
-        // Intentar reconocer epsilon
+        // Intentar reconocer epsilon (incluyendo 'e' si no es terminal)
         if (remaining.startsWith('ε') || remaining.startsWith('epsilon') || remaining.startsWith('∈')) {
           symbols.push('ε');
           remaining = remaining.slice(remaining.startsWith('ε') ? 1 : remaining.startsWith('∈') ? 1 : 7);
+          continue;
+        }
+        
+        // Si es 'e' y no está en los terminales definidos, tratarlo como epsilon
+        if (remaining.startsWith('e') && !inputTerminals.has('e')) {
+          symbols.push('ε');
+          remaining = remaining.slice(1);
           continue;
         }
 
