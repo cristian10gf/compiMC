@@ -37,12 +37,59 @@ import type { ParseStep, ParsingResult } from '@/lib/types/grammar';
 
 interface StringRecognitionLLProps {
   onRecognize: (input: string) => Promise<ParsingResult | null>;
+  terminals?: string[]; // Terminales de la gramática para tokenización
   isProcessing?: boolean;
   className?: string;
 }
 
+/**
+ * Tokeniza una cadena de entrada usando los terminales conocidos
+ * Si la cadena tiene espacios, los usa como separadores
+ * Si no tiene espacios, intenta detectar los terminales más largos primero
+ */
+function tokenizeInput(input: string, terminals: string[]): string {
+  // Si la entrada ya tiene espacios, usarlos como separadores
+  if (input.includes(' ')) {
+    return input;
+  }
+
+  // Si no hay terminales definidos, devolver la entrada tal cual
+  if (!terminals || terminals.length === 0) {
+    return input;
+  }
+
+  // Ordenar terminales por longitud descendente para encontrar coincidencias más largas primero
+  const sortedTerminals = [...terminals].sort((a, b) => b.length - a.length);
+  
+  const tokens: string[] = [];
+  let remaining = input;
+
+  while (remaining.length > 0) {
+    let matched = false;
+
+    // Intentar coincidir con cada terminal
+    for (const terminal of sortedTerminals) {
+      if (remaining.startsWith(terminal)) {
+        tokens.push(terminal);
+        remaining = remaining.slice(terminal.length);
+        matched = true;
+        break;
+      }
+    }
+
+    // Si no hubo coincidencia, tomar el siguiente carácter como token individual
+    if (!matched) {
+      tokens.push(remaining[0]);
+      remaining = remaining.slice(1);
+    }
+  }
+
+  return tokens.join(' ');
+}
+
 export function StringRecognitionLL({
   onRecognize,
+  terminals = [],
   isProcessing = false,
   className,
 }: StringRecognitionLLProps) {
@@ -113,9 +160,11 @@ export function StringRecognitionLL({
     setResult(null);
     setCurrentStep(0);
 
-    const newResult = await onRecognize(inputString);
+    // Tokenizar la entrada usando los terminales conocidos
+    const tokenizedInput = tokenizeInput(inputString, terminals);
+    const newResult = await onRecognize(tokenizedInput);
     setResult(newResult);
-  }, [inputString, onRecognize, stopPlayback]);
+  }, [inputString, terminals, onRecognize, stopPlayback]);
 
   const handleReset = useCallback(() => {
     stopPlayback();
@@ -148,7 +197,7 @@ export function StringRecognitionLL({
             <Input
               value={inputString}
               onChange={(e) => setInputString(e.target.value)}
-              placeholder="Ej: id + id * id"
+              placeholder={terminals.length > 0 ? "Ej: id+id*id o id + id * id" : "Ej: id + id * id"}
               className="font-mono flex-1"
               onKeyDown={(e) => e.key === 'Enter' && handleRecognize()}
             />
@@ -165,7 +214,10 @@ export function StringRecognitionLL({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Separa los símbolos con espacios. Ejemplo: id + id * id
+            {terminals.length > 0 
+              ? 'Puedes escribir con o sin espacios. Los terminales se detectarán automáticamente.'
+              : 'Separa los símbolos con espacios. Ejemplo: id + id * id'
+            }
           </p>
         </div>
 
