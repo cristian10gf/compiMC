@@ -11,7 +11,7 @@
  * 5. Reconocimiento de cadena con animación
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleSection } from '@/components/shared';
@@ -22,17 +22,8 @@ import {
   ParsingTable,
   StringRecognitionLL,
 } from '@/components/analizador-sintactico';
-import { 
-  parseGrammarText,
-  transformGrammar,
-  generateFirstFollowWithRules,
-  buildParsingTable,
-  parseStringLL,
-  isLL1,
-  type FirstFollowWithRules,
-  type GrammarTransformation,
-} from '@/lib/algorithms/syntax/descendente';
-import type { Grammar, ParsingTable as ParsingTableType, ParsingResult } from '@/lib/types';
+import { useDescendenteAnalysis } from '@/hooks';
+import type { ParsingResult } from '@/lib/types';
 import { 
   Calculator, 
   GitBranch, 
@@ -43,15 +34,15 @@ import {
 } from 'lucide-react';
 
 export default function ASDClientPage() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Estado del análisis
-  const [grammar, setGrammar] = useState<Grammar | null>(null);
-  const [transformation, setTransformation] = useState<GrammarTransformation | null>(null);
-  const [firstFollow, setFirstFollow] = useState<FirstFollowWithRules[] | null>(null);
-  const [parsingTable, setParsingTable] = useState<ParsingTableType | null>(null);
-  const [isLL1Grammar, setIsLL1Grammar] = useState<{ isLL1: boolean; conflicts: string[] } | null>(null);
+  const {
+    state,
+    recognition,
+    isProcessing,
+    error,
+    analyze,
+    recognizeString,
+    hasAnalysis,
+  } = useDescendenteAnalysis();
 
   /**
    * Maneja el análisis de la gramática
@@ -61,70 +52,19 @@ export default function ASDClientPage() {
     terminals: string,
     autoDetect: boolean
   ) => {
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      // 1. Parsear la gramática
-      const parsedGrammar = parseGrammarText(grammarText, terminals, autoDetect);
-      
-      if (parsedGrammar.productions.length === 0) {
-        throw new Error('No se pudieron parsear las producciones. Verifica el formato.');
-      }
-
-      setGrammar(parsedGrammar);
-
-      // 2. Transformar la gramática (eliminar recursividad, factorizar)
-      const grammarTransformation = transformGrammar(parsedGrammar);
-      setTransformation(grammarTransformation);
-
-      // Usar la gramática transformada para los siguientes cálculos
-      const workingGrammar = grammarTransformation.factorized;
-
-      // 3. Calcular PRIMERO y SIGUIENTE con reglas
-      const firstFollowData = generateFirstFollowWithRules(workingGrammar);
-      setFirstFollow(firstFollowData);
-
-      // 4. Construir la tabla M
-      const table = buildParsingTable(workingGrammar);
-      setParsingTable(table);
-
-      // 5. Verificar si es LL(1)
-      const ll1Check = isLL1(workingGrammar);
-      setIsLL1Grammar(ll1Check);
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al analizar la gramática';
-      setError(errorMessage);
-      // Limpiar estado en caso de error
-      setGrammar(null);
-      setTransformation(null);
-      setFirstFollow(null);
-      setParsingTable(null);
-      setIsLL1Grammar(null);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, []);
+    await analyze({
+      grammarText,
+      terminals,
+      autoDetectTerminals: autoDetect,
+    });
+  }, [analyze]);
 
   /**
    * Maneja el reconocimiento de una cadena
    */
   const handleRecognize = useCallback(async (input: string): Promise<ParsingResult | null> => {
-    if (!transformation?.factorized || !parsingTable) {
-      setError('Primero debes analizar una gramática');
-      return null;
-    }
-
-    try {
-      const result = parseStringLL(transformation.factorized, parsingTable, input);
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al reconocer la cadena';
-      setError(errorMessage);
-      return null;
-    }
-  }, [transformation, parsingTable]);
+    return recognizeString(input);
+  }, [recognizeString]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -144,17 +84,17 @@ export default function ASDClientPage() {
       )}
 
       {/* Resultados */}
-      {grammar && (
+      {hasAnalysis && state.workingGrammar && (
         <div className="space-y-4">
           {/* Encabezado de resultados */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Resultados del Análisis</h2>
-            {isLL1Grammar && (
+            {state.ll1Check && (
               <Badge
-                variant={isLL1Grammar.isLL1 ? 'default' : 'destructive'}
+                variant={state.ll1Check.isLL1 ? 'default' : 'destructive'}
                 className="flex items-center gap-1"
               >
-                {isLL1Grammar.isLL1 ? (
+                {state.ll1Check.isLL1 ? (
                   <>
                     <CheckCircle2 className="h-3 w-3" />
                     Gramática LL(1)
@@ -170,7 +110,7 @@ export default function ASDClientPage() {
           </div>
 
           {/* Conflictos si los hay */}
-          {isLL1Grammar && !isLL1Grammar.isLL1 && isLL1Grammar.conflicts.length > 0 && (
+          {state.ll1Check && !state.ll1Check.isLL1 && state.ll1Check.conflicts.length > 0 && (
             <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
@@ -180,7 +120,7 @@ export default function ASDClientPage() {
               </CardHeader>
               <CardContent>
                 <ul className="text-sm space-y-1 text-amber-600 dark:text-amber-400">
-                  {isLL1Grammar.conflicts.map((conflict, idx) => (
+                  {state.ll1Check.conflicts.map((conflict, idx) => (
                     <li key={idx} className="font-mono text-xs">
                       • {conflict}
                     </li>
@@ -191,61 +131,63 @@ export default function ASDClientPage() {
           )}
 
           {/* Sección 1: Gramática Transformada */}
-          {transformation && (
+          {state.transformation && (
             <CollapsibleSection
               title="Gramática Sin Recursividad y Factorizada"
               icon={<GitBranch className="h-5 w-5" />}
               badge={
-                transformation.transformationSteps.filter(s => !s.startsWith('===')).length > 0 ? (
+                state.transformation.transformationSteps.filter(s => !s.startsWith('===')).length > 0 ? (
                   <Badge variant="secondary" className="text-xs">
-                    {transformation.transformationSteps.filter(s => s.startsWith('  ')).length} cambios
+                    {state.transformation.transformationSteps.filter(s => s.startsWith('  ')).length} cambios
                   </Badge>
                 ) : undefined
               }
               defaultOpen
             >
               <GrammarTransformations
-                originalGrammar={transformation.originalGrammar}
-                transformedGrammar={transformation.factorized}
-                transformationSteps={transformation.transformationSteps}
+                originalGrammar={state.transformation.originalGrammar}
+                transformedGrammar={state.transformation.factorized}
+                transformationSteps={state.transformation.transformationSteps}
               />
             </CollapsibleSection>
           )}
 
           {/* Sección 2: Valores (PRIMERO y SIGUIENTE) */}
-          {firstFollow && (
+          {state.firstFollow && (
             <CollapsibleSection
               title="Valores (PRIMERO y SIGUIENTE)"
               icon={<Calculator className="h-5 w-5" />}
               badge={
                 <Badge variant="secondary" className="text-xs">
-                  {firstFollow.length} no terminales
+                  {state.firstFollow.length} no terminales
                 </Badge>
               }
               defaultOpen
             >
-              <FirstFollowTable data={firstFollow} />
+              <FirstFollowTable data={state.firstFollow} />
             </CollapsibleSection>
           )}
 
           {/* Sección 3: Tabla M */}
-          {parsingTable && (
+          {state.parsingTable && state.workingGrammar && (
             <CollapsibleSection
               title="Tabla M de Parsing"
               icon={<Table2 className="h-5 w-5" />}
               badge={
                 <Badge variant="secondary" className="text-xs">
-                  {parsingTable.entries?.filter(e => e.production).length || 0} entradas
+                  {state.parsingTable.entries?.filter(e => e.production).length || 0} entradas
                 </Badge>
               }
               defaultOpen
             >
-              <ParsingTable table={parsingTable} />
+              <ParsingTable 
+                table={state.parsingTable}
+              />
             </CollapsibleSection>
           )}
 
           {/* Sección 4: Reconocimiento de Cadena */}
-          {parsingTable && (
+          {state.parsingTable && (
             <CollapsibleSection
               title="Reconocer Cadena"
               icon={<TextSearch className="h-5 w-5" />}
