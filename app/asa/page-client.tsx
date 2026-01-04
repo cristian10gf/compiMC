@@ -1,132 +1,350 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+/**
+ * Página cliente del Analizador Sintáctico Ascendente (ASA)
+ * 
+ * Implementa análisis por precedencia de operadores con:
+ * 1. Input de gramática con terminales (gramáticas de operadores)
+ * 2. Selector de método (LR / Precedencia) - por ahora solo Precedencia
+ * 3. Validación de gramática de operadores
+ * 4. Configuración de modo (automático/manual)
+ * 5. Tabla de precedencia
+ * 6. Reconocimiento de cadenas con traza
+ */
+
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GrammarInput, PrecedenceTable, StackTraceTable } from '@/components/analizador-sintactico';
-import { CollapsibleSection } from '@/components/shared';
-import { useSyntaxAnalyzer } from '@/hooks';
-import { Loader2 } from 'lucide-react';
-import type { Grammar, Production } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CollapsibleSection, SegmentedControl } from '@/components/shared';
+import { 
+  GrammarInputASA,
+  PrecedenceTable,
+  PrecedenceSteps,
+  StringRecognitionPrecedence,
+} from '@/components/analizador-sintactico';
+import { useAscendenteAnalysis } from '@/hooks';
+import { 
+  buildPrecedenceTableFromSteps,
+  calculatePrecedenceUsingFirstLast,
+  derivationsToPrecedenceSteps,
+} from '@/lib/algorithms/syntax/ascendente';
+import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType, DerivationStep } from '@/lib/types';
+import { 
+  CheckCircle2, 
+  AlertTriangle,
+  Settings,
+  Table2,
+  TextSearch,
+  ShieldCheck,
+  BarChart3,
+} from 'lucide-react';
+
+// Opciones del selector de método
+const METHOD_OPTIONS = [
+  { value: 'precedence', label: 'Precedencia' },
+  { value: 'lr', label: 'LR (Próximamente)' },
+];
 
 export default function ASAClientPage() {
-  const [productions, setProductions] = useState<Production[]>([
-    { id: 'prod-1', left: 'E', right: ['E', '+', 'T'] },
-    { id: 'prod-2', left: 'E', right: ['T'] },
-    { id: 'prod-3', left: 'T', right: ['T', '*', 'F'] },
-    { id: 'prod-4', left: 'T', right: ['F'] },
-    { id: 'prod-5', left: 'F', right: ['(', 'E', ')'] },
-    { id: 'prod-6', left: 'F', right: ['id'] },
-  ]);
-  const [inputString, setInputString] = useState('');
-  
-  const { 
-    precedenceTable, 
-    parsingResult,
-    isProcessing, 
+  // Estado del hook de análisis
+  const {
+    state,
+    isProcessing,
     error,
-    setGrammar,
-    analyzeLR,
-  } = useSyntaxAnalyzer();
+    analyze,
+    recognizeString,
+    hasAnalysis,
+  } = useAscendenteAnalysis();
 
-  const handleAnalyze = async () => {
-    const grammar: Grammar = {
-      productions,
-      startSymbol: productions[0]?.left || 'E',
-      terminals: [],
-      nonTerminals: [],
-    };
+  // Estado local para UI
+  const [method, setMethod] = useState('precedence');
+  const [isAutomatic, setIsAutomatic] = useState(true);
+  const [testString, setTestString] = useState('');
+  const [localSteps, setLocalSteps] = useState<PrecedenceStep[] | null>(null);
+  const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
+  const [localGrammar, setLocalGrammar] = useState<Grammar | null>(null);
+  const [localPrecedenceTable, setLocalPrecedenceTable] = useState<PrecedenceTableType | null>(null);
 
-    setGrammar(grammar);
-    await analyzeLR(false); // false = modo automático
-  };
+  /**
+   * Maneja el análisis inicial de la gramática
+   */
+  const handleAnalyze = useCallback(async (
+    grammarText: string,
+    terminals: string
+  ) => {
+    // Limpiar estados previos
+    setLocalSteps(null);
+    setValidationResult(null);
+    setTestString('');
+    setLocalPrecedenceTable(null);
+
+    // Analizar con el hook
+    await analyze({
+      grammarText,
+      terminals,
+      mode: isAutomatic ? 'automatic' : 'manual',
+      autoDetectTerminals: false,
+    });
+  }, [analyze, isAutomatic]);
+
+  /**
+   * Efecto para actualizar estados locales cuando cambia el análisis
+   */
+  useEffect(() => {
+    if (state.grammar) {
+      setLocalGrammar(state.grammar);
+      setValidationResult(state.operatorValidation);
+      
+      // Usar la tabla del estado si existe
+      if (state.precedenceTable) {
+        setLocalPrecedenceTable(state.precedenceTable);
+      }
+    }
+  }, [state.grammar, state.operatorValidation, state.precedenceTable]);
+
+  /**
+   * Maneja el cambio de modo (automático/manual)
+   */
+  const handleModeChange = useCallback((automatic: boolean) => {
+    setIsAutomatic(automatic);
+    // El componente PrecedenceSteps maneja internamente el cambio
+    setTestString('');
+    setLocalSteps(null);
+    setLocalPrecedenceTable(null);
+  }, []);
+
+  /**
+   * Maneja la generación de pasos de precedencia (recibe los pasos del componente)
+   */
+  const handleGenerateSteps = useCallback((steps: PrecedenceStep[]) => {
+    if (!localGrammar) return;
+
+    setLocalSteps(steps);
+
+    // En modo automático, usar calculatePrecedenceUsingFirstLast para obtener
+    // la tabla correcta basada en reglas de precedencia de operadores
+    if (isAutomatic) {
+      const table = calculatePrecedenceUsingFirstLast(localGrammar);
+      setLocalPrecedenceTable(table);
+    } else {
+      // En modo manual, construir tabla desde los pasos generados
+      const table = buildPrecedenceTableFromSteps(localGrammar, steps);
+      setLocalPrecedenceTable(table);
+    }
+  }, [localGrammar, isAutomatic]);
+
+  /**
+   * Maneja el reconocimiento de cadenas
+   */
+  const handleRecognize = useCallback(async (input: string) => {
+    return recognizeString(input);
+  }, [recognizeString]);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Definición de la Gramática</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <GrammarInput
-            productions={productions}
-            onChange={setProductions}
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Input de gramática */}
+      <GrammarInputASA
+        onAnalyze={handleAnalyze}
+        isProcessing={isProcessing}
+      />
+
+      {/* Error global */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Selector de método */}
+      {hasAnalysis && (
+        <div className="flex justify-center">
+          <SegmentedControl
+            options={METHOD_OPTIONS}
+            value={method}
+            onChange={(value) => {
+              if (value === 'lr') {
+                // LR aún no implementado
+                return;
+              }
+              setMethod(value);
+            }}
           />
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Analizar Cadena</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Cadena de Entrada</label>
-            <Input
-              value={inputString}
-              onChange={(e) => setInputString(e.target.value)}
-              placeholder="Ej: id + id * id"
-              className="font-mono"
-            />
-          </div>
-
-          <Button
-            onClick={handleAnalyze}
-            disabled={!productions.length || isProcessing}
-            className="w-full sm:w-auto"
+      {/* Contenido según el método seleccionado */}
+      {hasAnalysis && method === 'precedence' && (
+        <div className="space-y-4">
+          {/* Sección 1: Validación de Gramática de Operadores */}
+          <CollapsibleSection
+            title="Validación de Gramática"
+            icon={<ShieldCheck className="h-5 w-5" />}
+            badge={
+              validationResult && (
+                <Badge
+                  variant={validationResult.valid ? 'default' : 'destructive'}
+                  className="flex items-center gap-1"
+                >
+                  {validationResult.valid ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3" />
+                      Válida
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-3 w-3" />
+                      Inválida
+                    </>
+                  )}
+                </Badge>
+              )
+            }
+            defaultOpen
           >
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 animate-spin" />
-                Analizando...
-              </>
-            ) : (
-              'Analizar (LR)'
-            )}
-          </Button>
+            <div className="space-y-4">
+              {validationResult?.valid ? (
+                <Alert className="border-green-500/20 bg-green-500/10">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-700 dark:text-green-400">
+                    Gramática de Operadores Válida
+                  </AlertTitle>
+                  <AlertDescription className="text-green-600 dark:text-green-400">
+                    La gramática cumple con los requisitos para el análisis por precedencia de operadores:
+                    <ul className="mt-2 list-disc list-inside text-sm">
+                      <li>No hay producciones vacías (ε)</li>
+                      <li>No hay no terminales adyacentes</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Gramática No Válida</AlertTitle>
+                  <AlertDescription>
+                    La gramática no cumple con los requisitos:
+                    <ul className="mt-2 list-disc list-inside text-sm">
+                      {validationResult?.errors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
+              {/* Información de la gramática */}
+              {localGrammar && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Terminales</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-1.5">
+                        {localGrammar.terminals.map((t, idx) => (
+                          <Badge key={idx} variant="secondary" className="font-mono">
+                            {t}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">No Terminales</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-1.5">
+                        {localGrammar.nonTerminals.map((nt, idx) => (
+                          <Badge key={idx} variant="outline" className="font-mono">
+                            {nt}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
+          </CollapsibleSection>
+
+          {/* Sección 2: Configuración de Análisis (solo si gramática es válida) */}
+          {validationResult?.valid && localGrammar && (
+            <CollapsibleSection
+              title="Construcción de Tabla de Precedencia"
+              icon={<Settings className="h-5 w-5" />}
+              badge={
+                localSteps && (
+                  <Badge variant="secondary" className="text-xs">
+                    {localSteps.length} pasos
+                  </Badge>
+                )
+              }
+              defaultOpen
+            >
+              <PrecedenceSteps
+                grammar={localGrammar}
+                steps={localSteps}
+                testString={testString}
+                isAutomatic={isAutomatic}
+                onModeChange={handleModeChange}
+                onTestStringChange={setTestString}
+                onGenerateSteps={handleGenerateSteps}
+                isProcessing={isProcessing}
+              />
+            </CollapsibleSection>
           )}
-        </CardContent>
-      </Card>
 
-      {precedenceTable && (
-        <Tabs defaultValue="precedence" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="precedence">Precedencia</TabsTrigger>
-            <TabsTrigger value="trace">Traza</TabsTrigger>
-            <TabsTrigger value="items">Items LR</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="precedence" className="mt-6">
-            <CollapsibleSection title="Tabla de Precedencia de Operadores" defaultOpen>
-              {precedenceTable && <PrecedenceTable table={precedenceTable} />}
+          {/* Sección 3: Tabla de Precedencia */}
+          {localPrecedenceTable && (
+            <CollapsibleSection
+              title="Tabla de Precedencia"
+              icon={<Table2 className="h-5 w-5" />}
+              badge={
+                <Badge variant="secondary" className="text-xs">
+                  {localPrecedenceTable.symbols.length}×{localPrecedenceTable.symbols.length}
+                </Badge>
+              }
+              defaultOpen
+            >
+              <PrecedenceTable table={localPrecedenceTable} />
             </CollapsibleSection>
-          </TabsContent>
+          )}
 
-          <TabsContent value="trace" className="mt-6">
-            <CollapsibleSection title="Traza de Análisis" defaultOpen>
-              {parsingResult?.steps && <StackTraceTable steps={parsingResult.steps} />}
+          {/* Sección 4: Reconocimiento de Cadenas */}
+          {localPrecedenceTable && localGrammar && (
+            <CollapsibleSection
+              title="Reconocer Cadena"
+              icon={<TextSearch className="h-5 w-5" />}
+              defaultOpen
+            >
+              <StringRecognitionPrecedence
+                onRecognize={handleRecognize}
+                terminals={localGrammar.terminals}
+                isProcessing={isProcessing}
+              />
             </CollapsibleSection>
-          </TabsContent>
+          )}
+        </div>
+      )}
 
-          <TabsContent value="items" className="mt-6">
-            <CollapsibleSection title="Conjuntos de Items LR" defaultOpen>
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground">
-                    Los conjuntos de items LR estarán disponibles próximamente.
-                  </p>
-                </CardContent>
-              </Card>
-            </CollapsibleSection>
-          </TabsContent>
-        </Tabs>
+      {/* Mensaje cuando LR está seleccionado */}
+      {hasAnalysis && method === 'lr' && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
+              <div>
+                <h3 className="text-lg font-semibold">Análisis LR</h3>
+                <p className="text-muted-foreground">
+                  El análisis LR(0), SLR, LR(1) y LALR estará disponible próximamente.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

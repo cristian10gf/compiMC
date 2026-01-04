@@ -71,6 +71,19 @@ export interface PrecedenceRelation {
 }
 
 /**
+ * Un paso de derivación en la construcción de precedencia
+ * Representa una forma sentencial en el proceso de derivación
+ */
+export interface DerivationStep {
+  stepNumber: number; // Número del paso
+  sententialForm: string[]; // Forma sentencial actual (símbolos)
+  productionUsed: Production | null; // Producción usada para llegar a este paso
+  positionExpanded: number; // Posición del no terminal que se expandió (-1 si es inicial)
+  relations: PrecedenceRelation[]; // Relaciones encontradas en este paso
+  explanation: string; // Explicación del análisis
+}
+
+/**
  * Paso en la construcción manual de precedencia
  */
 export interface PrecedenceStep {
