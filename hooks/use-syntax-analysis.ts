@@ -289,9 +289,9 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
       const orderedNonTerminals = Array.from(new Set(workingGrammar.productions.map(p => p.left)));
       const orderedTerminals = Array.from(new Set(
         workingGrammar.productions.flatMap(p => p.right)
-                                  .filter(s => !workingGrammar.nonTerminals.includes(s))
+                                  .filter(s => !workingGrammar.nonTerminals.includes(s) && s !== 'ε')
       ));
-      
+
       workingGrammar.nonTerminals = orderedNonTerminals;
       workingGrammar.terminals = orderedTerminals;
 
