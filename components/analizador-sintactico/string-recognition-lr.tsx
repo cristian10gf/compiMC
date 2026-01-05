@@ -171,7 +171,7 @@ export function StringRecognitionLR({
 
             {/* Tabla de pasos */}
             {result.steps && result.steps.length > 0 && (
-              <StackTraceTable steps={result.steps} />
+              <StackTraceTable steps={result.steps}/>
             )}
           </div>
         )}

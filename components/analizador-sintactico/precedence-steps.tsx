@@ -36,6 +36,7 @@ import {
   getTestStringFromDerivations,
   derivationsToPrecedenceSteps,
   buildPrecedenceTableFromSteps,
+  calculatePrecedenceAutomatic,
 } from '@/lib/algorithms/syntax/ascendente';
 
 interface PrecedenceStepsProps {
@@ -100,9 +101,9 @@ export function PrecedenceSteps({
     }]);
   }, [grammar.startSymbol]);
 
-  // Generar automáticamente los pasos cuando está en modo automático
+  // Generar automáticamente cuando se activa el modo automático
   useEffect(() => {
-    if (isAutomatic && !steps) {
+    if (isAutomatic) {
       // Generar derivaciones automáticas
       const autoSteps = generateAutomaticDerivations(grammar);
       setDerivationSteps(autoSteps);
@@ -110,11 +111,12 @@ export function PrecedenceSteps({
       const testStr = getTestStringFromDerivations(grammar, autoSteps);
       onTestStringChange(testStr);
       
-      // Convertir a PrecedenceSteps (solo informativos, la tabla ya está en el hook)
+      // Generar tabla usando el método automático correcto
+      const table = calculatePrecedenceAutomatic(grammar);
       const precedenceSteps = derivationsToPrecedenceSteps(autoSteps);
-      onGenerateSteps(precedenceSteps); // No enviar tabla, usar la del hook
+      onGenerateSteps(precedenceSteps, table);
     }
-  }, [isAutomatic, grammar, steps, onTestStringChange, onGenerateSteps]);
+  }, [isAutomatic, grammar, onTestStringChange, onGenerateSteps]);
 
   // Forma sentencial actual (último paso)
   const currentForm = useMemo(() => {
@@ -204,9 +206,10 @@ export function PrecedenceSteps({
     const testStr = getTestStringFromDerivations(grammar, autoSteps);
     onTestStringChange(testStr);
     
-    // Convertir a PrecedenceSteps para la tabla
+    // Generar tabla usando el método automático correcto
+    const table = calculatePrecedenceAutomatic(grammar);
     const precedenceSteps = derivationsToPrecedenceSteps(autoSteps);
-    onGenerateSteps(precedenceSteps);
+    onGenerateSteps(precedenceSteps, table);
   }, [grammar, onTestStringChange, onGenerateSteps]);
 
   // Analizar derivaciones manuales

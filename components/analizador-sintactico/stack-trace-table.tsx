@@ -17,8 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ParseStep } from '@/lib/types/grammar';
 import { CopyButton } from '@/components/shared/copy-button';
-import { Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface StackTraceTableProps {
@@ -39,18 +39,8 @@ export function StackTraceTable({
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-  const [currentPage, setCurrentPage] = useState(0);
 
   const totalSteps = steps.length;
-  const totalPages = Math.ceil(totalSteps / itemsPerPage);
-
-  // Sincronizar página con paso actual
-  useEffect(() => {
-    const targetPage = Math.floor(currentStep / itemsPerPage);
-    if (targetPage !== currentPage) {
-      setCurrentPage(targetPage);
-    }
-  }, [currentStep, itemsPerPage, currentPage]);
 
   const startAutoPlay = () => {
     if (intervalId) return;
@@ -84,11 +74,6 @@ export function StackTraceTable({
       startAutoPlay();
     }
   };
-
-  const paginatedSteps = steps.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
 
   return (
     <Card className={className}>
@@ -173,7 +158,7 @@ export function StackTraceTable({
         </div>
 
         {/* Tabla de pasos */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-150 overflow-y-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -184,24 +169,23 @@ export function StackTraceTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedSteps.map((step, index) => {
-                const globalIndex = currentPage * itemsPerPage + index;
-                const isCurrentStep = globalIndex === currentStep;
+              {steps.map((step, index) => {
+                const isCurrentStep = index === currentStep;
 
                 return (
                   <TableRow
-                    key={globalIndex}
+                    key={index}
                     className={cn(
                       'transition-all cursor-pointer',
                       isCurrentStep && 'bg-primary/10 ring-2 ring-primary'
                     )}
                     onClick={() => {
                       stopAutoPlay();
-                      setCurrentStep(globalIndex);
+                      setCurrentStep(index);
                     }}
                   >
                     <TableCell className="text-center font-medium">
-                      {globalIndex + 1}
+                      {index + 1}
                     </TableCell>
                     <TableCell>
                       <code className="text-xs font-mono">
@@ -222,33 +206,6 @@ export function StackTraceTable({
             </TableBody>
           </Table>
         </div>
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-muted-foreground">
-              Página {currentPage + 1} de {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                disabled={currentPage === 0}
-              >
-                <ChevronLeft />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={currentPage === totalPages - 1}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
