@@ -2,7 +2,6 @@
  * Exportaciones de componentes de análisis léxico
  */
 
-export { AutomataGraph } from './automata-graph';
 export { AutomataGraphCytoscape } from './automata-graph-cytoscape';
 export { AutomataEditor } from './automata-editor';
 export { AutomataHelpModal } from './automata-help-modal';
