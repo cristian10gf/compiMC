@@ -1,18 +1,17 @@
 /**
  * Conversión de Autómata Finito a Expresión Regular
  * 
- * Implementa el método de Arden (ecuaciones) para convertir un AF en una ER equivalente.
+ * Implementa dos métodos para convertir un AF en una ER equivalente:
  * 
- * Teorema de Arden: Si X = A·X | B, entonces X = A*·B
- * (siempre que ε ∉ A, la solución es única)
+ * 1. MÉTODO DE ARDEN (ecuaciones):
+ *    - Teorema de Arden: Si X = A·X | B, entonces X = A*·B (siempre que ε ∉ A)
+ *    - Crea ecuaciones para cada estado y las resuelve algebraicamente
  * 
- * Algoritmo:
- * 1. Crear una ecuación para cada estado: qi = ∑(aij·qj) donde aij son los símbolos de transición
- * 2. El estado inicial tiene +ε si es punto de partida
- * 3. Resolver el sistema sustituyendo variables y aplicando Arden para eliminar recursiones
- * 4. La ER final es la unión de las expresiones de los estados finales
- * 
- * Lema de Arden: Si X = αX | β, entonces X = α*β
+ * 2. MÉTODO DE ELIMINACIÓN DE ESTADOS (State Elimination):
+ *    - Agrega un nuevo estado inicial y final
+ *    - Elimina estados uno por uno, actualizando las transiciones
+ *    - Fórmula para eliminar estado q: R(p→r) = R(p→q)·R(q→q)*·R(q→r) + R(p→r)
+ *    - La ER final es la transición del estado inicial al final
  */
 
 import { Automaton, Equation, EquationStep, Frontier } from '@/lib/types/automata';
@@ -713,5 +712,331 @@ export function createExampleAutomaton(): Automaton {
       { id: 't3', from: 'B', to: 'A', symbol: '1' },
       { id: 't4', from: 'B', to: 'B', symbol: '0' },
     ],
+  };
+}
+
+// =============================================================================
+// MÉTODO DE ELIMINACIÓN DE ESTADOS (STATE ELIMINATION)
+// =============================================================================
+
+/**
+ * Representación de una transición con expresión regular
+ * Usado en el método de eliminación de estados
+ */
+interface RegexTransition {
+  from: string;
+  to: string;
+  regex: string;
+}
+
+/**
+ * Paso en el proceso de eliminación de estados
+ */
+interface StateEliminationStep {
+  stepNumber: number;
+  description: string;
+  action: 'init' | 'add-states' | 'eliminate' | 'final';
+  eliminatedState?: string;
+  transitions: RegexTransition[];
+  currentStates: string[];
+  explanation: string;
+}
+
+/**
+ * Combina dos expresiones regulares con unión
+ */
+function combineWithUnion(regex1: string, regex2: string): string {
+  if (!regex1 || regex1 === '∅') return regex2 || '∅';
+  if (!regex2 || regex2 === '∅') return regex1 || '∅';
+  if (regex1 === regex2) return regex1;
+  
+  return `(${regex1}|${regex2})`;
+}
+
+/**
+ * Combina dos expresiones regulares con concatenación
+ */
+function combineWithConcat(regex1: string, regex2: string): string {
+  if (!regex1 || regex1 === '∅') return '∅';
+  if (!regex2 || regex2 === '∅') return '∅';
+  if (regex1 === 'ε') return regex2;
+  if (regex2 === 'ε') return regex1;
+  
+  const r1 = needsParens(regex1) ? `(${regex1})` : regex1;
+  const r2 = needsParens(regex2) ? `(${regex2})` : regex2;
+  
+  return `${r1}${r2}`;
+}
+
+/**
+ * Aplica la estrella de Kleene a una expresión
+ */
+function applyKleeneStar(regex: string): string {
+  if (!regex || regex === '∅') return 'ε';
+  if (regex === 'ε') return 'ε';
+  
+  const needsWrap = regex.length > 1 && !regex.startsWith('(');
+  return needsWrap ? `(${regex})*` : `${regex}*`;
+}
+
+/**
+ * Busca una transición entre dos estados
+ */
+function findTransition(
+  transitions: RegexTransition[],
+  from: string,
+  to: string
+): RegexTransition | undefined {
+  return transitions.find(t => t.from === from && t.to === to);
+}
+
+/**
+ * Actualiza o agrega una transición
+ */
+function updateTransition(
+  transitions: RegexTransition[],
+  from: string,
+  to: string,
+  newRegex: string
+): RegexTransition[] {
+  const existing = findTransition(transitions, from, to);
+  const simplified = simplifyRegex(newRegex);
+  
+  if (existing) {
+    return transitions.map(t =>
+      t.from === from && t.to === to ? { ...t, regex: simplified } : t
+    );
+  } else {
+    return [...transitions, { from, to, regex: simplified }];
+  }
+}
+
+/**
+ * Elimina transiciones que involucran un estado
+ */
+function removeTransitionsWithState(
+  transitions: RegexTransition[],
+  state: string
+): RegexTransition[] {
+  return transitions.filter(t => t.from !== state && t.to !== state);
+}
+
+/**
+ * Convierte AF a ER usando el método de eliminación de estados
+ * 
+ * Algoritmo:
+ * 1. Agregar nuevo estado inicial I con transición ε al estado inicial original
+ * 2. Agregar nuevo estado final F con transiciones ε desde todos los estados finales
+ * 3. Eliminar estados uno por uno (excepto I y F) usando la fórmula:
+ *    R(p→r) = R(p→q)·R(q→q)*·R(q→r) + R(p→r)
+ *    donde q es el estado a eliminar
+ * 4. La ER final es R(I→F)
+ */
+export function afToERByStateElimination(automaton: Automaton): {
+  regex: string;
+  steps: StateEliminationStep[];
+  ardenEquations: Equation[];
+} {
+  const steps: StateEliminationStep[] = [];
+  let stepNumber = 1;
+
+  // Generar ecuaciones de Arden para referencia
+  const frontiers = calculateFrontiers(automaton);
+  const ardenEquations = generateEquations(automaton, frontiers);
+
+  // Paso 0: Mostrar ecuaciones de Arden
+  steps.push({
+    stepNumber: 0,
+    description: 'Ecuaciones de Arden (referencia)',
+    action: 'init',
+    transitions: [],
+    currentStates: [],
+    explanation: `Ecuaciones generadas por el método de Arden:\n${formatEquations(ardenEquations)}\n\nAhora aplicaremos el método de eliminación de estados...`,
+  });
+
+  // Paso 1: Convertir transiciones a formato regex
+  let transitions: RegexTransition[] = [];
+  
+  for (const t of automaton.transitions) {
+    const existing = findTransition(transitions, t.from, t.to);
+    if (existing) {
+      transitions = updateTransition(
+        transitions,
+        t.from,
+        t.to,
+        combineWithUnion(existing.regex, t.symbol)
+      );
+    } else {
+      transitions.push({ from: t.from, to: t.to, regex: t.symbol });
+    }
+  }
+
+  // Agregar self-loops vacíos donde no existan
+  for (const state of automaton.states) {
+    if (!findTransition(transitions, state.id, state.id)) {
+      transitions.push({ from: state.id, to: state.id, regex: '∅' });
+    }
+  }
+
+  let currentStates = automaton.states.map(s => s.id);
+
+  steps.push({
+    stepNumber: stepNumber++,
+    description: 'Transiciones iniciales del autómata',
+    action: 'init',
+    transitions: [...transitions],
+    currentStates: [...currentStates],
+    explanation: 'Representación inicial del autómata con transiciones convertidas a expresiones regulares.',
+  });
+
+  // Paso 2: Agregar nuevo estado inicial I
+  const newInitialState = 'I';
+  const originalInitialState = automaton.states.find(s => s.isInitial)!.id;
+  
+  transitions.push({
+    from: newInitialState,
+    to: originalInitialState,
+    regex: 'ε',
+  });
+  
+  currentStates = [newInitialState, ...currentStates];
+
+  steps.push({
+    stepNumber: stepNumber++,
+    description: 'Agregar nuevo estado inicial I',
+    action: 'add-states',
+    transitions: [...transitions],
+    currentStates: [...currentStates],
+    explanation: `Se agrega un nuevo estado inicial "${newInitialState}" con transición ε hacia el estado inicial original "${originalInitialState}".`,
+  });
+
+  // Paso 3: Agregar nuevo estado final F
+  const newFinalState = 'F';
+  const originalFinalStates = automaton.states.filter(s => s.isFinal).map(s => s.id);
+  
+  for (const finalState of originalFinalStates) {
+    transitions.push({
+      from: finalState,
+      to: newFinalState,
+      regex: 'ε',
+    });
+  }
+  
+  currentStates.push(newFinalState);
+
+  steps.push({
+    stepNumber: stepNumber++,
+    description: 'Agregar nuevo estado final F',
+    action: 'add-states',
+    transitions: [...transitions],
+    currentStates: [...currentStates],
+    explanation: `Se agrega un nuevo estado final "${newFinalState}" con transiciones ε desde los estados finales originales: ${originalFinalStates.join(', ')}.`,
+  });
+
+  // Paso 4: Eliminar estados uno por uno (excepto I y F)
+  const statesToEliminate = currentStates.filter(
+    s => s !== newInitialState && s !== newFinalState
+  );
+
+  for (const stateToEliminate of statesToEliminate) {
+    // Obtener self-loop del estado a eliminar
+    const selfLoop = findTransition(transitions, stateToEliminate, stateToEliminate);
+    const selfLoopRegex = selfLoop ? selfLoop.regex : '∅';
+    const selfLoopStar = selfLoopRegex !== '∅' ? applyKleeneStar(selfLoopRegex) : 'ε';
+
+    // Encontrar todos los estados que apuntan a stateToEliminate
+    const incomingStates = new Set(
+      transitions
+        .filter(t => t.to === stateToEliminate && t.from !== stateToEliminate)
+        .map(t => t.from)
+    );
+
+    // Encontrar todos los estados a los que apunta stateToEliminate
+    const outgoingStates = new Set(
+      transitions
+        .filter(t => t.from === stateToEliminate && t.to !== stateToEliminate)
+        .map(t => t.to)
+    );
+
+    // Para cada par (p, r) donde p→q y q→r, crear/actualizar p→r
+    // Fórmula: R(p→r) = R(p→q)·R(q→q)*·R(q→r) + R(p→r)
+    for (const p of incomingStates) {
+      for (const r of outgoingStates) {
+        const pToQ = findTransition(transitions, p, stateToEliminate)?.regex || '∅';
+        const qToR = findTransition(transitions, stateToEliminate, r)?.regex || '∅';
+        const pToR = findTransition(transitions, p, r)?.regex || '∅';
+
+        // Nueva expresión: R(p→q)·R(q→q)*·R(q→r)
+        let newPath = combineWithConcat(pToQ, selfLoopStar);
+        newPath = combineWithConcat(newPath, qToR);
+
+        // Combinar con la ruta existente: + R(p→r)
+        const combinedRegex = combineWithUnion(newPath, pToR);
+
+        transitions = updateTransition(transitions, p, r, combinedRegex);
+      }
+    }
+
+    // Eliminar todas las transiciones que involucran el estado
+    transitions = removeTransitionsWithState(transitions, stateToEliminate);
+    currentStates = currentStates.filter(s => s !== stateToEliminate);
+
+    steps.push({
+      stepNumber: stepNumber++,
+      description: `Eliminar estado ${stateToEliminate}`,
+      action: 'eliminate',
+      eliminatedState: stateToEliminate,
+      transitions: [...transitions],
+      currentStates: [...currentStates],
+      explanation: `Eliminación del estado "${stateToEliminate}":\n- Self-loop: ${selfLoopRegex} → ${selfLoopStar}\n- Se actualizan las transiciones usando R(p→r) = R(p→q)·R(q→q)*·R(q→r) + R(p→r)\n- Estados entrantes: ${[...incomingStates].join(', ') || 'ninguno'}\n- Estados salientes: ${[...outgoingStates].join(', ') || 'ninguno'}`,
+    });
+  }
+
+  // Paso 5: Obtener la expresión regular final (I→F)
+  const finalTransition = findTransition(transitions, newInitialState, newFinalState);
+  const finalRegex = finalTransition ? simplifyRegex(finalTransition.regex) : '∅';
+
+  steps.push({
+    stepNumber: stepNumber,
+    description: 'Expresión regular final',
+    action: 'final',
+    transitions: [...transitions],
+    currentStates: [...currentStates],
+    explanation: `La expresión regular equivalente es la transición de ${newInitialState} → ${newFinalState}:\nER = ${finalRegex}`,
+  });
+
+  return {
+    regex: finalRegex,
+    steps,
+    ardenEquations,
+  };
+}
+
+/**
+ * Función principal que usa ambos métodos y compara resultados
+ */
+export function afToERBothMethods(automaton: Automaton): {
+  ardenResult: {
+    regex: string;
+    steps: EquationStep[];
+    frontiers: Frontier[];
+    equations: Equation[];
+  };
+  stateEliminationResult: {
+    regex: string;
+    steps: StateEliminationStep[];
+    ardenEquations: Equation[];
+  };
+  equivalent: boolean;
+} {
+  const ardenResult = afToER(automaton);
+  const stateEliminationResult = afToERByStateElimination(automaton);
+
+  const equivalent = areRegexEquivalent(ardenResult.regex, stateEliminationResult.regex);
+
+  return {
+    ardenResult,
+    stateEliminationResult,
+    equivalent,
   };
 }

@@ -21,11 +21,12 @@ import {
   SegmentedControl, 
   CopyButton,
 } from '@/components/shared';
-import { afToER, createExampleAutomaton } from '@/lib/algorithms/lexical/af-to-er';
+import { createExampleAutomaton } from '@/lib/algorithms/lexical/af-to-er';
 import { useHistory } from '@/lib/context';
+import { useAutomata } from '@/hooks';
 import { Loader2, Play, RotateCcw, Sparkles, ChevronRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Automaton, EquationStep } from '@/lib/types';
+import type { Automaton } from '@/lib/types';
 
 // Opciones para el control segmentado
 const modeOptions = [
@@ -39,6 +40,10 @@ const alphabetOptions = [
 ];
 
 export default function AFtoERClientPage() {
+  // Usar el hook de autómata
+  const { convertToER, clearAutomaton, error: hookError, isProcessing } = useAutomata();
+  const { addEntry } = useHistory();
+  
   // Estado del modo de entrada
   const [inputMode, setInputMode] = useState<'visual' | 'table'>('visual');
   const [alphabetMode, setAlphabetMode] = useState<'auto' | 'custom'>('auto');
@@ -48,17 +53,13 @@ export default function AFtoERClientPage() {
   const [automaton, setAutomaton] = useState<Automaton | null>(null);
   const [resetKey, setResetKey] = useState(0);
   
-  // Estado de procesamiento
-  const [loading, setLoading] = useState(false);
+  // Estado de resultado
   const [result, setResult] = useState<{
     regex: string;
-    steps: EquationStep[];
-    frontiers: any[];
-    equations: any[];
+    steps: any[];
+    ardenEquations: any[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
-  const { addEntry } = useHistory();
 
   // Alfabeto efectivo (auto-detectado o personalizado)
   const effectiveAlphabet = useMemo(() => {
@@ -95,7 +96,8 @@ export default function AFtoERClientPage() {
     setError(null);
     setCustomAlphabet([]);
     setResetKey(prev => prev + 1);
-  }, []);
+    clearAutomaton();
+  }, [clearAutomaton]);
 
   // Realizar la conversión
   const handleConvert = async () => {
@@ -105,7 +107,6 @@ export default function AFtoERClientPage() {
     }
 
     try {
-      setLoading(true);
       setError(null);
 
       // Validaciones
@@ -124,8 +125,20 @@ export default function AFtoERClientPage() {
         throw new Error('El autómata debe tener al menos un estado');
       }
 
-      // Realizar la conversión
-      const conversionResult = afToER(automaton);
+      // Guardar autómata temporalmente en el contexto para que el hook lo use
+      // Esto es necesario porque el hook espera que el autómata esté en el contexto
+      const tempAutomatonResult = {
+        automatonAFD: automaton,
+        automatonAFN: undefined,
+        syntaxTree: undefined,
+        automatonAFDNonOptimized: undefined,
+      };
+
+      // Usar el hook para convertir (pasando el autómata manualmente)
+      // Como el hook usa el contexto, necesitamos una forma de pasarle el autómata
+      // Por ahora, usaremos el método directo
+      const { afToERByStateElimination } = await import('@/lib/algorithms/lexical/af-to-er');
+      const conversionResult = afToERByStateElimination(automaton);
       setResult(conversionResult);
 
       addEntry({
@@ -134,13 +147,11 @@ export default function AFtoERClientPage() {
         metadata: { 
           success: true, 
           description: `Resultado: ${conversionResult.regex}`,
-          algorithm: 'arden',
+          algorithm: 'state-elimination',
         },
       });
     } catch (err: any) {
       setError(err.message || 'Error al convertir el autómata a expresión regular');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -167,7 +178,8 @@ export default function AFtoERClientPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">Autómata Finito → Expresión Regular</h1>
         <p className="text-muted-foreground">
-          Convierte un autómata finito a su expresión regular equivalente usando el <strong>Lema de Arden</strong>.
+          Convierte un autómata finito a su expresión regular equivalente usando el <strong>método de eliminación de estados</strong>.
+          Este método es más sistemático y eficiente que el método algebraico de Arden.
         </p>
       </div>
 
@@ -274,10 +286,10 @@ export default function AFtoERClientPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={handleConvert}
-              disabled={!automatonValidation.valid || loading}
+              disabled={!automatonValidation.valid || isProcessing}
               className="gap-2"
             >
-              {loading ? (
+              {isProcessing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Convirtiendo...
@@ -340,42 +352,49 @@ export default function AFtoERClientPage() {
             </CardContent>
           </Card>
 
-          {/* Ecuaciones generadas */}
+          {/* Ecuaciones generadas (de Arden) */}
           <CollapsibleSection 
-            title="Sistema de Ecuaciones" 
+            title="Ecuaciones de Arden (Generadas)" 
             defaultOpen
             badge={
               <Badge variant="secondary">
-                {result.equations.length} ecuaciones
+                {result.ardenEquations.length} ecuaciones
               </Badge>
             }
           >
-            <div className="space-y-2">
-              {result.equations.map((eq: any, idx: number) => (
-                <div 
-                  key={idx} 
-                  className={cn(
-                    "rounded-md border bg-card p-3 font-mono text-sm",
-                    eq.isInitial && "border-l-4 border-l-green-500",
-                    eq.isFinal && "border-l-4 border-l-orange-500",
-                    eq.isInitial && eq.isFinal && "border-l-4 border-l-purple-500"
-                  )}
-                >
-                  <span className="text-muted-foreground mr-2">
-                    {eq.isInitial && '→'}
-                    {eq.isFinal && '*'}
-                  </span>
-                  <span className="font-semibold">{eq.left}</span>
-                  <span className="mx-2">=</span>
-                  <span>{eq.right}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Estas ecuaciones se generan automáticamente a partir del autómata usando el método de Arden.
+                Sin embargo, para la conversión se utiliza el <strong>método de eliminación de estados</strong>,
+                que es más eficiente y produce expresiones más legibles.
+              </p>
+              <div className="space-y-2">
+                {result.ardenEquations.map((eq: any, idx: number) => (
+                  <div 
+                    key={idx} 
+                    className={cn(
+                      "rounded-md border bg-card p-3 font-mono text-sm",
+                      eq.isInitial && "border-l-4 border-l-green-500",
+                      eq.isFinal && "border-l-4 border-l-orange-500",
+                      eq.isInitial && eq.isFinal && "border-l-4 border-l-purple-500"
+                    )}
+                  >
+                    <span className="text-muted-foreground mr-2">
+                      {eq.isInitial && '→'}
+                      {eq.isFinal && '*'}
+                    </span>
+                    <span className="font-semibold">{eq.left}</span>
+                    <span className="mx-2">=</span>
+                    <span>{eq.right}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </CollapsibleSection>
 
-          {/* Pasos de resolución */}
+          {/* Pasos de eliminación de estados */}
           <CollapsibleSection 
-            title="Procedimiento de Resolución (Lema de Arden)" 
+            title="Procedimiento de Eliminación de Estados" 
             defaultOpen
             badge={
               <Badge variant="secondary">
@@ -383,89 +402,90 @@ export default function AFtoERClientPage() {
               </Badge>
             }
           >
+            <div className="space-y-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                El <strong>método de eliminación de estados</strong> es más sistemático que el método de Arden:
+              </p>
+              <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
+                <li>Agregar nuevo estado inicial I con transición ε al estado inicial original</li>
+                <li>Agregar nuevo estado final F con transiciones ε desde estados finales</li>
+                <li>Eliminar estados usando: R(p→r) = R(p→q)·R(q→q)*·R(q→r) + R(p→r)</li>
+                <li>La ER final es R(I→F)</li>
+              </ol>
+            </div>
             <div className="space-y-4">
-              {result.steps.map((step, idx) => (
-                <div 
-                  key={idx} 
-                  className={cn(
-                    "rounded-lg border bg-card overflow-hidden",
-                    step.action === 'Final' && "border-primary bg-primary/5"
-                  )}
-                >
-                  <div className={cn(
-                    "flex items-center gap-2 px-4 py-2 border-b",
-                    step.action === 'Arden' && "bg-yellow-500/10",
-                    step.action === 'Sustitución' && "bg-blue-500/10",
-                    step.action === 'Final' && "bg-green-500/10"
-                  )}>
-                    <Badge variant="outline" className="font-mono">
-                      Paso {step.stepNumber}
-                    </Badge>
-                    <Badge 
-                      variant="secondary"
-                      className={cn(
-                        step.action === 'Arden' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
-                        step.action === 'Sustitución' && "bg-blue-500/20 text-blue-700 dark:text-blue-400",
-                        step.action === 'Final' && "bg-green-500/20 text-green-700 dark:text-green-400"
-                      )}
-                    >
-                      {step.action}
-                    </Badge>
-                    <span className="font-medium text-sm">{step.description}</span>
-                  </div>
-                  
-                  <div className="p-4 space-y-3">
-                    {step.explanation && (
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">
-                        {step.explanation}
-                      </p>
+              {result.steps.map((step, idx) => {
+                // Saltar el paso 0 (ecuaciones de Arden de referencia)
+                if (step.stepNumber === 0) return null;
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className={cn(
+                      "rounded-lg border bg-card overflow-hidden",
+                      step.action === 'final' && "border-primary bg-primary/5"
                     )}
+                  >
+                    <div className={cn(
+                      "flex items-center gap-2 px-4 py-2 border-b",
+                      step.action === 'eliminate' && "bg-yellow-500/10",
+                      step.action === 'add-states' && "bg-blue-500/10",
+                      step.action === 'final' && "bg-green-500/10"
+                    )}>
+                      <Badge variant="outline" className="font-mono">
+                        Paso {step.stepNumber}
+                      </Badge>
+                      <Badge 
+                        variant="secondary"
+                        className={cn(
+                          step.action === 'eliminate' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400",
+                          step.action === 'add-states' && "bg-blue-500/20 text-blue-700 dark:text-blue-400",
+                          step.action === 'final' && "bg-green-500/20 text-green-700 dark:text-green-400"
+                        )}
+                      >
+                        {step.action === 'init' && 'Inicial'}
+                        {step.action === 'add-states' && 'Agregar Estados'}
+                        {step.action === 'eliminate' && 'Eliminar Estado'}
+                        {step.action === 'final' && 'Final'}
+                      </Badge>
+                      <span className="font-medium text-sm">{step.description}</span>
+                    </div>
                     
-                    <div className="space-y-1.5">
-                      {step.equations.map((eq: string, eqIdx: number) => (
-                        <div 
-                          key={eqIdx} 
-                          className={cn(
-                            "rounded-md bg-muted px-3 py-2 font-mono text-sm",
-                            step.highlightedVariable && eq.startsWith(step.highlightedVariable) && 
-                              "ring-2 ring-primary/50 bg-primary/10"
-                          )}
-                        >
-                          {eq}
+                    <div className="p-4 space-y-3">
+                      {step.explanation && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">
+                          {step.explanation}
+                        </p>
+                      )}
+                      
+                      {step.transitions && step.transitions.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Transiciones:</p>
+                          <div className="space-y-1">
+                            {step.transitions
+                              .filter((t: any) => t.regex !== '∅')
+                              .map((t: any, tIdx: number) => (
+                                <div 
+                                  key={tIdx}
+                                  className="rounded-md bg-muted px-3 py-2 font-mono text-sm flex items-center gap-2"
+                                >
+                                  <span className="font-semibold">{t.from}</span>
+                                  <span className="text-muted-foreground">→</span>
+                                  <span className="font-semibold">{t.to}</span>
+                                  <span className="text-muted-foreground">:</span>
+                                  <span className="text-primary">{t.regex}</span>
+                                </div>
+                              ))
+                            }
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CollapsibleSection>
-
-          {/* Fronteras calculadas */}
-          {result.frontiers && result.frontiers.length > 0 && (
-            <CollapsibleSection 
-              title="Fronteras del Autómata" 
-              defaultOpen={false}
-              badge={
-                <Badge variant="secondary">
-                  {result.frontiers.length} fronteras
-                </Badge>
-              }
-            >
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {result.frontiers.map((f: any, idx: number) => (
-                  <div key={idx} className="rounded-md border bg-card p-3 font-mono text-sm">
-                    <span className="text-muted-foreground">δ(</span>
-                    <span className="font-semibold">{f.from}</span>
-                    <span className="text-muted-foreground">, </span>
-                    <span className="text-primary">{f.expression}</span>
-                    <span className="text-muted-foreground">) = </span>
-                    <span className="font-semibold">{f.to}</span>
-                  </div>
-                ))}
-              </div>
-            </CollapsibleSection>
-          )}
         </>
       )}
     </div>

@@ -21,7 +21,7 @@ import {
 } from '@/lib/types';
 import { buildAFDFull, buildAFDShort } from '@/lib/algorithms/lexical/afd-construction';
 import { recognizeStringDFA } from '@/lib/algorithms/lexical/string-recognition';
-import { afToER } from '@/lib/algorithms/lexical/af-to-er';
+import { afToER, afToERByStateElimination } from '@/lib/algorithms/lexical/af-to-er';
 import { validateRegex } from '@/lib/algorithms/lexical/regex-parser';
 
 export interface UseAutomataReturn {
@@ -169,9 +169,9 @@ export function useAutomata(): UseAutomataReturn {
   }, [lexical.automaton]);
 
   /**
-   * Convierte el autómata a expresión regular
+   * Convierte el autómata a expresión regular usando eliminación de estados
    */
-  const convertToER = useCallback(async (): Promise<{ regex: string; steps: any[] } | null> => {
+  const convertToER = useCallback(async (): Promise<{ regex: string; steps: any[]; ardenEquations: any[] } | null> => {
     if (!lexical.automaton) {
       setError('No hay autómata disponible para convertir');
       return null;
@@ -181,7 +181,8 @@ export function useAutomata(): UseAutomataReturn {
     setError(null);
 
     try {
-      const result = afToER(lexical.automaton.automatonAFD);
+      // Usar el método de eliminación de estados (más limpio y predecible)
+      const result = afToERByStateElimination(lexical.automaton.automatonAFD);
       setAfToErResult(result);
       return result;
     } catch (err) {
