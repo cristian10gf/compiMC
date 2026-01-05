@@ -3,13 +3,11 @@
 /**
  * Página cliente del Analizador Sintáctico Ascendente (ASA)
  * 
- * Implementa análisis por precedencia de operadores con:
- * 1. Input de gramática con terminales (gramáticas de operadores)
- * 2. Selector de método (LR / Precedencia) - por ahora solo Precedencia
- * 3. Validación de gramática de operadores
- * 4. Configuración de modo (automático/manual)
- * 5. Tabla de precedencia
- * 6. Reconocimiento de cadenas con traza
+ * Implementa análisis por precedencia de operadores y análisis LR con:
+ * 1. Input de gramática con terminales
+ * 2. Selector de método (LR / Precedencia)
+ * 3. Para Precedencia: Validación, tabla de precedencia, reconocimiento
+ * 4. Para LR: AFN, SLR, LR canónico, LALR, reconocimiento
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -22,9 +20,11 @@ import {
   PrecedenceTable,
   PrecedenceSteps,
   StringRecognitionPrecedence,
+  LRAnalysisSection,
 } from '@/components/analizador-sintactico';
 import { useAscendenteAnalysis } from '@/hooks';
-import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType } from '@/lib/types';
+import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType, ParsingResult } from '@/lib/types';
+import type { LRAnalysisType } from '@/lib/types/syntax-analysis';
 import { 
   CheckCircle2, 
   AlertTriangle,
@@ -38,7 +38,7 @@ import {
 // Opciones del selector de método
 const METHOD_OPTIONS = [
   { value: 'precedence', label: 'Precedencia' },
-  { value: 'lr', label: 'LR (Próximamente)' },
+  { value: 'lr', label: 'LR' },
 ];
 
 export default function ASAClientPage() {
@@ -48,7 +48,10 @@ export default function ASAClientPage() {
     isProcessing,
     error,
     analyze,
+    analyzeLR,
     recognizeString,
+    recognizeStringLR,
+    setLRType,
     hasAnalysis,
   } = useAscendenteAnalysis();
 
@@ -63,7 +66,6 @@ export default function ASAClientPage() {
 
   /**
    * Maneja el análisis inicial de la gramática
-   * Genera automáticamente la tabla de precedencia
    */
   const handleAnalyze = useCallback(async (
     grammarText: string,
@@ -75,14 +77,23 @@ export default function ASAClientPage() {
     setTestString('');
     setLocalPrecedenceTable(null);
 
-    // Analizar con el hook en modo automático (genera la tabla de precedencia)
-    await analyze({
-      grammarText,
-      terminals,
-      mode: 'automatic',
-      autoDetectTerminals: false,
-    });
-  }, [analyze]);
+    if (method === 'precedence') {
+      // Analizar con precedencia de operadores
+      await analyze({
+        grammarText,
+        terminals,
+        mode: 'automatic',
+        autoDetectTerminals: false,
+      });
+    } else {
+      // Analizar con LR
+      await analyzeLR({
+        grammarText,
+        terminals,
+        autoDetectTerminals: false,
+      });
+    }
+  }, [analyze, analyzeLR, method]);
 
   /**
    * Efecto para actualizar estados locales cuando cambia el análisis
@@ -92,7 +103,6 @@ export default function ASAClientPage() {
       setLocalGrammar(state.grammar);
       setValidationResult(state.operatorValidation);
       
-      // Usar la tabla del estado si existe
       if (state.precedenceTable) {
         setLocalPrecedenceTable(state.precedenceTable);
       }
@@ -106,10 +116,7 @@ export default function ASAClientPage() {
     setIsAutomatic(automatic);
     setTestString('');
     setLocalSteps(null);
-    // En modo automático, restaurar la tabla del hook
-    // En modo manual, se limpia para regenerar desde pasos
     if (automatic) {
-      // Restaurar la tabla generada por el hook
       setLocalPrecedenceTable(state.precedenceTable || null);
     } else {
       setLocalPrecedenceTable(null);
@@ -118,30 +125,52 @@ export default function ASAClientPage() {
 
   /**
    * Maneja la generación de pasos de precedencia
-   * En modo automático: los pasos son informativos, la tabla ya está en el hook
-   * En modo manual: genera la tabla a partir de los pasos del usuario
    */
   const handleGenerateSteps = useCallback((steps: PrecedenceStep[], table?: PrecedenceTableType) => {
     setLocalSteps(steps);
-    // Si se provee una tabla (modo manual), usarla
     if (table) {
       setLocalPrecedenceTable(table);
     } else {
-      // Modo automático: restaurar la tabla del hook
       setLocalPrecedenceTable(state.precedenceTable || null);
     }
   }, [state.precedenceTable]);
 
   /**
-   * Maneja el reconocimiento de cadenas
+   * Maneja el reconocimiento de cadenas (precedencia)
    */
   const handleRecognize = useCallback(async (input: string) => {
-    // Usar la tabla de precedencia actualizada (local) si existe
     return recognizeString(input, localPrecedenceTable || undefined);
   }, [recognizeString, localPrecedenceTable]);
 
+  /**
+   * Maneja el reconocimiento de cadenas (LR)
+   */
+  const handleRecognizeLR = useCallback(async (input: string, type: LRAnalysisType): Promise<ParsingResult | null> => {
+    return recognizeStringLR(input, type);
+  }, [recognizeStringLR]);
+
+  /**
+   * Maneja el cambio de tipo de LR
+   */
+  const handleLRTypeChange = useCallback((type: LRAnalysisType) => {
+    setLRType(type);
+  }, [setLRType]);
+
+  // Verificar si hay análisis LR disponible
+  const hasLRAnalysis = state.lrAnalysis !== null;
+  const hasPrecedenceAnalysis = state.precedenceTable !== null || state.operatorValidation !== null;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      {/* Selector de método - antes del input */}
+      <div className="flex justify-center">
+        <SegmentedControl
+          options={METHOD_OPTIONS}
+          value={method}
+          onChange={setMethod}
+        />
+      </div>
+
       {/* Input de gramática */}
       <GrammarInputASA
         onAnalyze={handleAnalyze}
@@ -157,25 +186,8 @@ export default function ASAClientPage() {
         </Alert>
       )}
 
-      {/* Selector de método */}
-      {hasAnalysis && (
-        <div className="flex justify-center">
-          <SegmentedControl
-            options={METHOD_OPTIONS}
-            value={method}
-            onChange={(value) => {
-              if (value === 'lr') {
-                // LR aún no implementado
-                return;
-              }
-              setMethod(value);
-            }}
-          />
-        </div>
-      )}
-
       {/* Contenido según el método seleccionado */}
-      {hasAnalysis && method === 'precedence' && (
+      {method === 'precedence' && hasPrecedenceAnalysis && (
         <div className="space-y-4">
           {/* Sección 1: Validación de Gramática de Operadores */}
           <CollapsibleSection
@@ -328,16 +340,30 @@ export default function ASAClientPage() {
         </div>
       )}
 
-      {/* Mensaje cuando LR está seleccionado */}
-      {hasAnalysis && method === 'lr' && (
+      {/* Contenido LR */}
+      {method === 'lr' && hasLRAnalysis && state.lrAnalysis && state.grammar && (
+        <LRAnalysisSection
+          grammar={state.grammar}
+          slr={state.lrAnalysis.slr}
+          lr1={state.lrAnalysis.lr1}
+          lalr={state.lrAnalysis.lalr}
+          selectedType={state.lrAnalysis.selectedType}
+          onTypeChange={handleLRTypeChange}
+          onRecognize={handleRecognizeLR}
+          isProcessing={isProcessing}
+        />
+      )}
+
+      {/* Mensaje cuando no hay análisis */}
+      {!hasAnalysis && !hasPrecedenceAnalysis && !hasLRAnalysis && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground" />
               <div>
-                <h3 className="text-lg font-semibold">Análisis LR</h3>
+                <h3 className="text-lg font-semibold">Análisis Sintáctico Ascendente</h3>
                 <p className="text-muted-foreground">
-                  El análisis LR(0), SLR, LR(1) y LALR estará disponible próximamente.
+                  Ingresa una gramática para comenzar el análisis.
                 </p>
               </div>
             </div>
