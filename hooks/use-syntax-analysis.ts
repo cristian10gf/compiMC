@@ -316,8 +316,13 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
 
   /**
    * Reconoce una cadena con el análisis actual
+   * @param input - Cadena a reconocer
+   * @param customPrecedenceTable - Tabla de precedencia personalizada (opcional, solo para ascendente)
    */
-  const recognizeString = useCallback(async (input: string): Promise<ParsingResult | null> => {
+  const recognizeString = useCallback(async (
+    input: string,
+    customPrecedenceTable?: PrecedenceTable
+  ): Promise<ParsingResult | null> => {
     if (!state.analysisType) {
       setState(prev => ({
         ...prev,
@@ -348,11 +353,18 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
         // Análisis por precedencia
         const { grammar, precedenceTable } = state.ascendente;
         
-        if (!grammar || !precedenceTable) {
-          throw new Error('No hay análisis ascendente disponible');
+        if (!grammar) {
+          throw new Error('No hay gramática disponible');
         }
 
-        result = parseStringPrecedence(grammar, precedenceTable, input);
+        // Usar la tabla personalizada si se proporciona, sino usar la del estado
+        const tableToUse = customPrecedenceTable || precedenceTable;
+        
+        if (!tableToUse) {
+          throw new Error('No hay tabla de precedencia disponible');
+        }
+
+        result = parseStringPrecedence(grammar, tableToUse, input);
       }
 
       // Actualizar estado con resultado
