@@ -5,7 +5,8 @@
  * Implementa el método de Arden (ecuaciones) para la conversión
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,8 @@ const alphabetOptions = [
 ];
 
 export default function AFtoERClientPage() {
+  const searchParams = useSearchParams();
+  
   // Usar el hook de autómata
   const { convertToER, clearAutomaton, error: hookError, isProcessing } = useAutomata();
   const { addEntry } = useHistory();
@@ -48,6 +51,7 @@ export default function AFtoERClientPage() {
   const [inputMode, setInputMode] = useState<'visual' | 'table'>('visual');
   const [alphabetMode, setAlphabetMode] = useState<'auto' | 'custom'>('auto');
   const [customAlphabet, setCustomAlphabet] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Estado del autómata
   const [automaton, setAutomaton] = useState<Automaton | null>(null);
@@ -60,6 +64,36 @@ export default function AFtoERClientPage() {
     ardenEquations: any[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const inputModeParam = searchParams.get('inputMode');
+    const alphabetModeParam = searchParams.get('alphabetMode');
+    const customAlphabetParam = searchParams.get('customAlphabet');
+    const automatonParam = searchParams.get('automaton');
+    
+    if (inputModeParam === 'visual' || inputModeParam === 'table') {
+      setInputMode(inputModeParam);
+    }
+    if (alphabetModeParam === 'auto' || alphabetModeParam === 'custom') {
+      setAlphabetMode(alphabetModeParam);
+    }
+    if (customAlphabetParam) {
+      setCustomAlphabet(customAlphabetParam.split(',').filter(Boolean));
+    }
+    if (automatonParam) {
+      try {
+        const parsedAutomaton = JSON.parse(decodeURIComponent(automatonParam));
+        setAutomaton(parsedAutomaton);
+      } catch {
+        // Ignorar errores de parseo
+      }
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized]);
 
   // Alfabeto efectivo (auto-detectado o personalizado)
   const effectiveAlphabet = useMemo(() => {
@@ -142,12 +176,16 @@ export default function AFtoERClientPage() {
       setResult(conversionResult);
 
       addEntry({
-        type: 'lexical',
+        type: 'lexical-af-to-er',
         input: `AF con ${automaton.states.length} estados → ER`,
         metadata: { 
           success: true, 
           description: `Resultado: ${conversionResult.regex}`,
           algorithm: 'state-elimination',
+          inputMode,
+          alphabetMode,
+          customAlphabet: customAlphabet.length > 0 ? customAlphabet : undefined,
+          automatonJson: JSON.stringify(automaton),
         },
       });
     } catch (err: any) {

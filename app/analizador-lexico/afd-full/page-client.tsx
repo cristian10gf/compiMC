@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,11 +16,30 @@ import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, GitBranch, Layers, Minimize2 } from 'lucide-react';
 
 export default function AFDFullClientPage() {
+  const searchParams = useSearchParams();
   const [languages, setLanguages] = useState<string[]>([]);
   const [regex, setRegex] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const regexParam = searchParams.get('regex');
+    const languagesParam = searchParams.get('languages');
+    
+    if (regexParam) {
+      setRegex(regexParam);
+    }
+    if (languagesParam) {
+      setLanguages(languagesParam.split(',').filter(Boolean));
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized]);
 
   // Calcular estados unificados (los que cambiaron del AFD no óptimo al óptimo)
   const unifiedStates = useMemo(() => {
@@ -51,11 +71,13 @@ export default function AFDFullClientPage() {
 
     if (result && !error) {
       addEntry({
-        type: 'lexical',
+        type: 'lexical-afd-full',
         input: regex,
         metadata: { 
           success: true,
           algorithm: 'AFD Full (Subconjuntos)',
+          regex,
+          languages,
         },
       });
     }

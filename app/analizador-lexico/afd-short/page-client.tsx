@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,11 +17,30 @@ import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, TreeDeciduous, Table2, GitGraph } from 'lucide-react';
 
 export default function AFDShortClientPage() {
+  const searchParams = useSearchParams();
   const [languages, setLanguages] = useState<string[]>([]);
   const [regex, setRegex] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const regexParam = searchParams.get('regex');
+    const languagesParam = searchParams.get('languages');
+    
+    if (regexParam) {
+      setRegex(regexParam);
+    }
+    if (languagesParam) {
+      setLanguages(languagesParam.split(',').filter(Boolean));
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized]);
 
   const handleAnalyze = async () => {
     // Construir AFD óptimo usando árbol sintáctico
@@ -32,11 +52,13 @@ export default function AFDShortClientPage() {
 
     if (result && !error) {
       addEntry({
-        type: 'lexical',
+        type: 'lexical-afd-short',
         input: regex,
         metadata: { 
           success: true,
           algorithm: 'AFD Óptimo (Árbol Sintáctico)',
+          regex,
+          languages,
         },
       });
     }

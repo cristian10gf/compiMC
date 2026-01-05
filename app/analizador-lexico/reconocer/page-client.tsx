@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,8 +11,10 @@ import { useHistory, useAutomata } from '@/hooks';
 import { Loader2 } from 'lucide-react';
 
 export default function ReconocerClientPage() {
+  const searchParams = useSearchParams();
   const [regex, setRegex] = useState('');
   const [inputString, setInputString] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const { 
     automaton, 
@@ -23,6 +26,23 @@ export default function ReconocerClientPage() {
   } = useAutomata();
   
   const { addEntry } = useHistory();
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const regexParam = searchParams.get('regex');
+    const testStringParam = searchParams.get('testString');
+    
+    if (regexParam) {
+      setRegex(regexParam);
+    }
+    if (testStringParam) {
+      setInputString(testStringParam);
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized]);
 
   const handleBuildAutomaton = async () => {
     await buildAutomaton({
@@ -39,9 +59,13 @@ export default function ReconocerClientPage() {
     
     if (result) {
       addEntry({
-        type: 'lexical',
+        type: 'lexical-reconocer',
         input: `${regex} | ${inputString}`,
-        metadata: { success: result.accepted },
+        metadata: { 
+          success: result.accepted,
+          regex,
+          testString: inputString,
+        },
       });
     }
   };
