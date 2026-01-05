@@ -138,8 +138,9 @@ export default function ASAClientPage() {
    * Maneja el reconocimiento de cadenas
    */
   const handleRecognize = useCallback(async (input: string) => {
-    return recognizeString(input);
-  }, [recognizeString]);
+    // Usar la tabla de precedencia actualizada (local) si existe
+    return recognizeString(input, localPrecedenceTable || undefined);
+  }, [recognizeString, localPrecedenceTable]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
