@@ -10,7 +10,7 @@
  * - Validación de gramática de operadores
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,11 @@ export interface GrammarInputASAProps {
   onAnalyze: (grammarText: string, terminals: string) => void;
   isProcessing?: boolean;
   className?: string;
+  /** Valores iniciales para restaurar desde historial */
+  initialValues?: {
+    grammarText?: string;
+    terminals?: string;
+  };
 }
 
 // Ejemplos de gramáticas de operadores
@@ -61,9 +66,25 @@ export function GrammarInputASA({
   onAnalyze,
   isProcessing = false,
   className,
+  initialValues,
 }: GrammarInputASAProps) {
-  const [grammarText, setGrammarText] = useState(EXAMPLES[0].grammar);
-  const [terminalsInput, setTerminalsInput] = useState(EXAMPLES[0].terminals);
+  const [grammarText, setGrammarText] = useState(initialValues?.grammarText || EXAMPLES[0].grammar);
+  const [terminalsInput, setTerminalsInput] = useState(initialValues?.terminals || EXAMPLES[0].terminals);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Actualizar valores cuando cambian los initialValues
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    if (initialValues?.grammarText) {
+      setGrammarText(initialValues.grammarText);
+    }
+    if (initialValues?.terminals) {
+      setTerminalsInput(initialValues.terminals);
+    }
+    
+    setIsInitialized(true);
+  }, [initialValues, isInitialized]);
 
   const loadExample = useCallback((index: number) => {
     setGrammarText(EXAMPLES[index].grammar);

@@ -8,7 +8,7 @@
  * - Ejemplos predefinidos
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,12 @@ interface GrammarInputEnhancedProps {
   onAnalyze: (grammarText: string, terminals: string, autoDetect: boolean) => void;
   isProcessing?: boolean;
   className?: string;
+  /** Valores iniciales para restaurar desde historial */
+  initialValues?: {
+    grammarText?: string;
+    terminals?: string;
+    autoDetect?: boolean;
+  };
 }
 
 const EXAMPLES = [
@@ -76,10 +82,29 @@ export function GrammarInputEnhanced({
   onAnalyze,
   isProcessing = false,
   className,
+  initialValues,
 }: GrammarInputEnhancedProps) {
-  const [grammarText, setGrammarText] = useState(EXAMPLES[0].grammar);
-  const [terminalsInput, setTerminalsInput] = useState(EXAMPLES[0].terminals);
-  const [autoDetect, setAutoDetect] = useState(false);
+  const [grammarText, setGrammarText] = useState(initialValues?.grammarText || EXAMPLES[0].grammar);
+  const [terminalsInput, setTerminalsInput] = useState(initialValues?.terminals || EXAMPLES[0].terminals);
+  const [autoDetect, setAutoDetect] = useState(initialValues?.autoDetect ?? false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Actualizar valores cuando cambian los initialValues (restaurar desde historial)
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    if (initialValues?.grammarText) {
+      setGrammarText(initialValues.grammarText);
+    }
+    if (initialValues?.terminals) {
+      setTerminalsInput(initialValues.terminals);
+    }
+    if (initialValues?.autoDetect !== undefined) {
+      setAutoDetect(initialValues.autoDetect);
+    }
+    
+    setIsInitialized(true);
+  }, [initialValues, isInitialized]);
 
   const loadExample = useCallback((index: number) => {
     setGrammarText(EXAMPLES[index].grammar);
