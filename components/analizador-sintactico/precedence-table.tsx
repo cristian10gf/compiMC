@@ -70,7 +70,7 @@ export function PrecedenceTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="font-bold bg-muted">Terminal</TableHead>
+                <TableHead className="font-bold bg-muted text-center">Terminal</TableHead>
                 {symbols.map((symbol) => (
                   <TableHead key={symbol} className="text-center font-bold bg-muted">
                     {symbol}
@@ -81,7 +81,7 @@ export function PrecedenceTable({
             <TableBody>
               {symbols.map((rowSymbol) => (
                 <TableRow key={rowSymbol}>
-                  <TableCell className="font-medium bg-muted">{rowSymbol}</TableCell>
+                  <TableCell className="text-center font-medium bg-muted">{rowSymbol}</TableCell>
                   {symbols.map((colSymbol) => {
                     const relation = getRelation(rowSymbol, colSymbol);
                     const isHighlighted =
