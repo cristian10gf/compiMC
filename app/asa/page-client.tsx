@@ -52,6 +52,7 @@ export default function ASAClientPage() {
     recognizeString,
     recognizeStringLR,
     setLRType,
+    updatePrecedenceTable,
     hasAnalysis,
   } = useAscendenteAnalysis();
 
@@ -62,7 +63,6 @@ export default function ASAClientPage() {
   const [localSteps, setLocalSteps] = useState<PrecedenceStep[] | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
   const [localGrammar, setLocalGrammar] = useState<Grammar | null>(null);
-  const [localPrecedenceTable, setLocalPrecedenceTable] = useState<PrecedenceTableType | null>(null);
 
   /**
    * Maneja el análisis inicial de la gramática
@@ -75,7 +75,6 @@ export default function ASAClientPage() {
     setLocalSteps(null);
     setValidationResult(null);
     setTestString('');
-    setLocalPrecedenceTable(null);
 
     if (method === 'precedence') {
       // Analizar con precedencia de operadores
@@ -102,12 +101,8 @@ export default function ASAClientPage() {
     if (state.grammar) {
       setLocalGrammar(state.grammar);
       setValidationResult(state.operatorValidation);
-      
-      if (state.precedenceTable) {
-        setLocalPrecedenceTable(state.precedenceTable);
-      }
     }
-  }, [state.grammar, state.operatorValidation, state.precedenceTable]);
+  }, [state.grammar, state.operatorValidation]);
 
   /**
    * Maneja el cambio de modo (automático/manual)
@@ -116,12 +111,7 @@ export default function ASAClientPage() {
     setIsAutomatic(automatic);
     setTestString('');
     setLocalSteps(null);
-    if (automatic) {
-      setLocalPrecedenceTable(state.precedenceTable || null);
-    } else {
-      setLocalPrecedenceTable(null);
-    }
-  }, [state.precedenceTable]);
+  }, []);
 
   /**
    * Maneja la generación de pasos de precedencia
@@ -129,18 +119,16 @@ export default function ASAClientPage() {
   const handleGenerateSteps = useCallback((steps: PrecedenceStep[], table?: PrecedenceTableType) => {
     setLocalSteps(steps);
     if (table) {
-      setLocalPrecedenceTable(table);
-    } else {
-      setLocalPrecedenceTable(state.precedenceTable || null);
+      updatePrecedenceTable(table, steps);
     }
-  }, [state.precedenceTable]);
+  }, [updatePrecedenceTable]);
 
   /**
    * Maneja el reconocimiento de cadenas (precedencia)
    */
   const handleRecognize = useCallback(async (input: string) => {
-    return recognizeString(input, localPrecedenceTable || undefined);
-  }, [recognizeString, localPrecedenceTable]);
+    return recognizeString(input, state.precedenceTable || undefined);
+  }, [recognizeString, state.precedenceTable]);
 
   /**
    * Maneja el reconocimiento de cadenas (LR)
@@ -308,23 +296,23 @@ export default function ASAClientPage() {
           )}
 
           {/* Sección 3: Tabla de Precedencia */}
-          {localPrecedenceTable && (
+          {state.precedenceTable && (
             <CollapsibleSection
               title="Tabla de Precedencia"
               icon={<Table2 className="h-5 w-5" />}
               badge={
                 <Badge variant="secondary" className="text-xs">
-                  {localPrecedenceTable.symbols.length}×{localPrecedenceTable.symbols.length}
+                  {state.precedenceTable.symbols.length}×{state.precedenceTable.symbols.length}
                 </Badge>
               }
               defaultOpen
             >
-              <PrecedenceTable table={localPrecedenceTable} />
+              <PrecedenceTable table={state.precedenceTable} />
             </CollapsibleSection>
           )}
 
           {/* Sección 4: Reconocimiento de Cadenas */}
-          {localPrecedenceTable && localGrammar && (
+          {state.precedenceTable && localGrammar && (
             <CollapsibleSection
               title="Reconocer Cadena"
               icon={<TextSearch className="h-5 w-5" />}
