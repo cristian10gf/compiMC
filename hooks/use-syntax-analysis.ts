@@ -7,6 +7,7 @@
  * Características:
  * - Análisis descendente (LL1) con transformación de gramática
  * - Análisis ascendente (Precedencia de operadores)
+ * - Análisis LR (SLR, LR canónico, LALR)
  * - Cálculo de PRIMERO y SIGUIENTE
  * - Construcción de tablas de parsing
  * - Reconocimiento de cadenas
@@ -33,6 +34,9 @@ import type {
   SyntaxAnalysisState,
   DescendenteOptions,
   AscendenteOptions,
+  LRAnalysisOptions,
+  LRAnalysisType,
+  LRAnalysisState,
   UseSyntaxAnalysisReturn,
 } from '@/lib/types/syntax-analysis';
 import {
@@ -50,6 +54,14 @@ import {
   parseStringPrecedence,
   isOperatorGrammar,
 } from '@/lib/algorithms/syntax/ascendente';
+import {
+  buildSLRTable,
+  buildLR1Table,
+  buildLALRTable,
+  buildLR0AFN,
+  augmentGrammar,
+  parseLR,
+} from '@/lib/algorithms/syntax/lr';
 
 // ============================================================================
 // ESTADO INICIAL
@@ -64,12 +76,22 @@ const initialDescendenteState: DescendenteAnalysisState = {
   ll1Check: null,
 };
 
+const initialLRAnalysisState: LRAnalysisState = {
+  augmentedGrammar: null,
+  afn: null,
+  slr: null,
+  lr1: null,
+  lalr: null,
+  selectedType: 'SLR',
+};
+
 const initialAscendenteState: AscendenteAnalysisState = {
   grammar: null,
   mode: 'automatic',
   precedenceSteps: null,
   precedenceTable: null,
   operatorValidation: null,
+  lrAnalysis: null,
 };
 
 const initialRecognitionState: RecognitionState = {
@@ -292,6 +314,7 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
           precedenceSteps,
           precedenceTable,
           operatorValidation,
+          lrAnalysis: null,
         },
         // Limpiar estado descendente
         descendente: initialDescendenteState,
@@ -308,6 +331,106 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
         ascendente: initialAscendenteState,
       }));
     }
+  }, []);
+
+  // -------------------------------------------------------------------------
+  // Análisis LR
+  // -------------------------------------------------------------------------
+
+  /**
+   * Realiza el análisis LR completo (SLR, LR1, LALR)
+   */
+  const analyzeLR = useCallback(async (options: LRAnalysisOptions) => {
+    const { grammarText, terminals, autoDetectTerminals = false } = options;
+
+    setState(prev => ({
+      ...prev,
+      isProcessing: true,
+      error: null,
+      analysisType: 'ascendente',
+    }));
+
+    try {
+      // 1. Parsear la gramática
+      const grammar = parseGrammarText(grammarText, terminals, autoDetectTerminals);
+      
+      // ordenar los terminales segun el orden de definicion de las producciones
+      grammar.terminals.sort((a, b) => {
+        const indexA = grammar.productions.findIndex(p => p.right.includes(a));
+        const indexB = grammar.productions.findIndex(p => p.right.includes(b));
+        return indexA - indexB;
+      });
+      
+      // ordenar los no terminales segun el orden de definicion de las producciones
+      grammar.nonTerminals.sort((a, b) => {
+        const indexA = grammar.productions.findIndex(p => p.left === a);
+        const indexB = grammar.productions.findIndex(p => p.left === b);
+        return indexA - indexB;
+      });
+
+
+      if (grammar.productions.length === 0) {
+        throw new Error('No se pudieron parsear las producciones. Verifica el formato de la gramática.');
+      }
+
+      // 2. Construir gramática aumentada
+      const augmentedGrammar = augmentGrammar(grammar);
+
+      // 3. Construir AFN LR(0)
+      const afn = buildLR0AFN(grammar);
+
+      // 4. Construir tablas para cada tipo
+      const slr = buildSLRTable(grammar);
+      const lr1 = buildLR1Table(grammar);
+      const lalr = buildLALRTable(grammar);
+
+      // 5. Actualizar estado
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        analysisType: 'ascendente',
+        ascendente: {
+          grammar,
+          mode: 'automatic',
+          precedenceSteps: null,
+          precedenceTable: null,
+          operatorValidation: null,
+          lrAnalysis: {
+            augmentedGrammar,
+            afn,
+            slr,
+            lr1,
+            lalr,
+            selectedType: 'SLR',
+          },
+        },
+        descendente: initialDescendenteState,
+        recognition: initialRecognitionState,
+      }));
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al analizar la gramática';
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        error: errorMessage,
+      }));
+    }
+  }, []);
+
+  /**
+   * Cambia el tipo de análisis LR seleccionado
+   */
+  const setLRType = useCallback((type: LRAnalysisType) => {
+    setState(prev => ({
+      ...prev,
+      ascendente: {
+        ...prev.ascendente,
+        lrAnalysis: prev.ascendente.lrAnalysis
+          ? { ...prev.ascendente.lrAnalysis, selectedType: type }
+          : null,
+      },
+    }));
   }, []);
 
   // -------------------------------------------------------------------------
@@ -405,10 +528,10 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
       return state.descendente.workingGrammar !== null;
     }
     if (state.analysisType === 'ascendente') {
-      return state.ascendente.grammar !== null;
+      return state.ascendente.grammar !== null || state.ascendente.lrAnalysis !== null;
     }
     return false;
-  }, [state.analysisType, state.descendente.workingGrammar, state.ascendente.grammar]);
+  }, [state.analysisType, state.descendente.workingGrammar, state.ascendente.grammar, state.ascendente.lrAnalysis]);
 
   /**
    * Gramática actual (según el tipo de análisis)
@@ -418,10 +541,90 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
       return state.descendente.workingGrammar;
     }
     if (state.analysisType === 'ascendente') {
-      return state.ascendente.grammar;
+      return state.ascendente.lrAnalysis?.augmentedGrammar || state.ascendente.grammar;
     }
     return null;
-  }, [state.analysisType, state.descendente.workingGrammar, state.ascendente.grammar]);
+  }, [state.analysisType, state.descendente.workingGrammar, state.ascendente.grammar, state.ascendente.lrAnalysis]);
+
+  /**
+   * Reconoce una cadena usando análisis LR
+   */
+  const recognizeStringLR = useCallback(async (
+    input: string,
+    type?: LRAnalysisType
+  ): Promise<ParsingResult | null> => {
+    const lrAnalysis = state.ascendente.lrAnalysis;
+    
+    if (!lrAnalysis) {
+      setState(prev => ({
+        ...prev,
+        error: 'Primero debes realizar un análisis LR',
+      }));
+      return null;
+    }
+
+    setState(prev => ({
+      ...prev,
+      isProcessing: true,
+      error: null,
+    }));
+
+    try {
+      const analysisType = type || lrAnalysis.selectedType;
+      const grammar = state.ascendente.grammar;
+      
+      if (!grammar) {
+        throw new Error('No hay gramática disponible');
+      }
+
+      let actionTable;
+      let gotoTable;
+
+      switch (analysisType) {
+        case 'SLR':
+          actionTable = lrAnalysis.slr?.actionTable;
+          gotoTable = lrAnalysis.slr?.gotoTable;
+          break;
+        case 'LR1':
+          actionTable = lrAnalysis.lr1?.actionTable;
+          gotoTable = lrAnalysis.lr1?.gotoTable;
+          break;
+        case 'LALR':
+          actionTable = lrAnalysis.lalr?.actionTable;
+          gotoTable = lrAnalysis.lalr?.gotoTable;
+          break;
+      }
+
+      if (!actionTable || !gotoTable) {
+        throw new Error(`No hay tabla de análisis ${analysisType} disponible`);
+      }
+
+      const result = parseLR(grammar, actionTable, gotoTable, input);
+
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        recognition: {
+          result,
+          history: [
+            { input, result, timestamp: new Date() },
+            ...prev.recognition.history.slice(0, 9),
+          ],
+        },
+      }));
+
+      return result;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al reconocer la cadena';
+      setState(prev => ({
+        ...prev,
+        isProcessing: false,
+        error: errorMessage,
+      }));
+      return null;
+    }
+  }, [state.ascendente.lrAnalysis, state.ascendente.grammar]);
 
   // -------------------------------------------------------------------------
   // Retorno
@@ -431,11 +634,14 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
     state,
     analyzeDescendente,
     analyzeAscendente,
+    analyzeLR,
     recognizeString,
+    recognizeStringLR,
     parseGrammar,
     clearAnalysis,
     clearError,
     clearRecognitionHistory,
+    setLRType,
     hasAnalysis,
     currentGrammar,
   };
@@ -485,12 +691,16 @@ export function useAscendenteAnalysis() {
     
     // Funciones
     analyze: analysis.analyzeAscendente,
+    analyzeLR: analysis.analyzeLR,
     recognizeString: analysis.recognizeString,
+    recognizeStringLR: analysis.recognizeStringLR,
     parseGrammar: analysis.parseGrammar,
     clearAnalysis: analysis.clearAnalysis,
     clearError: analysis.clearError,
+    setLRType: analysis.setLRType,
     
     // Computed
     hasAnalysis: analysis.state.analysisType === 'ascendente' && analysis.hasAnalysis,
   };
 }
+
