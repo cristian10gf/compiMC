@@ -45,6 +45,33 @@ interface StringRecognitionPrecedenceProps {
 }
 
 /**
+ * Formatea la pila enfatizando terminales y atenuando no terminales
+ */
+function formatStack(stack: string[], terminals: string[]){
+  return (
+    <code className="text-xs font-mono bg-muted px-2 py-1 rounded inline-flex flex-wrap gap-1">
+      <span>[</span>
+      {stack.map((symbol, idx) => {
+        const isTerminal = terminals.includes(symbol) || symbol === '$';
+        return (
+          <span key={idx} className="inline-flex items-center">
+            <span
+              className={cn(
+                isTerminal ? 'text-foreground font-semibold' : 'text-muted-foreground/40 font-normal'
+              )}
+            >
+              {symbol}
+            </span>
+            {idx < stack.length - 1 && <span className="text-muted-foreground">,</span>}
+          </span>
+        );
+      })}
+      <span>]</span>
+    </code>
+  );
+}
+
+/**
  * Tokeniza una cadena de entrada usando los terminales conocidos
  */
 function tokenizeInput(input: string, terminals: string[]): string {
@@ -379,9 +406,7 @@ export function StringRecognitionPrecedence({
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                              [{step.stack.join(', ')}]
-                            </code>
+                            {formatStack(step.stack, terminals)}
                           </TableCell>
                           <TableCell>
                             <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
