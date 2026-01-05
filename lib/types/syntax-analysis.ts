@@ -9,7 +9,85 @@ import type {
   PrecedenceTable,
   ParsingResult,
   PrecedenceStep,
+  ActionTable,
+  GotoTable,
+  LRAutomaton,
 } from './grammar';
+
+// ============================================================================
+// TIPOS PARA ANÁLISIS LR
+// ============================================================================
+
+/**
+ * Tipo de análisis LR
+ */
+export type LRAnalysisType = 'SLR' | 'LR1' | 'LALR';
+
+/**
+ * Conflicto en tabla LR
+ */
+export interface LRConflict {
+  type: 'shift-reduce' | 'reduce-reduce';
+  state: number;
+  symbol: string;
+  description: string;
+}
+
+/**
+ * Item LR con clave para comparación
+ */
+export interface LRItemWithKey {
+  production: {
+    id: string;
+    left: string;
+    right: string[];
+    number?: number;
+  };
+  dotPosition: number;
+  lookahead?: string;
+  key: string;
+}
+
+/**
+ * Conjunto de estados LR
+ */
+export interface LRStateSet {
+  id: number;
+  items: LRItemWithKey[];
+  kernel: LRItemWithKey[];
+  transitions: Map<string, number>;
+}
+
+/**
+ * Resultado completo del análisis LR
+ */
+export interface LRAnalysisResult {
+  augmentedGrammar: Grammar;
+  afn: LRAutomaton;
+  canonicalSets: LRStateSet[];
+  actionTable: ActionTable;
+  gotoTable: GotoTable;
+  conflicts: LRConflict[];
+  type: LRAnalysisType;
+}
+
+/**
+ * Estado del análisis LR
+ */
+export interface LRAnalysisState {
+  /** Gramática aumentada */
+  augmentedGrammar: Grammar | null;
+  /** AFN de elementos LR(0) */
+  afn: LRAutomaton | null;
+  /** Resultado SLR */
+  slr: LRAnalysisResult | null;
+  /** Resultado LR(1) canónico */
+  lr1: LRAnalysisResult | null;
+  /** Resultado LALR */
+  lalr: LRAnalysisResult | null;
+  /** Tipo de análisis seleccionado para reconocimiento */
+  selectedType: LRAnalysisType;
+}
 
 // ============================================================================
 // TIPOS DE CÁLCULO (FIRST/FOLLOW)
@@ -103,6 +181,8 @@ export interface AscendenteAnalysisState {
   precedenceTable: PrecedenceTable | null;
   /** Validación de gramática de operadores */
   operatorValidation: { valid: boolean; errors: string[] } | null;
+  /** Estado del análisis LR */
+  lrAnalysis: LRAnalysisState | null;
 }
 
 /**
@@ -163,6 +243,18 @@ export interface AscendenteOptions {
   autoDetectTerminals?: boolean;
 }
 
+/**
+ * Opciones para el análisis LR
+ */
+export interface LRAnalysisOptions {
+  /** Texto de la gramática */
+  grammarText: string;
+  /** Terminales (separados por espacios) */
+  terminals: string;
+  /** Autodetectar terminales */
+  autoDetectTerminals?: boolean;
+}
+
 // ============================================================================
 // TIPOS DE RETORNO DE HOOKS
 // ============================================================================
@@ -180,14 +272,19 @@ export interface UseSyntaxAnalysisReturn {
   // Análisis ascendente
   analyzeAscendente: (options: AscendenteOptions) => Promise<void>;
   
+  // Análisis LR
+  analyzeLR: (options: LRAnalysisOptions) => Promise<void>;
+  
   // Reconocimiento de cadenas
   recognizeString: (input: string, customPrecedenceTable?: PrecedenceTable) => Promise<ParsingResult | null>;
+  recognizeStringLR: (input: string, type?: LRAnalysisType) => Promise<ParsingResult | null>;
   
   // Utilidades
   parseGrammar: (grammarText: string, terminals: string, autoDetect?: boolean) => Grammar;
   clearAnalysis: () => void;
   clearError: () => void;
   clearRecognitionHistory: () => void;
+  setLRType: (type: LRAnalysisType) => void;
   
   // Computed
   hasAnalysis: boolean;
