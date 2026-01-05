@@ -28,13 +28,14 @@ import {
 import { CopyButton } from '@/components/shared/copy-button';
 import { Play, RefreshCw, Lightbulb, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { PrecedenceStep, Production, Grammar, DerivationStep, PrecedenceRelation } from '@/lib/types/grammar';
+import type { PrecedenceStep, Production, Grammar, DerivationStep, PrecedenceRelation, PrecedenceTable as PrecedenceTableType } from '@/lib/types/grammar';
 import {
   analyzeDerivationStep,
   applyDerivation,
   generateAutomaticDerivations,
   getTestStringFromDerivations,
   derivationsToPrecedenceSteps,
+  buildPrecedenceTableFromSteps,
 } from '@/lib/algorithms/syntax/ascendente';
 
 interface PrecedenceStepsProps {
@@ -44,7 +45,7 @@ interface PrecedenceStepsProps {
   isAutomatic: boolean;
   onModeChange: (isAutomatic: boolean) => void;
   onTestStringChange: (testString: string) => void;
-  onGenerateSteps: (steps: PrecedenceStep[]) => void;
+  onGenerateSteps: (steps: PrecedenceStep[], table?: PrecedenceTableType) => void;
   isProcessing?: boolean;
   className?: string;
 }
@@ -98,6 +99,22 @@ export function PrecedenceSteps({
       explanation: `Inicio con símbolo inicial: ${grammar.startSymbol}`,
     }]);
   }, [grammar.startSymbol]);
+
+  // Generar automáticamente los pasos cuando está en modo automático
+  useEffect(() => {
+    if (isAutomatic && !steps) {
+      // Generar derivaciones automáticas
+      const autoSteps = generateAutomaticDerivations(grammar);
+      setDerivationSteps(autoSteps);
+      
+      const testStr = getTestStringFromDerivations(grammar, autoSteps);
+      onTestStringChange(testStr);
+      
+      // Convertir a PrecedenceSteps (solo informativos, la tabla ya está en el hook)
+      const precedenceSteps = derivationsToPrecedenceSteps(autoSteps);
+      onGenerateSteps(precedenceSteps); // No enviar tabla, usar la del hook
+    }
+  }, [isAutomatic, grammar, steps, onTestStringChange, onGenerateSteps]);
 
   // Forma sentencial actual (último paso)
   const currentForm = useMemo(() => {
@@ -195,8 +212,9 @@ export function PrecedenceSteps({
   // Analizar derivaciones manuales
   const handleAnalyzeManual = useCallback(() => {
     const precedenceSteps = derivationsToPrecedenceSteps(derivationSteps);
-    onGenerateSteps(precedenceSteps);
-  }, [derivationSteps, onGenerateSteps]);
+    const table = buildPrecedenceTableFromSteps(grammar, precedenceSteps);
+    onGenerateSteps(precedenceSteps, table);
+  }, [derivationSteps, grammar, onGenerateSteps]);
 
   // Manejar cambio de modo
   const handleModeChange = useCallback((automatic: boolean) => {
