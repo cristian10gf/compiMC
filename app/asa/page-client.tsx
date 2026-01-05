@@ -24,12 +24,7 @@ import {
   StringRecognitionPrecedence,
 } from '@/components/analizador-sintactico';
 import { useAscendenteAnalysis } from '@/hooks';
-import { 
-  buildPrecedenceTableFromSteps,
-  calculatePrecedenceUsingFirstLast,
-  derivationsToPrecedenceSteps,
-} from '@/lib/algorithms/syntax/ascendente';
-import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType, DerivationStep } from '@/lib/types';
+import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType } from '@/lib/types';
 import { 
   CheckCircle2, 
   AlertTriangle,
@@ -68,6 +63,7 @@ export default function ASAClientPage() {
 
   /**
    * Maneja el análisis inicial de la gramática
+   * Genera automáticamente la tabla de precedencia
    */
   const handleAnalyze = useCallback(async (
     grammarText: string,
@@ -79,14 +75,14 @@ export default function ASAClientPage() {
     setTestString('');
     setLocalPrecedenceTable(null);
 
-    // Analizar con el hook
+    // Analizar con el hook en modo automático (genera la tabla de precedencia)
     await analyze({
       grammarText,
       terminals,
-      mode: isAutomatic ? 'automatic' : 'manual',
+      mode: 'automatic',
       autoDetectTerminals: false,
     });
-  }, [analyze, isAutomatic]);
+  }, [analyze]);
 
   /**
    * Efecto para actualizar estados locales cuando cambia el análisis
@@ -108,31 +104,33 @@ export default function ASAClientPage() {
    */
   const handleModeChange = useCallback((automatic: boolean) => {
     setIsAutomatic(automatic);
-    // El componente PrecedenceSteps maneja internamente el cambio
     setTestString('');
     setLocalSteps(null);
-    setLocalPrecedenceTable(null);
-  }, []);
+    // En modo automático, restaurar la tabla del hook
+    // En modo manual, se limpia para regenerar desde pasos
+    if (automatic) {
+      // Restaurar la tabla generada por el hook
+      setLocalPrecedenceTable(state.precedenceTable || null);
+    } else {
+      setLocalPrecedenceTable(null);
+    }
+  }, [state.precedenceTable]);
 
   /**
-   * Maneja la generación de pasos de precedencia (recibe los pasos del componente)
+   * Maneja la generación de pasos de precedencia
+   * En modo automático: los pasos son informativos, la tabla ya está en el hook
+   * En modo manual: genera la tabla a partir de los pasos del usuario
    */
-  const handleGenerateSteps = useCallback((steps: PrecedenceStep[]) => {
-    if (!localGrammar) return;
-
+  const handleGenerateSteps = useCallback((steps: PrecedenceStep[], table?: PrecedenceTableType) => {
     setLocalSteps(steps);
-
-    // En modo automático, usar calculatePrecedenceUsingFirstLast para obtener
-    // la tabla correcta basada en reglas de precedencia de operadores
-    if (isAutomatic) {
-      const table = calculatePrecedenceUsingFirstLast(localGrammar);
+    // Si se provee una tabla (modo manual), usarla
+    if (table) {
       setLocalPrecedenceTable(table);
     } else {
-      // En modo manual, construir tabla desde los pasos generados
-      const table = buildPrecedenceTableFromSteps(localGrammar, steps);
-      setLocalPrecedenceTable(table);
+      // Modo automático: restaurar la tabla del hook
+      setLocalPrecedenceTable(state.precedenceTable || null);
     }
-  }, [localGrammar, isAutomatic]);
+  }, [state.precedenceTable]);
 
   /**
    * Maneja el reconocimiento de cadenas
@@ -283,7 +281,6 @@ export default function ASAClientPage() {
                   </Badge>
                 )
               }
-              defaultOpen
             >
               <PrecedenceSteps
                 grammar={localGrammar}
