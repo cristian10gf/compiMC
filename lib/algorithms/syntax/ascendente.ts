@@ -232,11 +232,8 @@ export function buildPrecedenceTableFromSteps(
  * Calcula la tabla de precedencia automáticamente (Modo Automático)
  */
 export function calculatePrecedenceAutomatic(grammar: Grammar): PrecedenceTable {
-  // Usar el método manual para generar pasos
-  const steps = calculatePrecedenceManual(grammar);
-  
-  // Construir tabla desde los pasos
-  return buildPrecedenceTableFromSteps(grammar, steps);
+  // Calcular tabla de precedencia usando análisis de FIRST/LAST y jerarquía de operadores
+  return calculatePrecedenceUsingFirstLast(grammar);
 }
 
 /**
