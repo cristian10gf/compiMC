@@ -285,6 +285,7 @@ export interface UseSyntaxAnalysisReturn {
   clearError: () => void;
   clearRecognitionHistory: () => void;
   setLRType: (type: LRAnalysisType) => void;
+  updatePrecedenceTable: (table: PrecedenceTable, steps?: PrecedenceStep[]) => void;
   
   // Computed
   hasAnalysis: boolean;

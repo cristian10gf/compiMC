@@ -626,6 +626,20 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
     }
   }, [state.ascendente.lrAnalysis, state.ascendente.grammar]);
 
+  /**
+   * Actualiza la tabla de precedencia manualmente
+   */
+  const updatePrecedenceTable = useCallback((table: PrecedenceTable, steps?: PrecedenceStep[]) => {
+    setState(prev => ({
+      ...prev,
+      ascendente: {
+        ...prev.ascendente,
+        precedenceTable: table,
+        precedenceSteps: steps || prev.ascendente.precedenceSteps,
+      },
+    }));
+  }, []);
+
   // -------------------------------------------------------------------------
   // Retorno
   // -------------------------------------------------------------------------
@@ -642,6 +656,7 @@ export function useSyntaxAnalysis(): UseSyntaxAnalysisReturn {
     clearError,
     clearRecognitionHistory,
     setLRType,
+    updatePrecedenceTable,
     hasAnalysis,
     currentGrammar,
   };
@@ -698,6 +713,7 @@ export function useAscendenteAnalysis() {
     clearAnalysis: analysis.clearAnalysis,
     clearError: analysis.clearError,
     setLRType: analysis.setLRType,
+    updatePrecedenceTable: analysis.updatePrecedenceTable,
     
     // Computed
     hasAnalysis: analysis.state.analysisType === 'ascendente' && analysis.hasAnalysis,
