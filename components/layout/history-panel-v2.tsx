@@ -4,9 +4,11 @@
  * Panel de historial mejorado con Sheet de shadcn
  * Muestra el historial de análisis guardados en localStorage
  * Mejoras: Usa Sheet para mejor semántica y animaciones
+ * Las entradas son clickeables y redirigen a la página correspondiente
  */
 
 import { useHistory } from '@/lib/context';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,32 +26,22 @@ import {
   CheckCircle2,
   XCircle,
   Search,
+  ExternalLink,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { generateHistoryEntryUrl } from '@/lib/utils/history-navigation';
+import { historyTypeLabels, historyTypeColors, HistoryEntry } from '@/lib/types';
 
 interface HistoryPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const typeLabels = {
-  lexical: 'Léxico',
-  'syntax-ll': 'Sint. LL',
-  'syntax-lr': 'Sint. LR',
-  compiler: 'Compilador',
-};
-
-const typeColors = {
-  lexical: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  'syntax-ll': 'bg-green-500/10 text-green-700 dark:text-green-400',
-  'syntax-lr': 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  compiler: 'bg-orange-500/10 text-orange-700 dark:text-orange-400',
-};
-
 export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
   const { filteredHistory, removeEntry, clearHistory, stats, setFilter, clearFilter } = useHistory();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = (term: string) => {
@@ -59,6 +51,15 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
     } else {
       clearFilter();
     }
+  };
+
+  /**
+   * Navega a la página correspondiente con los parámetros de la entrada
+   */
+  const handleEntryClick = (entry: HistoryEntry) => {
+    const url = generateHistoryEntryUrl(entry);
+    onOpenChange(false); // Cerrar el panel
+    router.push(url);
   };
 
   const formatDate = (date: Date) => {
@@ -84,7 +85,7 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
         <SheetHeader className="border-b border-border px-4 py-4">
           <SheetTitle>Historial</SheetTitle>
           <SheetDescription>
-            {stats.totalEntries} {stats.totalEntries === 1 ? 'entrada' : 'entradas'}
+            {stats.totalEntries} {stats.totalEntries === 1 ? 'entrada' : 'entradas'} · Clic para restaurar
           </SheetDescription>
         </SheetHeader>
 
@@ -138,7 +139,19 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
               </div>
             ) : (
               filteredHistory.map((entry) => (
-                <Card key={entry.id} className="p-3 transition-colors hover:bg-muted/50">
+                <Card 
+                  key={entry.id} 
+                  className="p-3 transition-colors hover:bg-muted/50 cursor-pointer group"
+                  onClick={() => handleEntryClick(entry)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleEntryClick(entry);
+                    }
+                  }}
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1 space-y-1.5">
                       {/* Type and status */}
@@ -147,16 +160,18 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
                           variant="secondary"
                           className={cn(
                             'text-xs',
-                            typeColors[entry.type as keyof typeof typeColors]
+                            historyTypeColors[entry.type] || 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
                           )}
                         >
-                          {typeLabels[entry.type as keyof typeof typeLabels]}
+                          {historyTypeLabels[entry.type] || entry.type}
                         </Badge>
                         {entry.metadata?.success ? (
                           <CheckCircle2 className="size-3.5 text-green-600 dark:text-green-400" />
                         ) : (
                           <XCircle className="size-3.5 text-red-600 dark:text-red-400" />
                         )}
+                        {/* Indicador de que es clickeable */}
+                        <ExternalLink className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
                       </div>
 
                       {/* Input preview */}
@@ -180,7 +195,10 @@ export function HistoryPanel({ open, onOpenChange }: HistoryPanelProps) {
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={() => removeEntry(entry.id)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evitar que se navegue al eliminar
+                        removeEntry(entry.id);
+                      }}
                       className="shrink-0"
                       aria-label="Eliminar entrada"
                     >
