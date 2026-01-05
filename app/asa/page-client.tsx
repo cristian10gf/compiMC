@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -22,7 +23,7 @@ import {
   StringRecognitionPrecedence,
   LRAnalysisSection,
 } from '@/components/analizador-sintactico';
-import { useAscendenteAnalysis } from '@/hooks';
+import { useAscendenteAnalysis, useHistory } from '@/hooks';
 import type { PrecedenceStep, Grammar, PrecedenceTable as PrecedenceTableType, ParsingResult } from '@/lib/types';
 import type { LRAnalysisType } from '@/lib/types/syntax-analysis';
 import { 
@@ -42,6 +43,9 @@ const METHOD_OPTIONS = [
 ];
 
 export default function ASAClientPage() {
+  const searchParams = useSearchParams();
+  const { addEntry } = useHistory();
+  
   // Estado del hook de análisis
   const {
     state,
@@ -63,6 +67,38 @@ export default function ASAClientPage() {
   const [localSteps, setLocalSteps] = useState<PrecedenceStep[] | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
   const [localGrammar, setLocalGrammar] = useState<Grammar | null>(null);
+  
+  // Estado para valores iniciales del historial
+  const [initialValues, setInitialValues] = useState<{
+    grammarText?: string;
+    terminals?: string;
+  } | undefined>(undefined);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const grammarParam = searchParams.get('grammar');
+    const terminalsParam = searchParams.get('terminals');
+    const methodParam = searchParams.get('method');
+    const lrTypeParam = searchParams.get('lrType');
+    
+    if (grammarParam || terminalsParam) {
+      setInitialValues({
+        grammarText: grammarParam ? decodeURIComponent(grammarParam) : undefined,
+        terminals: terminalsParam || undefined,
+      });
+    }
+    if (methodParam === 'precedence' || methodParam === 'lr') {
+      setMethod(methodParam);
+    }
+    if (lrTypeParam === 'SLR' || lrTypeParam === 'LR1' || lrTypeParam === 'LALR') {
+      setLRType(lrTypeParam);
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized, setLRType]);
 
   /**
    * Maneja el análisis inicial de la gramática
@@ -84,6 +120,18 @@ export default function ASAClientPage() {
         mode: 'automatic',
         autoDetectTerminals: false,
       });
+      
+      // Guardar en historial
+      addEntry({
+        type: 'syntax-precedence',
+        input: grammarText.split('\n')[0] + '...',
+        metadata: {
+          success: !error,
+          grammarText,
+          terminals,
+          method: 'precedence',
+        },
+      });
     } else {
       // Analizar con LR
       await analyzeLR({
@@ -91,8 +139,21 @@ export default function ASAClientPage() {
         terminals,
         autoDetectTerminals: false,
       });
+      
+      // Guardar en historial
+      addEntry({
+        type: 'syntax-lr',
+        input: grammarText.split('\n')[0] + '...',
+        metadata: {
+          success: !error,
+          grammarText,
+          terminals,
+          method: 'lr',
+          lrType: state.lrAnalysis?.selectedType?.toLowerCase() as 'slr' | 'lr1' | 'lalr' | undefined,
+        },
+      });
     }
-  }, [analyze, analyzeLR, method]);
+  }, [analyze, analyzeLR, method, addEntry, error, state.lrAnalysis?.selectedType]);
 
   /**
    * Efecto para actualizar estados locales cuando cambia el análisis
@@ -163,6 +224,7 @@ export default function ASAClientPage() {
       <GrammarInputASA
         onAnalyze={handleAnalyze}
         isProcessing={isProcessing}
+        initialValues={initialValues}
       />
 
       {/* Error global */}

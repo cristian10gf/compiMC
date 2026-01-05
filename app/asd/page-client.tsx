@@ -11,7 +11,8 @@
  * 5. Reconocimiento de cadena con animación
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleSection } from '@/components/shared';
@@ -22,7 +23,7 @@ import {
   ParsingTable,
   StringRecognitionLL,
 } from '@/components/analizador-sintactico';
-import { useDescendenteAnalysis } from '@/hooks';
+import { useDescendenteAnalysis, useHistory } from '@/hooks';
 import type { ParsingResult } from '@/lib/types';
 import { 
   Calculator, 
@@ -34,6 +35,9 @@ import {
 } from 'lucide-react';
 
 export default function ASDClientPage() {
+  const searchParams = useSearchParams();
+  const { addEntry } = useHistory();
+  
   const {
     state,
     recognition,
@@ -44,6 +48,33 @@ export default function ASDClientPage() {
     hasAnalysis,
   } = useDescendenteAnalysis();
 
+  // Estado para valores iniciales del historial
+  const [initialValues, setInitialValues] = useState<{
+    grammarText?: string;
+    terminals?: string;
+    autoDetect?: boolean;
+  } | undefined>(undefined);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const grammarParam = searchParams.get('grammar');
+    const terminalsParam = searchParams.get('terminals');
+    const autoDetectParam = searchParams.get('autoDetect');
+    
+    if (grammarParam || terminalsParam) {
+      setInitialValues({
+        grammarText: grammarParam ? decodeURIComponent(grammarParam) : undefined,
+        terminals: terminalsParam || undefined,
+        autoDetect: autoDetectParam === 'true',
+      });
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized]);
+
   /**
    * Maneja el análisis de la gramática
    */
@@ -52,12 +83,24 @@ export default function ASDClientPage() {
     terminals: string,
     autoDetect: boolean
   ) => {
-    await analyze({
+    const result = await analyze({
       grammarText,
       terminals,
       autoDetectTerminals: autoDetect,
     });
-  }, [analyze]);
+
+    // Guardar en historial con todos los inputs
+    addEntry({
+      type: 'syntax-ll',
+      input: grammarText.split('\n')[0] + '...',
+      metadata: {
+        success: !error,
+        grammarText,
+        terminals,
+        autoDetectTerminals: autoDetect,
+      },
+    });
+  }, [analyze, addEntry, error]);
 
   /**
    * Maneja el reconocimiento de una cadena
@@ -72,6 +115,7 @@ export default function ASDClientPage() {
       <GrammarInputEnhanced
         onAnalyze={handleAnalyze}
         isProcessing={isProcessing}
+        initialValues={initialValues}
       />
 
       {/* Error */}

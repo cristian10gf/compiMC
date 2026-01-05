@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { TokensTable, CodeTable, OptimizationTable, SyntaxTreeGraph } from '@/components/general';
 import { CollapsibleSection, SegmentedControl } from '@/components/shared';
-import { useCompilerFull } from '@/hooks';
+import { useCompilerFull, useHistory } from '@/hooks';
 import { createCustomTokenPatterns } from '@/lib/algorithms/general/compiler';
 import { Loader2, Plus, X, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -17,8 +18,12 @@ interface CustomToken {
 }
 
 export default function GeneralClientPage() {
+  const searchParams = useSearchParams();
+  const { addEntry } = useHistory();
+  
   const [activeTab, setActiveTab] = useState<'analysis' | 'synthesis'>('analysis');
   const [customTokens, setCustomTokens] = useState<CustomToken[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const { 
     sourceCode,
@@ -28,6 +33,32 @@ export default function GeneralClientPage() {
     setSourceCode,
     compile: compileCode,
   } = useCompilerFull();
+
+  // Restaurar estado desde URL al montar
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    const codeParam = searchParams.get('code');
+    const tokensParam = searchParams.get('tokens');
+    
+    if (codeParam) {
+      setSourceCode(decodeURIComponent(codeParam));
+    }
+    if (tokensParam) {
+      try {
+        const parsedTokens = JSON.parse(decodeURIComponent(tokensParam));
+        setCustomTokens(parsedTokens.map((t: { symbol: string; regex: string }, idx: number) => ({
+          id: `${Date.now()}-${idx}`,
+          symbol: t.symbol,
+          regex: t.regex,
+        })));
+      } catch {
+        // Ignorar errores de parseo
+      }
+    }
+    
+    setIsInitialized(true);
+  }, [searchParams, isInitialized, setSourceCode]);
 
   const addCustomToken = () => {
     setCustomTokens([...customTokens, { id: Date.now().toString(), symbol: '', regex: '' }]);
@@ -44,6 +75,19 @@ export default function GeneralClientPage() {
 
   const handleCompile = async () => {
     await compileCode(customPatterns);
+    
+    // Guardar en historial
+    addEntry({
+      type: 'compiler',
+      input: sourceCode.substring(0, 50) + (sourceCode.length > 50 ? '...' : ''),
+      metadata: {
+        success: !error,
+        sourceCode,
+        customTokens: customTokens.length > 0 
+          ? customTokens.map(t => ({ symbol: t.symbol, regex: t.regex }))
+          : undefined,
+      },
+    });
   };
 
   return (
