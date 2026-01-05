@@ -181,7 +181,7 @@ export interface UseSyntaxAnalysisReturn {
   analyzeAscendente: (options: AscendenteOptions) => Promise<void>;
   
   // Reconocimiento de cadenas
-  recognizeString: (input: string) => Promise<ParsingResult | null>;
+  recognizeString: (input: string, customPrecedenceTable?: PrecedenceTable) => Promise<ParsingResult | null>;
   
   // Utilidades
   parseGrammar: (grammarText: string, terminals: string, autoDetect?: boolean) => Grammar;

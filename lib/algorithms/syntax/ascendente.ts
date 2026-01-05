@@ -242,45 +242,61 @@ export function calculatePrecedenceAutomatic(grammar: Grammar): PrecedenceTable 
 /**
  * Encuentra el mango de una cadena usando la tabla de precedencia
  * 
- * Algoritmo:
- * 1. Insertar $ al inicio y fin: $w$
- * 2. Insertar relaciones de precedencia entre símbolos
- * 3. Buscar el primer ·>
- * 4. Retroceder hasta encontrar <·
- * 5. El mango está entre <· y ·>
+ * Algoritmo (según el libro):
+ * Cuando detectamos a·>b (donde a es terminal del tope, b es entrada):
+ * 1. Empezar desde el tope de la pila
+ * 2. Retroceder extrayendo símbolos hasta encontrar un terminal prev tal que prev<·curr
+ * 3. El mango incluye todos los símbolos desde donde encontramos <· hasta el tope
+ * 
+ * Este método se llama SOLO cuando ya sabimos que a·>b
  */
 export function findHandle(
   stack: string[],
   precedenceTable: PrecedenceTable
 ): { handle: string[]; position: number } | null {
-  // Buscar el primer ·>
-  for (let i = 0; i < stack.length - 1; i++) {
-    const current = stack[i];
-    const next = stack[i + 1];
+  if (stack.length <= 1) {
+    return null; // Solo hay $
+  }
 
-    const relation = precedenceTable.relations.get(current)?.get(next);
+  // Buscar terminales de derecha a izquierda
+  let currentTerminal: string | null = null;
+  let startPosition = stack.length;
 
-    if (relation === '>') {
-      // Retroceder hasta encontrar <·
-      let start = i;
-      while (start > 0) {
-        const prev = stack[start - 1];
-        const curr = stack[start];
-        const prevRelation = precedenceTable.relations.get(prev)?.get(curr);
-
-        if (prevRelation === '<') {
-          break;
-        }
-        start--;
-      }
-
-      // El mango está entre start y i (inclusive)
-      const handle = stack.slice(start, i + 1);
-      return { handle, position: start };
+  // Primero, encontrar el terminal más a la derecha (tope)
+  for (let i = stack.length - 1; i >= 0; i--) {
+    if (precedenceTable.symbols.includes(stack[i])) {
+      currentTerminal = stack[i];
+      startPosition = i;
+      break;
     }
   }
 
-  return null;
+  if (!currentTerminal) {
+    return null;
+  }
+
+  // Ahora retroceder buscando el terminal anterior y verificar la relación
+  for (let i = startPosition - 1; i >= 0; i--) {
+    if (precedenceTable.symbols.includes(stack[i])) {
+      const prevTerminal = stack[i];
+      const relation = precedenceTable.relations.get(prevTerminal)?.get(currentTerminal);
+      
+      // Si encontramos <·, el mango va desde i+1 hasta el final
+      if (relation === '<') {
+        const handle = stack.slice(i + 1);
+        return { handle, position: i + 1 };
+      }
+      
+      // Si es ≐, continuamos buscando
+      // Actualizar el terminal actual para la siguiente iteración
+      currentTerminal = prevTerminal;
+    }
+  }
+
+  // Si no encontramos <·, el mango incluye todo desde después de $ hasta el final
+  // Esto ocurre cuando el primer terminal tiene relación $<·terminal
+  const handle = stack.slice(1); // Excluir el $
+  return { handle, position: 1 };
 }
 
 /**
@@ -341,27 +357,40 @@ export function parseStringPrecedence(
 
   while (inputQueue.length > 0) {
     const currentInput = inputQueue[0];
-    const stackTop = stack[stack.length - 1];
-
-    // Si llegamos a $ en ambos lados, aceptar
-    if (stackTop === '$' && currentInput === '$' && stack.length === 2) {
-      steps.push({
-        stepNumber: stepNumber++,
-        stack: [...stack],
-        input: [...inputQueue],
-        output: output.join('\n'),
-        action: 'Aceptar',
-      });
-
-      return {
-        accepted: true,
-        steps,
-        output: output.join('\n'),
-      };
+    
+    // Buscar el terminal más a la cima de la pila (ignorando no terminales)
+    // Según el algoritmo: "sea a el símbolo terminal más a la cima de la pila"
+    let stackTopTerminal = '$';
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (precedenceTable.symbols.includes(stack[i])) {
+        stackTopTerminal = stack[i];
+        break;
+      }
     }
 
-    // Obtener relación de precedencia
-    const relation = precedenceTable.relations.get(stackTop)?.get(currentInput);
+    // Si llegamos a $ en ambos lados, aceptar
+    if (stackTopTerminal === '$' && currentInput === '$') {
+      // Verificar si solo queda el símbolo inicial en la pila (además de $)
+      const nonDollarSymbols = stack.filter(s => s !== '$');
+      if (nonDollarSymbols.length === 1 && nonDollarSymbols[0] === grammar.startSymbol) {
+        steps.push({
+          stepNumber: stepNumber++,
+          stack: [...stack],
+          input: [...inputQueue],
+          output: output.join('\n'),
+          action: 'Aceptar',
+        });
+
+        return {
+          accepted: true,
+          steps,
+          output: output.join('\n'),
+        };
+      }
+    }
+
+    // Obtener relación de precedencia entre el terminal de la pila y el símbolo de entrada
+    const relation = precedenceTable.relations.get(stackTopTerminal)?.get(currentInput);
 
     if (!relation || relation === '·') {
       steps.push({
@@ -369,27 +398,27 @@ export function parseStringPrecedence(
         stack: [...stack],
         input: [...inputQueue],
         output: output.join('\n'),
-        action: `Error: No hay relación entre '${stackTop}' y '${currentInput}'`,
+        action: `Error: No hay relación entre '${stackTopTerminal}' y '${currentInput}'`,
       });
 
       return {
         accepted: false,
         steps,
-        error: `No hay relación entre '${stackTop}' y '${currentInput}'`,
+        error: `No hay relación entre '${stackTopTerminal}' y '${currentInput}'`,
       };
     }
 
     if (relation === '<' || relation === '=') {
       // Desplazar: mover símbolo de entrada a pila
-      stack.push(currentInput);
-      inputQueue.shift();
+      const symbol = inputQueue.shift()!;
+      stack.push(symbol);
 
       steps.push({
         stepNumber: stepNumber++,
         stack: [...stack],
         input: [...inputQueue],
         output: output.join('\n'),
-        action: `Desplazar '${currentInput}'`,
+        action: `Desplazar '${symbol}'`,
       });
     } else if (relation === '>') {
       // Reducir: encontrar mango y reducir
@@ -420,13 +449,13 @@ export function parseStringPrecedence(
           stack: [...stack],
           input: [...inputQueue],
           output: output.join('\n'),
-          action: `Error: No hay producción para mango {${handle.join(' ')}}`,
+          action: `Error: No hay producción para mango [${handle.join(' ')}]`,
         });
 
         return {
           accepted: false,
           steps,
-          error: `No hay producción para mango {${handle.join(' ')}}`,
+          error: `No hay producción para mango [${handle.join(' ')}]`,
         };
       }
 
