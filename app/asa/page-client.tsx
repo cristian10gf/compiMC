@@ -45,7 +45,7 @@ const METHOD_OPTIONS = [
 
 export default function ASAClientPage() {
   // Usar nuqs para manejar el estado de la URL
-  const [{ grammar, terminals, method, lrType }, setParams] = useQueryStates(asaSearchParams);
+  const [{ grammar, terminals, method, lrType, testString }, setParams] = useQueryStates(asaSearchParams);
   
   const { addEntry } = useHistory();
   
@@ -65,7 +65,6 @@ export default function ASAClientPage() {
 
   // Estado local para UI
   const [isAutomatic, setIsAutomatic] = useState(true);
-  const [testString, setTestString] = useState('');
   const [localSteps, setLocalSteps] = useState<PrecedenceStep[] | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
   const [localGrammar, setLocalGrammar] = useState<Grammar | null>(null);
@@ -126,12 +125,12 @@ export default function ASAClientPage() {
     // Limpiar estados previos
     setLocalSteps(null);
     setValidationResult(null);
-    setTestString('');
     
     // Actualizar URL con los valores actuales
     setParams({
       grammar: grammarText,
       terminals: terminalStr,
+      testString: '', // Limpiar la cadena de prueba al analizar nueva gramática
     });
 
     if (method === 'precedence') {
@@ -193,9 +192,9 @@ export default function ASAClientPage() {
    */
   const handleModeChange = useCallback((automatic: boolean) => {
     setIsAutomatic(automatic);
-    setTestString('');
+    setParams({ testString: '' }); // Limpiar la cadena de prueba
     setLocalSteps(null);
-  }, []);
+  }, [setParams]);
 
   /**
    * Maneja la generación de pasos de precedencia
@@ -211,15 +210,19 @@ export default function ASAClientPage() {
    * Maneja el reconocimiento de cadenas (precedencia)
    */
   const handleRecognize = useCallback(async (input: string) => {
+    // Guardar la cadena de prueba en la URL
+    setParams({ testString: input });
     return recognizeString(input, state.precedenceTable || undefined);
-  }, [recognizeString, state.precedenceTable]);
+  }, [recognizeString, state.precedenceTable, setParams]);
 
   /**
    * Maneja el reconocimiento de cadenas (LR)
    */
   const handleRecognizeLR = useCallback(async (input: string, type: LRAnalysisType): Promise<ParsingResult | null> => {
+    // Guardar la cadena de prueba en la URL
+    setParams({ testString: input });
     return recognizeStringLR(input, type);
-  }, [recognizeStringLR]);
+  }, [recognizeStringLR, setParams]);
 
   /**
    * Maneja el cambio de tipo de LR
@@ -374,7 +377,7 @@ export default function ASAClientPage() {
                 testString={testString}
                 isAutomatic={isAutomatic}
                 onModeChange={handleModeChange}
-                onTestStringChange={setTestString}
+                onTestStringChange={(value) => setParams({ testString: value })}
                 onGenerateSteps={handleGenerateSteps}
                 isProcessing={isProcessing}
               />
@@ -408,6 +411,8 @@ export default function ASAClientPage() {
                 onRecognize={handleRecognize}
                 terminals={localGrammar.terminals}
                 isProcessing={isProcessing}
+                value={testString}
+                onChange={(value) => setParams({ testString: value })}
               />
             </CollapsibleSection>
           )}
@@ -425,6 +430,8 @@ export default function ASAClientPage() {
           onTypeChange={handleLRTypeChange}
           onRecognize={handleRecognizeLR}
           isProcessing={isProcessing}
+          value={testString}
+          onValueChange={(value) => setParams({ testString: value })}
         />
       )}
 

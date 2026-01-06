@@ -37,7 +37,7 @@ import { asdSearchParams } from '@/lib/nuqs';
 
 export default function ASDClientPage() {
   // Usar nuqs para manejar el estado de la URL
-  const [{ grammar, terminals, autoDetect }, setParams] = useQueryStates(asdSearchParams);
+  const [{ grammar, terminals, autoDetect, testString }, setParams] = useQueryStates(asdSearchParams);
   
   const { addEntry } = useHistory();
   
@@ -116,8 +116,10 @@ export default function ASDClientPage() {
    * Maneja el reconocimiento de una cadena
    */
   const handleRecognize = useCallback(async (input: string): Promise<ParsingResult | null> => {
+    // Guardar la cadena de prueba en la URL
+    setParams({ testString: input });
     return recognizeString(input);
-  }, [recognizeString]);
+  }, [recognizeString, setParams]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -251,6 +253,8 @@ export default function ASDClientPage() {
                 onRecognize={handleRecognize}
                 terminals={state.workingGrammar.terminals}
                 isProcessing={isProcessing}
+                value={testString}
+                onChange={(value) => setParams({ testString: value })}
               />
             </CollapsibleSection>
           )}
