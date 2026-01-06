@@ -11,7 +11,7 @@ export default function GeneralPage() {
     <>
       <section className="container mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-balance font-bold text-3xl sm:text-4xl mb-2 flex flex-row-reverse">
+          <h1 className="text-balance font-bold text-3xl sm:text-4xl mb-2 flex sm:justify-center-safe flex-row-reverse sm:text-left">
             Compilador General
           </h1>
           <p className="text-pretty text-muted-foreground">
