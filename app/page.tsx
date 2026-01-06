@@ -69,7 +69,7 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold">Visualización Interactiva</h3>
               <p className="text-muted-foreground text-sm">
-                Grafos de autómatas y árboles sintácticos con React Flow
+                Grafos de autómatas y árboles sintácticos
               </p>
             </div>
             <div className="space-y-2 text-center">
