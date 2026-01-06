@@ -26,11 +26,11 @@ export function HeroSection({
   showHistoryButton = true,
 }: HeroSectionProps) {
   return (
-    <div className="border-b border-border bg-muted/30 py-8 sm:py-12">
+    <div className="border-b border-border bg-muted/30 py-4 sm:py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex-1 space-y-3">
-            <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl text-center sm:flex sm:flex-row-reverse sm:text-left">
               {title}
             </h1>
             {subtitle && (
