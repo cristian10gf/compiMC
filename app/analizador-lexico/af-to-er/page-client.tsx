@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import { useAutomata } from '@/hooks';
 import { Loader2, Play, RotateCcw, Sparkles, ChevronRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Automaton } from '@/lib/types';
+import { afToErSearchParams } from '@/lib/nuqs';
 
 // Opciones para el control segmentado
 const modeOptions = [
@@ -41,21 +42,25 @@ const alphabetOptions = [
 ];
 
 export default function AFtoERClientPage() {
-  const searchParams = useSearchParams();
+  // Usar nuqs para manejar el estado de la URL
+  const [{ inputMode, alphabetMode, customAlphabet, automaton: automatonJson }, setParams] = useQueryStates(afToErSearchParams);
   
   // Usar el hook de autómata
   const { convertToER, clearAutomaton, error: hookError, isProcessing } = useAutomata();
   const { addEntry } = useHistory();
   
-  // Estado del modo de entrada
-  const [inputMode, setInputMode] = useState<'visual' | 'table'>('visual');
-  const [alphabetMode, setAlphabetMode] = useState<'auto' | 'custom'>('auto');
-  const [customAlphabet, setCustomAlphabet] = useState<string[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // Estado del autómata
-  const [automaton, setAutomaton] = useState<Automaton | null>(null);
+  // Estado local (no persistido en URL)
   const [resetKey, setResetKey] = useState(0);
+  
+  // Parsear automaton desde JSON
+  const automaton = useMemo(() => {
+    if (!automatonJson) return null;
+    try {
+      return JSON.parse(automatonJson) as Automaton;
+    } catch {
+      return null;
+    }
+  }, [automatonJson]);
   
   // Estado de resultado
   const [result, setResult] = useState<{
@@ -64,36 +69,6 @@ export default function AFtoERClientPage() {
     ardenEquations: any[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Restaurar estado desde URL al montar
-  useEffect(() => {
-    if (isInitialized) return;
-    
-    const inputModeParam = searchParams.get('inputMode');
-    const alphabetModeParam = searchParams.get('alphabetMode');
-    const customAlphabetParam = searchParams.get('customAlphabet');
-    const automatonParam = searchParams.get('automaton');
-    
-    if (inputModeParam === 'visual' || inputModeParam === 'table') {
-      setInputMode(inputModeParam);
-    }
-    if (alphabetModeParam === 'auto' || alphabetModeParam === 'custom') {
-      setAlphabetMode(alphabetModeParam);
-    }
-    if (customAlphabetParam) {
-      setCustomAlphabet(customAlphabetParam.split(',').filter(Boolean));
-    }
-    if (automatonParam) {
-      try {
-        const parsedAutomaton = JSON.parse(decodeURIComponent(automatonParam));
-        setAutomaton(parsedAutomaton);
-      } catch {
-        // Ignorar errores de parseo
-      }
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized]);
 
   // Alfabeto efectivo (auto-detectado o personalizado)
   const effectiveAlphabet = useMemo(() => {
@@ -110,28 +85,32 @@ export default function AFtoERClientPage() {
 
   // Manejar cambio de autómata desde los editores
   const handleAutomatonChange = useCallback((newAutomaton: Automaton) => {
-    setAutomaton(newAutomaton);
+    setParams({ automaton: JSON.stringify(newAutomaton) });
     setResult(null); // Limpiar resultado previo
     setError(null);
-  }, []);
+  }, [setParams]);
 
   // Cargar ejemplo
   const loadExample = useCallback(() => {
     const example = createExampleAutomaton();
-    setAutomaton(example);
+    setParams({ automaton: JSON.stringify(example) });
     setResult(null);
     setError(null);
-  }, []);
+  }, [setParams]);
 
   // Resetear todo
   const handleReset = useCallback(() => {
-    setAutomaton(null);
+    setParams({ 
+      automaton: null, 
+      customAlphabet: [], 
+      inputMode: 'visual', 
+      alphabetMode: 'auto' 
+    });
     setResult(null);
     setError(null);
-    setCustomAlphabet([]);
     setResetKey(prev => prev + 1);
     clearAutomaton();
-  }, [clearAutomaton]);
+  }, [clearAutomaton, setParams]);
 
   // Realizar la conversión
   const handleConvert = async () => {
@@ -238,7 +217,7 @@ export default function AFtoERClientPage() {
               <SegmentedControl
                 options={alphabetOptions}
                 value={alphabetMode}
-                onChange={(v) => setAlphabetMode(v as 'auto' | 'custom')}
+                onChange={(v) => setParams({ alphabetMode: v as 'auto' | 'custom' })}
               />
             </div>
           </div>
@@ -248,7 +227,7 @@ export default function AFtoERClientPage() {
               <label className="text-sm font-medium">Símbolos del alfabeto</label>
               <LanguageInput
                 languages={customAlphabet}
-                onChange={setCustomAlphabet}
+                onChange={(newAlphabet) => setParams({ customAlphabet: newAlphabet })}
                 placeholder="Ej: a, b, 0, 1"
                 maxLanguages={10}
               />
@@ -282,7 +261,7 @@ export default function AFtoERClientPage() {
               <SegmentedControl
                 options={modeOptions}
                 value={inputMode}
-                onChange={(v) => setInputMode(v as 'visual' | 'table')}
+                onChange={(v) => setParams({ inputMode: v as 'visual' | 'table' })}
               />
               <AutomataHelpModal mode={inputMode} />
             </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,32 +14,14 @@ import {
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, GitBranch, Layers, Minimize2 } from 'lucide-react';
+import { afdFullSearchParams } from '@/lib/nuqs';
 
 export default function AFDFullClientPage() {
-  const searchParams = useSearchParams();
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [regex, setRegex] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Usar nuqs para manejar el estado de la URL
+  const [{ regex, languages }, setParams] = useQueryStates(afdFullSearchParams);
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
-
-  // Restaurar estado desde URL al montar
-  useEffect(() => {
-    if (isInitialized) return;
-    
-    const regexParam = searchParams.get('regex');
-    const languagesParam = searchParams.get('languages');
-    
-    if (regexParam) {
-      setRegex(regexParam);
-    }
-    if (languagesParam) {
-      setLanguages(languagesParam.split(',').filter(Boolean));
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized]);
 
   // Calcular estados unificados (los que cambiaron del AFD no óptimo al óptimo)
   const unifiedStates = useMemo(() => {
@@ -96,7 +78,7 @@ export default function AFDFullClientPage() {
         <CardContent className="space-y-4">
           <LanguageInput
             languages={languages}
-            onChange={setLanguages}
+            onChange={(newLangs) => setParams({ languages: newLangs })}
             placeholder="Ej: a,d,b"
             maxLanguages={5}
           />
@@ -105,13 +87,13 @@ export default function AFDFullClientPage() {
             <label className="text-sm font-medium">Expresión Regular</label>
             <Input
               value={regex}
-              onChange={(e) => setRegex(e.target.value)}
+              onChange={(e) => setParams({ regex: e.target.value })}
               placeholder="Ej: (a|b)*abb"
               className="font-mono"
             />
             <SymbolSlider
               symbols={commonSymbols.regex}
-              onSelect={(symbol) => setRegex(prev => prev + symbol)}
+              onSelect={(symbol) => setParams({ regex: regex + symbol })}
               variant="outline"
             />
           </div>

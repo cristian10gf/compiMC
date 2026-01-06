@@ -10,8 +10,8 @@
  * 4. Para LR: AFN, SLR, LR canónico, LALR, reconocimiento
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useQueryStates } from 'nuqs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -35,6 +35,7 @@ import {
   ShieldCheck,
   BarChart3,
 } from 'lucide-react';
+import { asaSearchParams } from '@/lib/nuqs';
 
 // Opciones del selector de método
 const METHOD_OPTIONS = [
@@ -43,7 +44,9 @@ const METHOD_OPTIONS = [
 ];
 
 export default function ASAClientPage() {
-  const searchParams = useSearchParams();
+  // Usar nuqs para manejar el estado de la URL
+  const [{ grammar, terminals, method, lrType }, setParams] = useQueryStates(asaSearchParams);
+  
   const { addEntry } = useHistory();
   
   // Estado del hook de análisis
@@ -61,62 +64,81 @@ export default function ASAClientPage() {
   } = useAscendenteAnalysis();
 
   // Estado local para UI
-  const [method, setMethod] = useState('precedence');
   const [isAutomatic, setIsAutomatic] = useState(true);
   const [testString, setTestString] = useState('');
   const [localSteps, setLocalSteps] = useState<PrecedenceStep[] | null>(null);
   const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[] } | null>(null);
   const [localGrammar, setLocalGrammar] = useState<Grammar | null>(null);
   
-  // Estado para valores iniciales del historial
-  const [initialValues, setInitialValues] = useState<{
-    grammarText?: string;
-    terminals?: string;
-  } | undefined>(undefined);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Restaurar estado desde URL al montar
+  // Valores iniciales para el componente de gramática (siempre pasan los valores de URL)
+  const initialValues = useMemo(() => ({
+    grammarText: grammar,
+    terminals: terminals,
+  }), [grammar, terminals]);
+  
+  // Ejecutar análisis automáticamente si hay parámetros válidos en la URL (navegación desde historial)
+  const hasAutoAnalyzed = useRef(false);
+  
+  // Resetear el flag cuando cambien los parámetros de URL
   useEffect(() => {
-    if (isInitialized) return;
-    
-    const grammarParam = searchParams.get('grammar');
-    const terminalsParam = searchParams.get('terminals');
-    const methodParam = searchParams.get('method');
-    const lrTypeParam = searchParams.get('lrType');
-    
-    if (grammarParam || terminalsParam) {
-      setInitialValues({
-        grammarText: grammarParam ? decodeURIComponent(grammarParam) : undefined,
-        terminals: terminalsParam || undefined,
-      });
+    hasAutoAnalyzed.current = false;
+  }, [grammar, terminals, method]);
+  
+  useEffect(() => {
+    // Solo ejecutar una vez si hay gramática válida en la URL y no se ha analizado aún
+    if (grammar && grammar.trim() && !hasAutoAnalyzed.current && !hasAnalysis) {
+      hasAutoAnalyzed.current = true;
+      
+      if (method === 'precedence') {
+        analyze({
+          grammarText: grammar,
+          terminals: terminals,
+          mode: 'automatic',
+          autoDetectTerminals: false,
+        });
+      } else {
+        analyzeLR({
+          grammarText: grammar,
+          terminals: terminals,
+          autoDetectTerminals: false,
+        });
+      }
     }
-    if (methodParam === 'precedence' || methodParam === 'lr') {
-      setMethod(methodParam);
+  }, [grammar, terminals, method, analyze, analyzeLR, hasAnalysis]);
+  
+  // Sincronizar lrType desde URL con el hook
+  useEffect(() => {
+    if (lrType) {
+      const mappedType = lrType.toUpperCase() as LRAnalysisType;
+      if (mappedType === 'SLR' || mappedType === 'LR1' || mappedType === 'LALR') {
+        setLRType(mappedType);
+      }
     }
-    if (lrTypeParam === 'SLR' || lrTypeParam === 'LR1' || lrTypeParam === 'LALR') {
-      setLRType(lrTypeParam);
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized, setLRType]);
+  }, [lrType, setLRType]);
 
   /**
    * Maneja el análisis inicial de la gramática
    */
   const handleAnalyze = useCallback(async (
     grammarText: string,
-    terminals: string
+    terminalStr: string
   ) => {
     // Limpiar estados previos
     setLocalSteps(null);
     setValidationResult(null);
     setTestString('');
+    
+    // Actualizar URL con los valores actuales
+    setParams({
+      grammar: grammarText,
+      terminals: terminalStr,
+    });
 
     if (method === 'precedence') {
       // Analizar con precedencia de operadores
       await analyze({
         grammarText,
-        terminals,
+        terminals: terminalStr,
         mode: 'automatic',
         autoDetectTerminals: false,
       });
@@ -128,15 +150,16 @@ export default function ASAClientPage() {
         metadata: {
           success: !error,
           grammarText,
-          terminals,
+          terminals: terminalStr,
           method: 'precedence',
+          
         },
       });
     } else {
       // Analizar con LR
       await analyzeLR({
         grammarText,
-        terminals,
+        terminals: terminalStr,
         autoDetectTerminals: false,
       });
       
@@ -147,13 +170,13 @@ export default function ASAClientPage() {
         metadata: {
           success: !error,
           grammarText,
-          terminals,
+          terminals: terminalStr,
           method: 'lr',
           lrType: state.lrAnalysis?.selectedType?.toLowerCase() as 'slr' | 'lr1' | 'lalr' | undefined,
         },
       });
     }
-  }, [analyze, analyzeLR, method, addEntry, error, state.lrAnalysis?.selectedType]);
+  }, [analyze, analyzeLR, method, addEntry, error, state.lrAnalysis?.selectedType, setParams]);
 
   /**
    * Efecto para actualizar estados locales cuando cambia el análisis
@@ -216,12 +239,13 @@ export default function ASAClientPage() {
         <SegmentedControl
           options={METHOD_OPTIONS}
           value={method}
-          onChange={setMethod}
+          onChange={(value) => setParams({ method: value as 'precedence' | 'lr' })}
         />
       </div>
 
       {/* Input de gramática */}
       <GrammarInputASA
+        key={`grammar-input-${grammar}-${terminals}`}
         onAnalyze={handleAnalyze}
         isProcessing={isProcessing}
         initialValues={initialValues}

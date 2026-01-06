@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,32 +14,14 @@ import {
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, TreeDeciduous, Table2, GitGraph } from 'lucide-react';
+import { afdShortSearchParams } from '@/lib/nuqs';
 
 export default function AFDShortClientPage() {
-  const searchParams = useSearchParams();
-  const [languages, setLanguages] = useState<string[]>([]);
-  const [regex, setRegex] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Usar nuqs para manejar el estado de la URL
+  const [{ regex, languages }, setParams] = useQueryStates(afdShortSearchParams);
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
-
-  // Restaurar estado desde URL al montar
-  useEffect(() => {
-    if (isInitialized) return;
-    
-    const regexParam = searchParams.get('regex');
-    const languagesParam = searchParams.get('languages');
-    
-    if (regexParam) {
-      setRegex(regexParam);
-    }
-    if (languagesParam) {
-      setLanguages(languagesParam.split(',').filter(Boolean));
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized]);
 
   const handleAnalyze = async () => {
     // Construir AFD óptimo usando árbol sintáctico
@@ -77,7 +58,7 @@ export default function AFDShortClientPage() {
         <CardContent className="space-y-4">
           <LanguageInput
             languages={languages}
-            onChange={setLanguages}
+            onChange={(newLangs) => setParams({ languages: newLangs })}
             placeholder="Ej: L={a,d}"
             maxLanguages={5}
           />
@@ -86,13 +67,13 @@ export default function AFDShortClientPage() {
             <label className="text-sm font-medium">Expresión Regular</label>
             <Input
               value={regex}
-              onChange={(e) => setRegex(e.target.value)}
+              onChange={(e) => setParams({ regex: e.target.value })}
               placeholder="Ej: (a|b)*abb"
               className="font-mono"
             />
             <SymbolSlider
               symbols={commonSymbols.regex}
-              onSelect={(symbol) => setRegex(prev => prev + symbol)}
+              onSelect={(symbol) => setParams({ regex: regex + symbol })}
               variant="outline"
             />
           </div>

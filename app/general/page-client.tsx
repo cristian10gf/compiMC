@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { CollapsibleSection, SegmentedControl } from '@/components/shared';
 import { useCompilerFull, useHistory } from '@/hooks';
 import { createCustomTokenPatterns } from '@/lib/algorithms/general/compiler';
 import { Loader2, Plus, X, CheckCircle2, XCircle } from 'lucide-react';
+import { compilerSearchParams } from '@/lib/nuqs';
 
 interface CustomToken {
   id: string;
@@ -18,12 +19,31 @@ interface CustomToken {
 }
 
 export default function GeneralClientPage() {
-  const searchParams = useSearchParams();
+  // Usar nuqs para manejar el estado de la URL
+  const [{ code, tokens: tokensJson }, setParams] = useQueryStates(compilerSearchParams);
+  
   const { addEntry } = useHistory();
   
   const [activeTab, setActiveTab] = useState<'analysis' | 'synthesis'>('analysis');
+  
+  // Parsear tokens desde JSON
   const [customTokens, setCustomTokens] = useState<CustomToken[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Sincronizar customTokens desde URL al montar
+  useEffect(() => {
+    if (tokensJson) {
+      try {
+        const parsedTokens = JSON.parse(tokensJson);
+        setCustomTokens(parsedTokens.map((t: { symbol: string; regex: string }, idx: number) => ({
+          id: `${Date.now()}-${idx}`,
+          symbol: t.symbol,
+          regex: t.regex,
+        })));
+      } catch {
+        // Ignorar errores de parseo
+      }
+    }
+  }, []); // Solo al montar
   
   const { 
     sourceCode,
@@ -34,38 +54,21 @@ export default function GeneralClientPage() {
     compile: compileCode,
   } = useCompilerFull();
 
-  // Restaurar estado desde URL al montar
+  // Sincronizar code desde URL al montar
   useEffect(() => {
-    if (isInitialized) return;
-    
-    const codeParam = searchParams.get('code');
-    const tokensParam = searchParams.get('tokens');
-    
-    if (codeParam) {
-      setSourceCode(decodeURIComponent(codeParam));
+    if (code) {
+      setSourceCode(code);
     }
-    if (tokensParam) {
-      try {
-        const parsedTokens = JSON.parse(decodeURIComponent(tokensParam));
-        setCustomTokens(parsedTokens.map((t: { symbol: string; regex: string }, idx: number) => ({
-          id: `${Date.now()}-${idx}`,
-          symbol: t.symbol,
-          regex: t.regex,
-        })));
-      } catch {
-        // Ignorar errores de parseo
-      }
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized, setSourceCode]);
+  }, []); // Solo al montar
 
   const addCustomToken = () => {
-    setCustomTokens([...customTokens, { id: Date.now().toString(), symbol: '', regex: '' }]);
+    const newTokens = [...customTokens, { id: Date.now().toString(), symbol: '', regex: '' }];
+    setCustomTokens(newTokens);
   };
 
   const removeCustomToken = (id: string) => {
-    setCustomTokens(customTokens.filter(token => token.id !== id));
+    const newTokens = customTokens.filter(token => token.id !== id);
+    setCustomTokens(newTokens);
   };
 
   // Convertir tokens personalizados a patrones
@@ -74,6 +77,14 @@ export default function GeneralClientPage() {
   }, [customTokens]);
 
   const handleCompile = async () => {
+    // Actualizar URL con los valores actuales
+    setParams({
+      code: sourceCode,
+      tokens: customTokens.length > 0 
+        ? JSON.stringify(customTokens.map(t => ({ symbol: t.symbol, regex: t.regex })))
+        : null,
+    });
+    
     await compileCode(customPatterns);
     
     // Guardar en historial

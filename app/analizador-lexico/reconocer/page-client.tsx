@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +8,11 @@ import { AutomataGraphCytoscape, StringRecognitionVisualizer } from '@/component
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { useHistory, useAutomata } from '@/hooks';
 import { Loader2 } from 'lucide-react';
+import { reconocerSearchParams } from '@/lib/nuqs';
 
 export default function ReconocerClientPage() {
-  const searchParams = useSearchParams();
-  const [regex, setRegex] = useState('');
-  const [inputString, setInputString] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Usar nuqs para manejar el estado de la URL
+  const [{ regex, testString }, setParams] = useQueryStates(reconocerSearchParams);
   
   const { 
     automaton, 
@@ -22,27 +20,10 @@ export default function ReconocerClientPage() {
     error,
     recognitionResult,
     buildAutomaton, 
-    testString 
+    testString: testStringFn 
   } = useAutomata();
   
   const { addEntry } = useHistory();
-
-  // Restaurar estado desde URL al montar
-  useEffect(() => {
-    if (isInitialized) return;
-    
-    const regexParam = searchParams.get('regex');
-    const testStringParam = searchParams.get('testString');
-    
-    if (regexParam) {
-      setRegex(regexParam);
-    }
-    if (testStringParam) {
-      setInputString(testStringParam);
-    }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized]);
 
   const handleBuildAutomaton = async () => {
     await buildAutomaton({
@@ -55,16 +36,16 @@ export default function ReconocerClientPage() {
   const handleRecognize = async () => {
     if (!automaton) return;
 
-    const result = await testString(inputString);
+    const result = await testStringFn(testString);
     
     if (result) {
       addEntry({
         type: 'lexical-reconocer',
-        input: `${regex} | ${inputString}`,
+        input: `${regex} | ${testString}`,
         metadata: { 
           success: result.accepted,
           regex,
-          testString: inputString,
+          testString,
         },
       });
     }
@@ -85,13 +66,13 @@ export default function ReconocerClientPage() {
             <label className="text-sm font-medium">Expresión Regular</label>
             <Input
               value={regex}
-              onChange={(e) => setRegex(e.target.value)}
+              onChange={(e) => setParams({ regex: e.target.value })}
               placeholder="Ej: (a|b)*abb"
               className="font-mono"
             />
             <SymbolSlider
               symbols={commonSymbols.regex}
-              onSelect={(symbol) => setRegex(prev => prev + symbol)}
+              onSelect={(symbol) => setParams({ regex: regex + symbol })}
               variant="outline"
             />
           </div>
@@ -137,21 +118,21 @@ export default function ReconocerClientPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Input
-                  value={inputString}
-                  onChange={(e) => setInputString(e.target.value)}
+                  value={testString}
+                  onChange={(e) => setParams({ testString: e.target.value })}
                   placeholder="Ej: aaabbb"
                   className="font-mono"
                 />
                 <SymbolSlider
                   symbols={automaton.automatonAFD.alphabet}
-                  onSelect={(symbol) => setInputString(prev => prev + symbol)}
+                  onSelect={(symbol) => setParams({ testString: testString + symbol })}
                   variant="outline"
                 />
               </div>
 
               <Button
                 onClick={handleRecognize}
-                disabled={inputString.length === 0 || isProcessing}
+                disabled={testString.length === 0 || isProcessing}
                 className="w-full sm:w-auto"
               >
                 {isProcessing && automaton ? (
@@ -170,7 +151,7 @@ export default function ReconocerClientPage() {
           {recognitionResult && (
             <StringRecognitionVisualizer
               className='h-full rounded-lg border bg-muted/20 overflow-hidden'
-              key={`${inputString}-${recognitionResult.accepted}`}
+              key={`${testString}-${recognitionResult.accepted}`}
               automaton={automaton.automatonAFD}
               result={recognitionResult}
             />

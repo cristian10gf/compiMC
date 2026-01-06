@@ -11,8 +11,8 @@
  * 5. Reconocimiento de cadena con animación
  */
 
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
+import { useQueryStates } from 'nuqs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleSection } from '@/components/shared';
@@ -33,9 +33,12 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
+import { asdSearchParams } from '@/lib/nuqs';
 
 export default function ASDClientPage() {
-  const searchParams = useSearchParams();
+  // Usar nuqs para manejar el estado de la URL
+  const [{ grammar, terminals, autoDetect }, setParams] = useQueryStates(asdSearchParams);
+  
   const { addEntry } = useHistory();
   
   const {
@@ -48,45 +51,52 @@ export default function ASDClientPage() {
     hasAnalysis,
   } = useDescendenteAnalysis();
 
-  // Estado para valores iniciales del historial
-  const [initialValues, setInitialValues] = useState<{
-    grammarText?: string;
-    terminals?: string;
-    autoDetect?: boolean;
-  } | undefined>(undefined);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Valores iniciales para el componente de gramática (siempre pasan los valores de URL)
+  const initialValues = useMemo(() => ({
+    grammarText: grammar,
+    terminals: terminals,
+    autoDetect: autoDetect,
+  }), [grammar, terminals, autoDetect]);
 
-  // Restaurar estado desde URL al montar
+  // Ejecutar análisis automáticamente si hay parámetros válidos en la URL (navegación desde historial)
+  const hasAutoAnalyzed = useRef(false);
+  
+  // Resetear el flag cuando cambien los parámetros de URL
   useEffect(() => {
-    if (isInitialized) return;
-    
-    const grammarParam = searchParams.get('grammar');
-    const terminalsParam = searchParams.get('terminals');
-    const autoDetectParam = searchParams.get('autoDetect');
-    
-    if (grammarParam || terminalsParam) {
-      setInitialValues({
-        grammarText: grammarParam ? decodeURIComponent(grammarParam) : undefined,
-        terminals: terminalsParam || undefined,
-        autoDetect: autoDetectParam === 'true',
+    hasAutoAnalyzed.current = false;
+  }, [grammar, terminals, autoDetect]);
+  
+  useEffect(() => {
+    // Solo ejecutar una vez si hay gramática válida en la URL y no se ha analizado aún
+    if (grammar && grammar.trim() && !hasAutoAnalyzed.current && !hasAnalysis) {
+      hasAutoAnalyzed.current = true;
+      analyze({
+        grammarText: grammar,
+        terminals: terminals,
+        autoDetectTerminals: autoDetect,
       });
     }
-    
-    setIsInitialized(true);
-  }, [searchParams, isInitialized]);
+  }, [grammar, terminals, autoDetect, analyze, hasAnalysis]);
 
   /**
    * Maneja el análisis de la gramática
    */
   const handleAnalyze = useCallback(async (
     grammarText: string,
-    terminals: string,
-    autoDetect: boolean
+    terminalStr: string,
+    autoDetectTerminals: boolean
   ) => {
+    // Actualizar los parámetros de URL con los valores actuales
+    setParams({
+      grammar: grammarText,
+      terminals: terminalStr,
+      autoDetect: autoDetectTerminals,
+    });
+    
     const result = await analyze({
       grammarText,
-      terminals,
-      autoDetectTerminals: autoDetect,
+      terminals: terminalStr,
+      autoDetectTerminals,
     });
 
     // Guardar en historial con todos los inputs
@@ -96,11 +106,11 @@ export default function ASDClientPage() {
       metadata: {
         success: !error,
         grammarText,
-        terminals,
-        autoDetectTerminals: autoDetect,
+        terminals: terminalStr,
+        autoDetectTerminals,
       },
     });
-  }, [analyze, addEntry, error]);
+  }, [analyze, addEntry, error, setParams]);
 
   /**
    * Maneja el reconocimiento de una cadena
