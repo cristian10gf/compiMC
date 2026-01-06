@@ -2,6 +2,13 @@ import { FeatureGrid } from '@/components/home';
 import { HeroSection } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+};
 
 export default function HomePage() {
   return (
