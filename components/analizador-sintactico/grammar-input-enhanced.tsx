@@ -84,27 +84,38 @@ export function GrammarInputEnhanced({
   className,
   initialValues,
 }: GrammarInputEnhancedProps) {
-  const [grammarText, setGrammarText] = useState(initialValues?.grammarText || EXAMPLES[0].grammar);
-  const [terminalsInput, setTerminalsInput] = useState(initialValues?.terminals || EXAMPLES[0].terminals);
-  const [autoDetect, setAutoDetect] = useState(initialValues?.autoDetect ?? false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Usar valores de URL si existen, sino usar el ejemplo por defecto
+  const [grammarText, setGrammarText] = useState(
+    initialValues?.grammarText || EXAMPLES[0].grammar
+  );
+  const [terminalsInput, setTerminalsInput] = useState(
+    initialValues?.terminals || EXAMPLES[0].terminals
+  );
+  const [autoDetect, setAutoDetect] = useState(
+    initialValues?.autoDetect ?? false
+  );
 
-  // Actualizar valores cuando cambian los initialValues (restaurar desde historial)
+  // Sincronizar estados cuando cambien los initialValues (navegación desde historial)
   useEffect(() => {
-    if (isInitialized) return;
-    
-    if (initialValues?.grammarText) {
-      setGrammarText(initialValues.grammarText);
+    // Actualizar gramática solo si hay un valor válido
+    if (initialValues?.grammarText !== undefined) {
+      setGrammarText(initialValues.grammarText || EXAMPLES[0].grammar);
     }
-    if (initialValues?.terminals) {
-      setTerminalsInput(initialValues.terminals);
+  }, [initialValues?.grammarText]);
+
+  useEffect(() => {
+    // Actualizar terminales solo si hay un valor válido
+    if (initialValues?.terminals !== undefined) {
+      setTerminalsInput(initialValues.terminals || EXAMPLES[0].terminals);
     }
+  }, [initialValues?.terminals]);
+
+  useEffect(() => {
+    // Actualizar autoDetect
     if (initialValues?.autoDetect !== undefined) {
       setAutoDetect(initialValues.autoDetect);
     }
-    
-    setIsInitialized(true);
-  }, [initialValues, isInitialized]);
+  }, [initialValues?.autoDetect]);
 
   const loadExample = useCallback((index: number) => {
     setGrammarText(EXAMPLES[index].grammar);

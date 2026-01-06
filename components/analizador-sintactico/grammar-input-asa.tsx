@@ -68,23 +68,23 @@ export function GrammarInputASA({
   className,
   initialValues,
 }: GrammarInputASAProps) {
-  const [grammarText, setGrammarText] = useState(initialValues?.grammarText || EXAMPLES[0].grammar);
-  const [terminalsInput, setTerminalsInput] = useState(initialValues?.terminals || EXAMPLES[0].terminals);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Usar valores de URL si existen, sino usar el ejemplo por defecto
+  const [grammarText, setGrammarText] = useState(
+    initialValues?.grammarText || EXAMPLES[0].grammar
+  );
+  const [terminalsInput, setTerminalsInput] = useState(
+    initialValues?.terminals || EXAMPLES[0].terminals
+  );
 
-  // Actualizar valores cuando cambian los initialValues
+  // Sincronizar estados cuando cambien los initialValues (navegación desde historial)
   useEffect(() => {
-    if (isInitialized) return;
-    
-    if (initialValues?.grammarText) {
+    if (initialValues?.grammarText !== undefined) {
       setGrammarText(initialValues.grammarText);
     }
-    if (initialValues?.terminals) {
+    if (initialValues?.terminals !== undefined) {
       setTerminalsInput(initialValues.terminals);
     }
-    
-    setIsInitialized(true);
-  }, [initialValues, isInitialized]);
+  }, [initialValues?.grammarText, initialValues?.terminals]);
 
   const loadExample = useCallback((index: number) => {
     setGrammarText(EXAMPLES[index].grammar);
