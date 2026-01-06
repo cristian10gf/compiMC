@@ -15,7 +15,6 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import CytoscapeComponent from 'react-cytoscapejs';
 import cytoscape from 'cytoscape';
-// @ts-expect-error - No hay tipos disponibles para este módulo
 import coseBilkent from 'cytoscape-cose-bilkent';
 
 // Registrar la extensión solo una vez
