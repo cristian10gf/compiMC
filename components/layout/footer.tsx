@@ -14,8 +14,7 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="font-semibold text-sm">Sobre CompiMC</h3>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Sistema web educativo para el análisis y simulación de compiladores,
-              desarrollado con Next.js y React.
+              Sistema web educativo para el análisis y simulación de compiladores.
             </p>
           </div>
 
@@ -90,13 +89,6 @@ export function Footer() {
                 <Github className="size-4" />
                 <span>GitHub</span>
                 <ExternalLink className="size-3" />
-              </a>
-              <a
-                href="mailto:contact@compimc.dev"
-                className="flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-foreground"
-              >
-                <Mail className="size-4" />
-                <span>Email</span>
               </a>
             </div>
           </div>
