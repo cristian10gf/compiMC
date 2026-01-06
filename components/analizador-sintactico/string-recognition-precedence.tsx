@@ -42,6 +42,8 @@ interface StringRecognitionPrecedenceProps {
   terminals?: string[];
   isProcessing?: boolean;
   className?: string;
+  value?: string; // Valor controlado desde la URL
+  onChange?: (value: string) => void; // Callback para actualizar la URL
 }
 
 /**
@@ -114,14 +116,18 @@ export function StringRecognitionPrecedence({
   terminals = [],
   isProcessing = false,
   className,
+  value = '',
+  onChange,
 }: StringRecognitionPrecedenceProps) {
-  const [inputString, setInputString] = useState('');
   const [result, setResult] = useState<ParsingResult | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1000);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Usar value directamente (controlled component)
+  const inputString = value;
 
   const totalSteps = result?.steps?.length || 0;
 
@@ -214,7 +220,7 @@ export function StringRecognitionPrecedence({
           <div className="flex gap-2">
             <Input
               value={inputString}
-              onChange={(e) => setInputString(e.target.value)}
+              onChange={(e) => onChange?.(e.target.value)}
               placeholder={terminals.length > 0 ? "Ej: id+id*id o id + id * id" : "Ej: id + id * id"}
               className="font-mono flex-1"
               onKeyDown={(e) => e.key === 'Enter' && handleRecognize()}

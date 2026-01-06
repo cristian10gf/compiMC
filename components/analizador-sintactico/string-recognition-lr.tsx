@@ -28,6 +28,8 @@ interface StringRecognitionLRProps {
   hasLr1?: boolean;
   hasLalr?: boolean;
   className?: string;
+  value?: string; // Valor controlado desde la URL
+  onChange?: (value: string) => void; // Callback para actualizar la URL
 }
 
 const LR_TYPE_OPTIONS = [
@@ -46,10 +48,14 @@ export function StringRecognitionLR({
   hasLr1 = true,
   hasLalr = true,
   className,
+  value = '',
+  onChange,
 }: StringRecognitionLRProps) {
-  const [input, setInput] = useState('');
   const [result, setResult] = useState<ParsingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Usar value directamente (controlled component)
+  const input = value;
 
   const handleRecognize = useCallback(async () => {
     if (!input.trim()) {
@@ -104,7 +110,7 @@ export function StringRecognitionLR({
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => onChange?.(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Cadena a reconocer (símbolos separados por espacios)"
             className="font-mono"
@@ -132,7 +138,7 @@ export function StringRecognitionLR({
               key={idx}
               variant="outline"
               className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
-              onClick={() => setInput(prev => prev ? `${prev} ${t}` : t)}
+              onClick={() => onChange?.(input ? `${input} ${t}` : t)}
             >
               {t}
             </Badge>

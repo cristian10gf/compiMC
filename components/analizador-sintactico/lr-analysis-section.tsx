@@ -27,6 +27,8 @@ interface LRAnalysisSectionProps {
   onRecognize: (input: string, type: LRAnalysisType) => Promise<ParsingResult | null>;
   isProcessing?: boolean;
   className?: string;
+  value?: string; // Valor controlado desde la URL
+  onValueChange?: (value: string) => void; // Callback para actualizar la URL
 }
 
 export function LRAnalysisSection({
@@ -39,6 +41,8 @@ export function LRAnalysisSection({
   onRecognize,
   isProcessing = false,
   className,
+  value = '',
+  onValueChange,
 }: LRAnalysisSectionProps) {
   // Estado para controlar qué autómata mostrar en las secciones colapsables de grafos
   const [showSlrGraph, setShowSlrGraph] = useState(false);
@@ -253,6 +257,8 @@ export function LRAnalysisSection({
               hasSlr={!!slr && slr.conflicts.length === 0}
               hasLr1={!!lr1 && lr1.conflicts.length === 0}
               hasLalr={!!lalr && lalr.conflicts.length === 0}
+              value={value}
+              onChange={onValueChange}
             />
           </CollapsibleSection>
         )}
