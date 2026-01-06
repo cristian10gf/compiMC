@@ -6,6 +6,7 @@ import { HistoryProvider } from "@/lib/context/history-context";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { AppLayout } from '@/components/layout';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'});
 
@@ -40,14 +41,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <CompilerProvider>
-            <HistoryProvider>
-              <AppLayout>
-                {children}
-              </AppLayout>
-              <Toaster />
-            </HistoryProvider>
-          </CompilerProvider>
+          <NuqsAdapter>
+            <CompilerProvider>
+              <HistoryProvider>
+                <AppLayout>
+                  {children}
+                </AppLayout>
+                <Toaster />
+              </HistoryProvider>
+            </CompilerProvider>
+          </NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>
