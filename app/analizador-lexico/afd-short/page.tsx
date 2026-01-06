@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { HeroSection } from '@/components/layout';
 import AFDShortClientPage from './page-client';
 import { Metadata } from 'next';
@@ -17,7 +18,9 @@ export default function AFDShortPage() {
       />
 
       <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <AFDShortClientPage />
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Cargando...</div>}>
+          <AFDShortClientPage />
+        </Suspense>
       </section>
     </>
   );

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { HeroSection } from '@/components/layout';
 import { Metadata } from 'next';
 import ERtoAFClientPage from './page-client';
@@ -16,7 +17,9 @@ export default function ERtoAFPage() {
       />
 
       <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <ERtoAFClientPage />
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Cargando...</div>}>
+          <ERtoAFClientPage />
+        </Suspense>
       </section>
     </>
   );

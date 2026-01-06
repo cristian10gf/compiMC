@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import ASDClientPage from './page-client';
 
@@ -22,7 +23,9 @@ export default function ASDPage() {
       </section>
 
       <section className="container mx-auto px-4 pb-8 sm:px-6 lg:px-8">
-        <ASDClientPage />
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Cargando...</div>}>
+          <ASDClientPage />
+        </Suspense>
       </section>
     </>
   );
