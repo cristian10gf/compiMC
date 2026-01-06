@@ -14,7 +14,6 @@ export {
   afnToAfd,
   buildAFDFull,
   buildAFDShort,
-  minimizeDFA,
   optimizeBySignificantStates,
   getSignificantStates,
   isDeterministic,
