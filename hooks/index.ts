@@ -5,9 +5,6 @@
 export { useAutomata } from './use-automata';
 export type { UseAutomataReturn } from './use-automata';
 
-export { useGraph } from './use-graph';
-export type { UseGraphReturn } from './use-graph';
-
 export { 
   useSyntaxAnalysis,
   useDescendenteAnalysis,
