@@ -96,6 +96,7 @@ export const asdSearchParams = {
   grammar: parseAsGrammar, // Usar parser personalizado
   terminals: parseAsString.withDefault(''),
   autoDetect: parseAsBoolean.withDefault(false),
+  testString: parseAsString.withDefault(''), // Cadena a probar
 };
 
 export type ASDSearchParams = inferParserType<typeof asdSearchParams>;
@@ -111,6 +112,7 @@ export const asaSearchParams = {
   terminals: parseAsString.withDefault(''),
   method: parseAsStringLiteral(asaMethods).withDefault('precedence'),
   lrType: parseAsStringLiteral(lrTypes).withDefault('SLR'),
+  testString: parseAsString.withDefault(''), // Cadena a probar
 };
 
 export type ASASearchParams = inferParserType<typeof asaSearchParams>;
