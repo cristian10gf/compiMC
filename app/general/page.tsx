@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default function GeneralPage() {
   return (
     <>
-      <section className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <section className="container mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-balance font-bold text-3xl sm:text-4xl mb-2">
+          <h1 className="text-balance font-bold text-3xl sm:text-4xl mb-2 flex flex-row-reverse">
             Compilador General
           </h1>
           <p className="text-pretty text-muted-foreground">

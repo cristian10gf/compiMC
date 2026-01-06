@@ -1,6 +1,12 @@
 import { HeroSection } from '@/components/layout';
 import { FeatureCard } from '@/components/home';
 import { Code2, GitBranch, Workflow, CheckCircle } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Analizador Léxico - CompiMC',
+  description: 'Herramientas para análisis léxico: construcción de autómatas, conversión ER↔AF y reconocimiento de cadenas.',
+};
 
 export default function AnalizadorLexicoPage() {
   return (
