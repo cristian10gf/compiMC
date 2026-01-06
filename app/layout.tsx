@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { AppLayout } from '@/components/layout';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { Analytics } from "@vercel/analytics/next"
 
 const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'});
 
@@ -52,6 +53,7 @@ export default function RootLayout({
             </CompilerProvider>
           </NuqsAdapter>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
