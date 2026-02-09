@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CompiMC
 
-## Getting Started
+Sistema educativo interactivo para el aprendizaje y simulación de análisis de compiladores. Visualiza autómatas, árboles de derivación y tablas de parsing en tiempo real.
 
-First, run the development server:
+## Características Principales
+
+### Analizador Léxico
+- **Construcción de Autómatas**: AFD completo y óptimo mediante algoritmo de Thompson
+- **Conversión ER ↔ AF**: Transformación bidireccional entre expresiones regulares y autómatas
+- **Reconocimiento de Cadenas**: Validación y visualización paso a paso de transiciones
+- **Visualización Interactiva**: Grafos de autómatas con Cytoscape.js
+- **Árboles Sintácticos**: Visualización de árboles de expresiones regulares
+- **Tablas de Transiciones**: Followpos, subconjuntos y más
+
+### Análisis Sintáctico Descendente (ASD)
+- Cálculo automático de conjuntos **First** y **Follow**
+- Construcción de **tabla de parsing LL(1)**
+- Análisis por **precedencia de operadores**
+- **Traza de pila** paso a paso
+- Validación de gramáticas
+
+### Análisis Sintáctico Ascendente (ASA)
+- Análisis **LR(0)**, **SLR(1)** y **LALR(1)**
+- Visualización de **autómata LR** (conjuntos canónicos)
+- Tablas **Action/GoTo**
+- Traza de análisis shift-reduce
+- Detección de conflictos
+
+### Compilador General
+- Pipeline completo: Léxico → Sintáctico → Código Intermedio → Optimización → Código Objeto
+- Tabla de tokens y lexemas
+- Generación de código de tres direcciones
+- Optimización de código
+- Generación de código ensamblador
+
+## Tecnologías
+
+| Categoría | Tecnología |
+|-----------|------------|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19 + TypeScript 5 |
+| Estilos | Tailwind CSS 4 + shadcn/ui |
+| Grafos | Cytoscape.js |
+| Estado | Context API + nuqs |
+| Iconos | Lucide React + Tabler Icons |
+| Animaciones | tw-animate-css |
+
+## Instalación
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/compimc.git
+cd compimc
+
+# Instalar dependencias
+pnpm install
+
+# Ejecutar en desarrollo
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── page.tsx                    # Home
+├── general/                    # Compilador completo
+├── analizador-lexico/          # Módulos de análisis léxico
+│   ├── afd-full/               # AFD completo
+│   ├── afd-short/              # AFD óptimo
+│   ├── af-to-er/               # Autómata → Expresión Regular
+│   └── reconocer/              # Reconocimiento de cadenas
+├── asd/                        # Análisis sintáctico descendente
+└── asa/                        # Análisis sintáctico ascendente
 
-## Learn More
+components/
+├── analizador-lexico/          # Componentes léxicos
+├── analizador-sintactico/      # Componentes sintácticos
+├── general/                    # Componentes del compilador
+├── layout/                     # Layout y navegación
+└── ui/                         # shadcn/ui
 
-To learn more about Next.js, take a look at the following resources:
+lib/
+├── algorithms/                 # Algoritmos de compilación
+├── types/                      # Definiciones TypeScript
+├── context/                    # Context API
+└── utils/                      # Utilidades
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+hooks/                          # Hooks personalizados
+├── use-automata.ts             # Construcción y manipulación de autómatas
+├── use-compiler.ts             # Pipeline de compilación
+├── use-syntax-analysis.ts      # Análisis sintáctico
+└── use-history.ts              # Historial de análisis
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts Disponibles
 
-## Deploy on Vercel
+```bash
+pnpm dev      # Servidor de desarrollo
+pnpm build    # Build de producción
+pnpm start    # Servidor de producción
+pnpm lint     # Linting con ESLint
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Capturas de Pantalla
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Analizador Léxico | Análisis Sintáctico | Compilador General |
+|-------------------|---------------------|-------------------|
+| Visualización de autómatas y tablas de transiciones | Tablas First/Follow y parsing LL/LR | Pipeline completo de compilación |
+
+## Documentación
+
+La documentación completa del proyecto se encuentra en la carpeta `/docs`:
+
+- [Plan de Desarrollo](docs/PLAN_DESARROLLO.md) - Arquitectura y fases del proyecto
+- [Quick Start](docs/QUICK_START.md) - Guía de inicio rápido
+- [Especificación de Componentes](docs/COMPONENTS_SPEC.md) - Detalle de todos los componentes
+
+## Licencia
+
+Este proyecto está bajo la licencia especificada en el archivo [LICENSE](LICENSE).
+
+---
+
+Desarrollado con fines educativos para el aprendizaje de teoría de compiladores.
