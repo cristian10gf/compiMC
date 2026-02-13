@@ -215,6 +215,10 @@ export default function ASAClientPage() {
     return recognizeString(input, state.precedenceTable || undefined);
   }, [recognizeString, state.precedenceTable, setParams]);
 
+  const handleTestStringChange = useCallback((value: string) => {
+    setParams({ testString: value });
+  }, [setParams]);
+
   /**
    * Maneja el reconocimiento de cadenas (LR)
    */
@@ -377,7 +381,7 @@ export default function ASAClientPage() {
                 testString={testString}
                 isAutomatic={isAutomatic}
                 onModeChange={handleModeChange}
-                onTestStringChange={(value) => setParams({ testString: value })}
+                onTestStringChange={handleTestStringChange}
                 onGenerateSteps={handleGenerateSteps}
                 isProcessing={isProcessing}
               />
