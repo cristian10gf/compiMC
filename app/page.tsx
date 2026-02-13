@@ -38,7 +38,12 @@ export default function HomePage() {
                 Comenzar con el Compilador General
               </a>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary/30 hover:border-primary hover:bg-primary/10 hover:text-foreground"
+              asChild
+            >
               <a href="/analizador-lexico">
                 <BookOpen className="mr-2" />
                 Explorar Analizador Léxico
@@ -52,14 +57,14 @@ export default function HomePage() {
       <FeatureGrid />
 
       {/* Sección de características adicionales */}
-      <section className="border-t border-border bg-muted/30 py-12 sm:py-16">
+      <section className="border-t border-primary/20 bg-muted/30 py-12 sm:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-balance text-center font-bold text-2xl sm:text-3xl">
             Características Principales
           </h2>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2 text-center">
-              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
                 <svg
                   className="size-6"
                   fill="none"
@@ -80,7 +85,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
                 <svg
                   className="size-6"
                   fill="none"
@@ -101,7 +106,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
                 <svg
                   className="size-6"
                   fill="none"
@@ -122,7 +127,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="space-y-2 text-center">
-              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
                 <svg
                   className="size-6"
                   fill="none"

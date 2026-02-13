@@ -27,10 +27,10 @@ interface PrecedenceTableProps {
 }
 
 const relationColors = {
-  '<': 'text-blue-600 bg-blue-50 dark:bg-blue-950',
-  '>': 'text-green-600 bg-green-50 dark:bg-green-950',
-  '=': 'text-orange-600 bg-orange-50 dark:bg-orange-950',
-  '·': 'text-gray-600 bg-gray-50 dark:bg-gray-950',
+  '<': 'text-blue-700 bg-amber-50/80 hover:bg-amber-100 dark:text-blue-400 dark:bg-blue-950/60 dark:hover:bg-blue-900/70',
+  '>': 'text-green-700 bg-amber-50/80 hover:bg-amber-100 dark:text-green-400 dark:bg-green-950/60 dark:hover:bg-green-900/70',
+  '=': 'text-orange-700 bg-amber-50/80 hover:bg-amber-100 dark:text-orange-400 dark:bg-orange-950/60 dark:hover:bg-orange-900/70',
+  '·': 'text-gray-600 bg-amber-50/40 hover:bg-amber-100/80 dark:text-gray-300 dark:bg-gray-950/60 dark:hover:bg-gray-900/70',
 };
 
 export function PrecedenceTable({

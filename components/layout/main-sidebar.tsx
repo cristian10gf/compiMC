@@ -7,6 +7,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +22,11 @@ import {
   History,
 } from 'lucide-react';
 import { useState } from 'react';
+
+const ThemeToggle = dynamic(
+  () => import('./theme-toggle').then((module) => module.ThemeToggle),
+  { ssr: false }
+);
 
 const navigationItems = [
   {
@@ -153,7 +159,8 @@ export function MainSidebar({ onHistoryToggle, historyOpen }: MainSidebarProps) 
 
           {/* Footer del sidebar */}
           <div className="border-t border-border p-4">
-            <p className="text-center text-xs text-muted-foreground">
+            <ThemeToggle />
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               CompiMC v1.0
               <br />
               Sistema de Análisis de Compiladores

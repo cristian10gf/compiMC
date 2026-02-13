@@ -32,7 +32,7 @@ export function CollapsibleSection({
     <div className={cn('rounded-lg border border-border bg-card', className)}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-muted/50"
+        className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-primary/10"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {icon && <div className="shrink-0 text-muted-foreground">{icon}</div>}
