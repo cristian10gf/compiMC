@@ -49,7 +49,7 @@ Sistema educativo interactivo para el aprendizaje y simulación de análisis de 
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/compimc.git
+git clone https://github.com/cristian10gf/compimc.git
 cd compimc
 
 # Instalar dependencias
