@@ -42,7 +42,7 @@ export function CollapsibleSection({
       className={cn('rounded-lg border border-border bg-card', className)}
     >
       <AccordionItem value={value} className="border-none">
-        <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
+        <AccordionTrigger className="px-4 hover:no-underline hover:bg-primary/10">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {icon && <div className="shrink-0 text-muted-foreground">{icon}</div>}
             <h3 className="font-semibold text-base sm:text-lg truncate">{title}</h3>
@@ -118,7 +118,7 @@ export function CollapsibleItem({
       value={value}
       className={cn('rounded-lg border border-border bg-card', className)}
     >
-      <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50">
+      <AccordionTrigger className="px-4 hover:no-underline hover:bg-primary/10">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {icon && <div className="shrink-0 text-muted-foreground">{icon}</div>}
           <h3 className="font-semibold text-base sm:text-lg truncate">{title}</h3>
