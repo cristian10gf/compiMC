@@ -80,8 +80,8 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="font-semibold text-sm">Contacto</h3>
             <div className="flex flex-col gap-2">
-              <a
-                href="https://github.com"
+              <Link
+                href="https://github.com/cristian10gf/compiMC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-foreground"
@@ -89,7 +89,7 @@ export function Footer() {
                 <Github className="size-4" />
                 <span>GitHub</span>
                 <ExternalLink className="size-3" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>
