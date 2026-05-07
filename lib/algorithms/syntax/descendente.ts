@@ -1181,7 +1181,7 @@ export function parseGrammarText(
             break;
           }
           const char = remaining[0];
-          if (char.trim() !== '') {
+          if (char !== ' ' && char !== '\t' && char !== '\n' && char !== '\r') {
             symbols.push(char);
             detectedTerminals.add(char);
           }
@@ -1191,7 +1191,7 @@ export function parseGrammarText(
 
         // Tomar el siguiente caracter como terminal
         const char = remaining[0];
-        if (char.trim() !== '') {
+        if (char !== ' ' && char !== '\t' && char !== '\n' && char !== '\r') {
           symbols.push(char);
           detectedTerminals.add(char);
         }
