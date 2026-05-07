@@ -1177,6 +1177,9 @@ export function parseGrammarText(
 
         // Si es autodetección, tomar cada caracter como terminal individual
         if (autoDetectTerminals) {
+          if (remaining.length === 0) {
+            break;
+          }
           const char = remaining[0];
           if (char !== ' ' && char !== '\t') {
             symbols.push(char);
