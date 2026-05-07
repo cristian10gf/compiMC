@@ -1175,16 +1175,15 @@ export function parseGrammarText(
         }
         if (matched) continue;
 
-        // Si es autodetección, tomar caracteres especiales como terminales individuales
+        // Si es autodetección, tomar cada caracter como terminal individual
         if (autoDetectTerminals) {
-          // Reconocer palabras reservadas/identificadores minúsculas
-          const wordMatch = remaining.match(/^([a-z]+[a-z0-9]*)/);
-          if (wordMatch) {
-            symbols.push(wordMatch[1]);
-            detectedTerminals.add(wordMatch[1]);
-            remaining = remaining.slice(wordMatch[1].length);
-            continue;
+          const char = remaining[0];
+          if (char !== ' ' && char !== '\t') {
+            symbols.push(char);
+            detectedTerminals.add(char);
           }
+          remaining = remaining.slice(1);
+          continue;
         }
 
         // Tomar el siguiente caracter como terminal
