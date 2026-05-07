@@ -1103,6 +1103,8 @@ export function parseGrammarText(
   const detectedTerminals = new Set<string>();
   let startSymbol = '';
   let prodCounter = 1;
+  const isWhitespace = (char: string) =>
+    char === ' ' || char === '\t' || char === '\n' || char === '\r';
 
   // Parsear terminales de entrada (separados por espacios)
   let inputTerminals: Set<string>;
@@ -1177,11 +1179,8 @@ export function parseGrammarText(
 
         // Si es autodetección, tomar cada caracter como terminal individual
         if (autoDetectTerminals) {
-          if (remaining.length === 0) {
-            break;
-          }
           const char = remaining[0];
-          if (char !== ' ' && char !== '\t' && char !== '\n' && char !== '\r') {
+          if (!isWhitespace(char)) {
             symbols.push(char);
             detectedTerminals.add(char);
           }
@@ -1191,7 +1190,7 @@ export function parseGrammarText(
 
         // Tomar el siguiente caracter como terminal
         const char = remaining[0];
-        if (char !== ' ' && char !== '\t' && char !== '\n' && char !== '\r') {
+        if (!isWhitespace(char)) {
           symbols.push(char);
           detectedTerminals.add(char);
         }
