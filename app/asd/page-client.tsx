@@ -1,136 +1,46 @@
 'use client';
 
-/**
- * Página cliente del Analizador Sintáctico Descendente (LL)
- * 
- * Secciones:
- * 1. Input de gramática con terminales
- * 2. Valores (PRIMERO y SIGUIENTE) con reglas de cálculo
- * 3. Gramática transformada (sin recursividad izquierda, factorizada)
- * 4. Tabla M de parsing
- * 5. Reconocimiento de cadena con animación
- */
-
-import { useCallback, useMemo, useEffect, useRef } from 'react';
-import { useQueryStates } from 'nuqs';
+import { useAsdPage } from '@/hooks/use-asd-page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CollapsibleSection } from '@/components/shared';
-import { 
+import {
   GrammarInputEnhanced,
   FirstFollowTable,
   GrammarTransformations,
   ParsingTable,
   StringRecognitionLL,
 } from '@/components/analizador-sintactico';
-import { useDescendenteAnalysis, useHistory } from '@/hooks';
-import type { ParsingResult } from '@/lib/types';
-import { 
-  Calculator, 
-  GitBranch, 
-  Table2, 
+import {
+  Calculator,
+  GitBranch,
+  Table2,
   TextSearch,
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
-import { asdSearchParams } from '@/lib/nuqs';
 
 export default function ASDClientPage() {
-  // Usar nuqs para manejar el estado de la URL
-  const [{ grammar, terminals, autoDetect, testString }, setParams] = useQueryStates(asdSearchParams);
-  
-  const { addEntry } = useHistory();
-  
   const {
     state,
-    recognition,
     isProcessing,
     error,
-    analyze,
-    recognizeString,
     hasAnalysis,
-  } = useDescendenteAnalysis();
-
-  // Valores iniciales para el componente de gramática (siempre pasan los valores de URL)
-  const initialValues = useMemo(() => ({
-    grammarText: grammar,
-    terminals: terminals,
-    autoDetect: autoDetect,
-  }), [grammar, terminals, autoDetect]);
-
-  // Ejecutar análisis automáticamente si hay parámetros válidos en la URL (navegación desde historial)
-  const hasAutoAnalyzed = useRef(false);
-  
-  // Resetear el flag cuando cambien los parámetros de URL
-  useEffect(() => {
-    hasAutoAnalyzed.current = false;
-  }, [grammar, terminals, autoDetect]);
-  
-  useEffect(() => {
-    // Solo ejecutar una vez si hay gramática válida en la URL y no se ha analizado aún
-    if (grammar && grammar.trim() && !hasAutoAnalyzed.current && !hasAnalysis) {
-      hasAutoAnalyzed.current = true;
-      analyze({
-        grammarText: grammar,
-        terminals: terminals,
-        autoDetectTerminals: autoDetect,
-      });
-    }
-  }, [grammar, terminals, autoDetect, analyze, hasAnalysis]);
-
-  /**
-   * Maneja el análisis de la gramática
-   */
-  const handleAnalyze = useCallback(async (
-    grammarText: string,
-    terminalStr: string,
-    autoDetectTerminals: boolean
-  ) => {
-    // Actualizar los parámetros de URL con los valores actuales
-    setParams({
-      grammar: grammarText,
-      terminals: terminalStr,
-      autoDetect: autoDetectTerminals,
-    });
-    
-    const result = await analyze({
-      grammarText,
-      terminals: terminalStr,
-      autoDetectTerminals,
-    });
-
-    // Guardar en historial con todos los inputs
-    addEntry({
-      type: 'syntax-ll',
-      input: grammarText.split('\n')[0] + '...',
-      metadata: {
-        success: !error,
-        grammarText,
-        terminals: terminalStr,
-        autoDetectTerminals,
-      },
-    });
-  }, [analyze, addEntry, error, setParams]);
-
-  /**
-   * Maneja el reconocimiento de una cadena
-   */
-  const handleRecognize = useCallback(async (input: string): Promise<ParsingResult | null> => {
-    // Guardar la cadena de prueba en la URL
-    setParams({ testString: input });
-    return recognizeString(input);
-  }, [recognizeString, setParams]);
+    testString,
+    setParams,
+    initialValues,
+    handleAnalyze,
+    handleRecognize,
+  } = useAsdPage();
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {/* Input de gramática */}
       <GrammarInputEnhanced
         onAnalyze={handleAnalyze}
         isProcessing={isProcessing}
         initialValues={initialValues}
       />
 
-      {/* Error */}
       {error && (
         <Card className="border-destructive bg-destructive/10">
           <CardContent className="pt-6">
@@ -139,10 +49,8 @@ export default function ASDClientPage() {
         </Card>
       )}
 
-      {/* Resultados */}
       {hasAnalysis && state.workingGrammar && (
         <div className="space-y-4">
-          {/* Encabezado de resultados */}
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Resultados del Análisis</h2>
             {state.ll1Check && (
@@ -165,7 +73,6 @@ export default function ASDClientPage() {
             )}
           </div>
 
-          {/* Conflictos si los hay */}
           {state.ll1Check && !state.ll1Check.isLL1 && state.ll1Check.conflicts.length > 0 && (
             <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950/30">
               <CardHeader className="pb-2">
@@ -176,17 +83,14 @@ export default function ASDClientPage() {
               </CardHeader>
               <CardContent>
                 <ul className="text-sm space-y-1 text-amber-600 dark:text-amber-400">
-                  {state.ll1Check.conflicts.map((conflict, idx) => (
-                    <li key={idx} className="font-mono text-xs">
-                      • {conflict}
-                    </li>
+                  {state.ll1Check.conflicts.map((conflict) => (
+                    <li key={conflict} className="font-mono text-xs">• {conflict}</li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
           )}
 
-          {/* Sección 1: Gramática Transformada */}
           {state.transformation && (
             <CollapsibleSection
               title="Gramática Sin Recursividad y Factorizada"
@@ -208,23 +112,17 @@ export default function ASDClientPage() {
             </CollapsibleSection>
           )}
 
-          {/* Sección 2: Valores (PRIMERO y SIGUIENTE) */}
           {state.firstFollow && (
             <CollapsibleSection
               title="Valores (PRIMERO y SIGUIENTE)"
               icon={<Calculator className="h-5 w-5" />}
-              badge={
-                <Badge variant="secondary" className="text-xs">
-                  {state.firstFollow.length} no terminales
-                </Badge>
-              }
+              badge={<Badge variant="secondary" className="text-xs">{state.firstFollow.length} no terminales</Badge>}
               defaultOpen
             >
               <FirstFollowTable data={state.firstFollow} />
             </CollapsibleSection>
           )}
 
-          {/* Sección 3: Tabla M */}
           {state.parsingTable && state.workingGrammar && (
             <CollapsibleSection
               title="Tabla M de Parsing"
@@ -236,13 +134,10 @@ export default function ASDClientPage() {
               }
               defaultOpen
             >
-              <ParsingTable 
-                table={state.parsingTable}
-              />
+              <ParsingTable table={state.parsingTable} />
             </CollapsibleSection>
           )}
 
-          {/* Sección 4: Reconocimiento de Cadena */}
           {state.parsingTable && state.workingGrammar && (
             <CollapsibleSection
               title="Reconocer Cadena"
