@@ -1,17 +1,21 @@
 'use client';
 
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  LanguageInput, 
-  AutomataGraphCytoscape, 
+import {
+  LanguageInput,
   TransitionTable,
-  SubsetStatesTable 
+  SubsetStatesTable
 } from '@/components/analizador-lexico';
-import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
+const AutomataGraphCytoscape = dynamic(
+  () => import('@/components/analizador-lexico/automata-graph-cytoscape').then(m => ({ default: m.AutomataGraphCytoscape })),
+  { ssr: false, loading: () => <div className="h-64 w-full rounded-lg bg-muted animate-pulse" /> }
+);
+import { SymbolSlider, commonSymbols, CollapsibleSection, MetricGrid } from '@/components/shared';
 import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, GitBranch, Layers, Minimize2 } from 'lucide-react';
 import { afdFullSearchParams } from '@/lib/nuqs';
@@ -106,7 +110,7 @@ export default function AFDFullClientPage() {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
-                Construyendo AFD...
+                Construyendo AFD…
               </>
             ) : (
               'Construir AFD Full'
@@ -135,29 +139,12 @@ export default function AFDFullClientPage() {
           >
             <div className="space-y-4">
               {/* Info del AFN */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Tipo</span>
-                  <span className="font-medium">
-                    {automaton.automatonAFN.type === 'NFA' ? 'AFN' : 
-                     automaton.automatonAFN.type === 'EPSILON_NFA' ? 'AFN-ε' : 'AFD'}
-                  </span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Estados</span>
-                  <span className="font-medium">{automaton.automatonAFN.states.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Transiciones</span>
-                  <span className="font-medium">{automaton.automatonAFN.transitions.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Alfabeto</span>
-                  <span className="font-medium font-mono">
-                    {'{' + automaton.automatonAFN.alphabet.join(', ') + '}'}
-                  </span>
-                </div>
-              </div>
+              <MetricGrid items={[
+                { label: 'Tipo', value: automaton.automatonAFN.type === 'NFA' ? 'AFN' : automaton.automatonAFN.type === 'EPSILON_NFA' ? 'AFN-ε' : 'AFD' },
+                { label: 'Estados', value: automaton.automatonAFN.states.length },
+                { label: 'Transiciones', value: automaton.automatonAFN.transitions.length },
+                { label: 'Alfabeto', value: <span className="font-mono">{'{' + automaton.automatonAFN.alphabet.join(', ') + '}'}</span> },
+              ]} />
 
               {/* Grafo del AFN */}
               <CollapsibleSection title="Grafo del AFN" defaultOpen>
@@ -182,26 +169,12 @@ export default function AFDFullClientPage() {
             >
               <div className="space-y-4">
                 {/* Info del AFD no óptimo */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground block">Tipo</span>
-                    <span className="font-medium">AFD</span>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground block">Estados</span>
-                    <span className="font-medium">{automaton.automatonAFDNonOptimized.states.length}</span>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground block">Transiciones</span>
-                    <span className="font-medium">{automaton.automatonAFDNonOptimized.transitions.length}</span>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground block">Alfabeto</span>
-                    <span className="font-medium font-mono">
-                      {'{' + automaton.automatonAFDNonOptimized.alphabet.join(', ') + '}'}
-                    </span>
-                  </div>
-                </div>
+                <MetricGrid items={[
+                  { label: 'Tipo', value: 'AFD' },
+                  { label: 'Estados', value: automaton.automatonAFDNonOptimized.states.length },
+                  { label: 'Transiciones', value: automaton.automatonAFDNonOptimized.transitions.length },
+                  { label: 'Alfabeto', value: <span className="font-mono">{'{' + automaton.automatonAFDNonOptimized.alphabet.join(', ') + '}'}</span> },
+                ]} />
 
                 {/* Grafo del AFD no óptimo */}
                 <CollapsibleSection title="Grafo del AFD (no óptimo)" defaultOpen>
@@ -240,52 +213,24 @@ export default function AFDFullClientPage() {
                   <h4 className="text-sm font-semibold text-green-700 dark:text-green-400 mb-3">
                     Resumen de Optimización
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                      <span className="text-muted-foreground block">Estados Originales</span>
-                      <span className="font-medium">{automaton.automatonAFDNonOptimized.states.length}</span>
-                    </div>
-                    <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                      <span className="text-muted-foreground block">Estados Finales</span>
-                      <span className="font-medium">{automaton.automatonAFD.states.length}</span>
-                    </div>
-                    <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                      <span className="text-muted-foreground block">Estados Reducidos</span>
-                      <span className="font-medium text-green-600 dark:text-green-400">
-                        {automaton.automatonAFDNonOptimized.states.length - automaton.automatonAFD.states.length}
-                      </span>
-                    </div>
-                    <div className="bg-white/50 dark:bg-black/20 rounded-lg p-3">
-                      <span className="text-muted-foreground block">Estados Unificados</span>
-                      <span className="font-medium font-mono text-yellow-600 dark:text-yellow-400">
-                        {unifiedStates.length > 0 ? unifiedStates.join(', ') : 'Ninguno'}
-                      </span>
-                    </div>
-                  </div>
+                  <MetricGrid
+                    items={[
+                      { label: 'Estados Originales', value: automaton.automatonAFDNonOptimized.states.length, className: 'bg-white/50 dark:bg-black/20' },
+                      { label: 'Estados Finales', value: automaton.automatonAFD.states.length, className: 'bg-white/50 dark:bg-black/20' },
+                      { label: 'Estados Reducidos', value: <span className="text-green-600 dark:text-green-400">{automaton.automatonAFDNonOptimized.states.length - automaton.automatonAFD.states.length}</span>, className: 'bg-white/50 dark:bg-black/20' },
+                      { label: 'Estados Unificados', value: <span className="font-mono text-yellow-600 dark:text-yellow-400">{unifiedStates.length > 0 ? unifiedStates.join(', ') : 'Ninguno'}</span>, className: 'bg-white/50 dark:bg-black/20' },
+                    ]}
+                  />
                 </div>
               )}
 
               {/* Info del AFD óptimo */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Tipo</span>
-                  <span className="font-medium">AFD Minimizado</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Estados</span>
-                  <span className="font-medium">{automaton.automatonAFD.states.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Transiciones</span>
-                  <span className="font-medium">{automaton.automatonAFD.transitions.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Alfabeto</span>
-                  <span className="font-medium font-mono">
-                    {'{' + automaton.automatonAFD.alphabet.join(', ') + '}'}
-                  </span>
-                </div>
-              </div>
+              <MetricGrid items={[
+                { label: 'Tipo', value: 'AFD Minimizado' },
+                { label: 'Estados', value: automaton.automatonAFD.states.length },
+                { label: 'Transiciones', value: automaton.automatonAFD.transitions.length },
+                { label: 'Alfabeto', value: <span className="font-mono">{'{' + automaton.automatonAFD.alphabet.join(', ') + '}'}</span> },
+              ]} />
 
               {/* Grafo del AFD óptimo */}
               <CollapsibleSection title="Grafo del AFD Óptimo" defaultOpen>

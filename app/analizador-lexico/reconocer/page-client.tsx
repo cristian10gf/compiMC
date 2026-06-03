@@ -1,10 +1,15 @@
 'use client';
 
 import { useQueryStates } from 'nuqs';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AutomataGraphCytoscape, StringRecognitionVisualizer } from '@/components/analizador-lexico';
+import { StringRecognitionVisualizer } from '@/components/analizador-lexico';
+const AutomataGraphCytoscape = dynamic(
+  () => import('@/components/analizador-lexico/automata-graph-cytoscape').then(m => ({ default: m.AutomataGraphCytoscape })),
+  { ssr: false, loading: () => <div className="h-64 w-full rounded-lg bg-muted animate-pulse" /> }
+);
 import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
 import { useHistory, useAutomata } from '@/hooks';
 import { Loader2 } from 'lucide-react';
@@ -85,7 +90,7 @@ export default function ReconocerClientPage() {
             {isProcessing && !automaton ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Construyendo...
+                Construyendo…
               </>
             ) : (
               'Construir AFD'
@@ -138,7 +143,7 @@ export default function ReconocerClientPage() {
                 {isProcessing && automaton ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Reconociendo...
+                    Reconociendo…
                   </>
                 ) : (
                   'Reconocer'

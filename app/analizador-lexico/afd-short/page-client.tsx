@@ -1,17 +1,25 @@
 'use client';
 
 import { useQueryStates } from 'nuqs';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  LanguageInput, 
-  SyntaxTreeCytoscape, 
+import {
+  LanguageInput,
   FollowposTable,
   TransitionTable,
-  AutomataGraphCytoscape 
 } from '@/components/analizador-lexico';
-import { SymbolSlider, commonSymbols, CollapsibleSection } from '@/components/shared';
+const SyntaxTreeCytoscape = dynamic(
+  () => import('@/components/analizador-lexico/syntax-tree-cytoscape').then(m => ({ default: m.SyntaxTreeCytoscape })),
+  { ssr: false, loading: () => <div className="h-64 w-full rounded-lg bg-muted animate-pulse" /> }
+);
+
+const AutomataGraphCytoscape = dynamic(
+  () => import('@/components/analizador-lexico/automata-graph-cytoscape').then(m => ({ default: m.AutomataGraphCytoscape })),
+  { ssr: false, loading: () => <div className="h-64 w-full rounded-lg bg-muted animate-pulse" /> }
+);
+import { SymbolSlider, commonSymbols, CollapsibleSection, MetricGrid } from '@/components/shared';
 import { useAutomata, useHistory } from '@/hooks';
 import { Loader2, TreeDeciduous, Table2, GitGraph } from 'lucide-react';
 import { afdShortSearchParams } from '@/lib/nuqs';
@@ -86,7 +94,7 @@ export default function AFDShortClientPage() {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 animate-spin" />
-                Construyendo AFD...
+                Construyendo AFD…
               </>
             ) : (
               'Construir AFD (Método Árbol Sintáctico)'
@@ -115,28 +123,12 @@ export default function AFDShortClientPage() {
           >
             <div className="space-y-4">
               {/* Info del árbol */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Expresión Aumentada</span>
-                  <span className="font-medium font-mono text-xs">{automaton.syntaxTree.regex}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Alfabeto</span>
-                  <span className="font-medium font-mono">
-                    {'{' + automaton.syntaxTree.alphabet.filter(s => s !== '#').join(', ') + '}'}
-                  </span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Posiciones</span>
-                  <span className="font-medium">{automaton.syntaxTree.positions.size}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Anulable (raíz)</span>
-                  <span className={`font-medium ${automaton.syntaxTree.anulable ? 'text-green-600' : 'text-red-600'}`}>
-                    {automaton.syntaxTree.anulable ? 'Sí' : 'No'}
-                  </span>
-                </div>
-              </div>
+              <MetricGrid items={[
+                { label: 'Expresión Aumentada', value: <span className="font-mono text-xs">{automaton.syntaxTree.regex}</span> },
+                { label: 'Alfabeto', value: <span className="font-mono">{'{' + automaton.syntaxTree.alphabet.filter((s: string) => s !== '#').join(', ') + '}'}</span> },
+                { label: 'Posiciones', value: automaton.syntaxTree.positions.size },
+                { label: 'Anulable (raíz)', value: <span className={automaton.syntaxTree.anulable ? 'text-green-600' : 'text-red-600'}>{automaton.syntaxTree.anulable ? 'Sí' : 'No'}</span> },
+              ]} />
 
               {/* Visualización del árbol */}
               <CollapsibleSection title="Visualización del Árbol" defaultOpen>
@@ -168,26 +160,12 @@ export default function AFDShortClientPage() {
           >
             <div className="space-y-4">
               {/* Info del AFD */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Tipo</span>
-                  <span className="font-medium">AFD Óptimo</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Estados</span>
-                  <span className="font-medium">{automaton.automatonAFD.states.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Transiciones</span>
-                  <span className="font-medium">{automaton.automatonAFD.transitions.length}</span>
-                </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <span className="text-muted-foreground block">Alfabeto</span>
-                  <span className="font-medium font-mono">
-                    {'{' + automaton.automatonAFD.alphabet.join(', ') + '}'}
-                  </span>
-                </div>
-              </div>
+              <MetricGrid items={[
+                { label: 'Tipo', value: 'AFD Óptimo' },
+                { label: 'Estados', value: automaton.automatonAFD.states.length },
+                { label: 'Transiciones', value: automaton.automatonAFD.transitions.length },
+                { label: 'Alfabeto', value: <span className="font-mono">{'{' + automaton.automatonAFD.alphabet.join(', ') + '}'}</span> },
+              ]} />
 
               {/* Explicación del método */}
               <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20 p-4">
