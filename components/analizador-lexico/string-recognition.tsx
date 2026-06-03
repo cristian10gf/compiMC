@@ -156,7 +156,7 @@ export function StringRecognition({
           <div className="space-y-2">
             {steps.slice(0, currentStep + 1).map((step, index) => (
               <div
-                key={index}
+                key={step.currentState}
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-lg border transition-all',
                   index === currentStep

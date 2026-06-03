@@ -222,8 +222,8 @@ export function GrammarInputEnhanced({
               {/* Vista previa de terminales */}
               {parsedTerminals.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {parsedTerminals.map((terminal, idx) => (
-                    <Badge key={idx} variant="secondary" className="font-mono text-xs">
+                  {parsedTerminals.map((terminal) => (
+                    <Badge key={terminal} variant="secondary" className="font-mono text-xs">
                       {terminal}
                     </Badge>
                   ))}
@@ -263,7 +263,7 @@ export function GrammarInputEnhanced({
             <div className="flex flex-wrap gap-2">
               {EXAMPLES.map((ex, idx) => (
                 <Button
-                  key={idx}
+                  key={ex.name}
                   variant="outline"
                   size="sm"
                   onClick={() => loadExample(idx)}
@@ -286,7 +286,7 @@ export function GrammarInputEnhanced({
           {isProcessing ? (
             <>
               <span className="animate-spin mr-2">⏳</span>
-              Analizando...
+              Analizando…
             </>
           ) : (
             <>

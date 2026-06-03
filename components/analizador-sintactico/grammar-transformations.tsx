@@ -40,10 +40,10 @@ function GrammarDisplay({ grammar, title }: { grammar: Grammar; title: string })
     return right.map((symbol, idx) => {
       const isNonTerminal = grammar.nonTerminals.includes(symbol);
       const isEpsilon = symbol === 'ε';
-      
+
       return (
         <span
-          key={idx}
+          key={`${idx}-${symbol}`}
           className={cn(
             'font-mono',
             isNonTerminal && 'text-primary font-bold',
@@ -75,7 +75,7 @@ function GrammarDisplay({ grammar, title }: { grammar: Grammar; title: string })
             <span className="text-muted-foreground">→</span>
             <div className="flex flex-wrap items-center gap-x-2">
               {rights.map((right, idx) => (
-                <span key={idx} className="flex items-center">
+                <span key={right.join('')} className="flex items-center">
                   {idx > 0 && <span className="text-muted-foreground mx-1">|</span>}
                   {formatProduction(right)}
                 </span>
@@ -163,9 +163,9 @@ export function GrammarTransformations({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="bg-muted/30 rounded-lg p-4 font-mono text-xs space-y-1 max-h-64 overflow-y-auto">
-                  {transformationSteps.map((step, idx) => (
+                  {transformationSteps.map((step) => (
                     <div
-                      key={idx}
+                      key={step}
                       className={cn(
                         step.startsWith('===') && 'font-bold text-primary mt-2 first:mt-0',
                         step.startsWith('  ') && 'text-muted-foreground ml-4'

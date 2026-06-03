@@ -5,7 +5,7 @@
  * Muestra los 4 valores en estructura circular: símbolo, anulable, primerapos, ultimapos
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TreeNode, SyntaxTree } from '@/lib/types/automata';
 import { Button } from '@/components/ui/button';
 import { Download, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
@@ -199,38 +199,30 @@ function getStylesheet(isDarkMode: boolean): any[] {
 
 export function SyntaxTreeCytoscape({ tree, className }: SyntaxTreeCytoscapeProps) {
   const cyRef = useRef<any>(null);
-  const [elements, setElements] = useState<any[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const elements = useMemo(() => tree ? syntaxTreeToCytoscape(tree) : [], [tree]);
 
   // Detectar modo oscuro
   useEffect(() => {
     const checkDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
-    
+
     checkDarkMode();
-    
+
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
-
-  // Convertir árbol a elementos de Cytoscape
-  useEffect(() => {
-    if (tree) {
-      const els = syntaxTreeToCytoscape(tree);
-      setElements(els);
-    }
-  }, [tree]);
 
   // Aplicar layout cuando los elementos cambien
   useEffect(() => {
     if (cyRef.current && elements.length > 0) {
-      setTimeout(() => {
+      const id = setTimeout(() => {
         cyRef.current.layout({
           name: 'dagre',
           directed: true,
@@ -244,10 +236,11 @@ export function SyntaxTreeCytoscape({ tree, className }: SyntaxTreeCytoscapeProp
           nodeSep: 70,
           rankSep: 90,
         }).run();
-        
+
         // Actualizar estilos cuando cambie el modo
         cyRef.current.style(getStylesheet(isDarkMode));
       }, 100);
+      return () => clearTimeout(id);
     }
   }, [elements, isDarkMode]);
 

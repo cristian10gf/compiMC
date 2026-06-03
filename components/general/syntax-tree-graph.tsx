@@ -5,7 +5,7 @@
  * Usa Cytoscape.js para renderizar el árbol con precedencia de operadores
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import { ASTNode } from '@/lib/types/analysis';
 import { Button } from '@/components/ui/button';
@@ -73,19 +73,11 @@ function astToCytoscape(node: ASTNode | null, parentId?: string): any[] {
 
 export function SyntaxTreeGraph({ tree, className }: SyntaxTreeGraphProps) {
   const cyRef = useRef<any>(null);
-  const [elements, setElements] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (tree) {
-      const els = astToCytoscape(tree);
-      setElements(els);
-    }
-  }, [tree]);
+  const elements = useMemo(() => astToCytoscape(tree), [tree]);
 
   useEffect(() => {
     if (cyRef.current && elements.length > 0) {
-      // Aplicar layout después de que los elementos se hayan agregado
-      setTimeout(() => {
+      const id = setTimeout(() => {
         cyRef.current.layout({
           name: 'dagre',
           directed: true,
@@ -97,6 +89,7 @@ export function SyntaxTreeGraph({ tree, className }: SyntaxTreeGraphProps) {
           animate: true,
         }).run();
       }, 100);
+      return () => clearTimeout(id);
     }
   }, [elements]);
 

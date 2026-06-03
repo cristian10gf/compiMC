@@ -159,9 +159,9 @@ export function LRCanonicalSets({
                 </div>
                 <div className="space-y-0.5">
                   {/* Mostrar TODOS los items sin límite */}
-                  {set.items.map((item, idx) => (
+                  {set.items.map((item) => (
                     <div
-                      key={idx}
+                      key={formatItemString(item)}
                       className="font-mono text-xs text-muted-foreground"
                       title={formatItemString(item)}
                     >
@@ -172,8 +172,8 @@ export function LRCanonicalSets({
                 {set.transitions.size > 0 && !compactMode && (
                   <div className="mt-2 pt-2 border-t border-border/50">
                     <div className="text-xs text-muted-foreground">
-                      {Array.from(set.transitions.entries()).map(([symbol, target], idx) => (
-                        <span key={idx} className="mr-2">
+                      {Array.from(set.transitions.entries()).map(([symbol, target]) => (
+                        <span key={`${symbol}-${target}`} className="mr-2">
                           <span className="text-primary">{symbol}</span>→I{target}
                         </span>
                       ))}

@@ -395,21 +395,22 @@ export function StringRecognitionVisualizer({
     const currentState = automaton.states.find(s => s.label === step.nextState);
     if (currentState) {
       cy.getElementById(currentState.id).addClass('current pulse');
-      
+
       // Remover la clase pulse después de 300ms para crear el efecto de animación
-      setTimeout(() => {
+      const pulseId = setTimeout(() => {
         if (cyRef.current) {
           cyRef.current.getElementById(currentState.id).removeClass('pulse');
           cyRef.current.edges('.pulse').removeClass('pulse');
         }
       }, 300);
+      return () => clearTimeout(pulseId);
     }
   }, [currentStep, steps, automaton]);
 
   // Aplicar layout cuando los elementos cambien
   useEffect(() => {
     if (cyRef.current && elements.length > 0) {
-      setTimeout(() => {
+      const id = setTimeout(() => {
         cyRef.current?.layout({
           name: 'cose-bilkent',
           quality: 'proof',
@@ -427,6 +428,7 @@ export function StringRecognitionVisualizer({
           numIter: 2500,
         } as any).run();
       }, 100);
+      return () => clearTimeout(id);
     }
   }, [elements]);
 
@@ -543,7 +545,7 @@ export function StringRecognitionVisualizer({
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {steps.slice(0, currentStep + 1).map((step, index) => (
               <div
-                key={index}
+                key={step.currentState}
                 className={cn(
                   'flex items-center gap-3 p-2.5 rounded-lg border transition-all',
                   index === currentStep

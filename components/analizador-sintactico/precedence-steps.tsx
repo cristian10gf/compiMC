@@ -299,7 +299,7 @@ export function PrecedenceSteps({
               {isProcessing ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Generando derivaciones...
+                  Generando derivaciones…
                 </>
               ) : (
                 <>
@@ -334,7 +334,7 @@ export function PrecedenceSteps({
                     const isNonTerminal = grammar.nonTerminals.includes(symbol);
                     return (
                       <Badge
-                        key={idx}
+                        key={`${idx}-${symbol}`}
                         variant={isNonTerminal ? 'default' : 'secondary'}
                         className={cn(
                           'font-mono text-sm',
@@ -409,7 +409,7 @@ export function PrecedenceSteps({
               {isProcessing ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Procesando...
+                  Procesando…
                 </>
               ) : (
                 <>
@@ -450,8 +450,8 @@ export function PrecedenceSteps({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {derivationSteps.map((step, idx) => (
-                    <TableRow key={idx} className={idx === derivationSteps.length - 1 ? 'bg-primary/5' : ''}>
+                  {derivationSteps.map((step) => (
+                    <TableRow key={step.stepNumber} className={step.stepNumber === derivationSteps.length ? 'bg-primary/5' : ''}>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="text-xs">
                           {step.stepNumber}
@@ -524,9 +524,9 @@ export function PrecedenceSteps({
                 </Label>
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="flex flex-wrap gap-1.5">
-                    {allRelationsFound.map((rel, idx) => (
+                    {allRelationsFound.map((rel) => (
                       <Badge
-                        key={idx}
+                        key={`${rel.symbol1}-${rel.relation}-${rel.symbol2}`}
                         variant="outline"
                         className={cn(
                           'font-mono text-xs',

@@ -105,9 +105,9 @@ export function FirstFollowTable({ data, className }: FirstFollowTableProps) {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {item.first.length > 0 ? (
-                        item.first.map((symbol, idx) => (
+                        item.first.map((symbol) => (
                           <Badge
-                            key={idx}
+                            key={symbol}
                             variant={symbol === 'ε' ? 'outline' : 'secondary'}
                             className="font-mono text-xs"
                           >
@@ -122,9 +122,9 @@ export function FirstFollowTable({ data, className }: FirstFollowTableProps) {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {item.follow.length > 0 ? (
-                        item.follow.map((symbol, idx) => (
+                        item.follow.map((symbol) => (
                           <Badge
-                            key={idx}
+                            key={symbol}
                             variant={symbol === '$' ? 'default' : 'secondary'}
                             className="font-mono text-xs"
                           >
@@ -160,9 +160,9 @@ export function FirstFollowTable({ data, className }: FirstFollowTableProps) {
                     {item.firstRules && item.firstRules.length > 0 && (
                       <div className="ml-4 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground">PRIMERO:</p>
-                        {item.firstRules.map((rule, idx) => (
+                        {item.firstRules.map((rule) => (
                           <div
-                            key={idx}
+                            key={rule.rule}
                             className="text-xs bg-muted/30 p-2 rounded flex items-start gap-2"
                           >
                             <code className="text-primary shrink-0">{rule.rule}</code>
@@ -177,9 +177,9 @@ export function FirstFollowTable({ data, className }: FirstFollowTableProps) {
                     {item.followRules && item.followRules.length > 0 && (
                       <div className="ml-4 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground">SIGUIENTE:</p>
-                        {item.followRules.map((rule, idx) => (
+                        {item.followRules.map((rule) => (
                           <div
-                            key={idx}
+                            key={rule.rule}
                             className="text-xs bg-muted/30 p-2 rounded flex items-start gap-2"
                           >
                             <code className="text-primary shrink-0">{rule.rule}</code>

@@ -25,7 +25,7 @@ export function SymbolSlider({
     <div className={cn('flex flex-wrap gap-1.5', className)}>
       {symbols.map((symbol, index) => (
         <Button
-          key={index}
+          key={symbol}
           variant={variant}
           size="sm"
           onClick={() => onSelect(symbol)}

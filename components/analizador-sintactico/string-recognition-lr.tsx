@@ -133,9 +133,9 @@ export function StringRecognitionLR({
         {/* Terminales disponibles */}
         <div className="flex flex-wrap gap-1.5">
           <span className="text-xs text-muted-foreground mr-1">Terminales:</span>
-          {terminals.map((t, idx) => (
+          {terminals.map((t) => (
             <Badge
-              key={idx}
+              key={t}
               variant="outline"
               className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
               onClick={() => onChange?.(input ? `${input} ${t}` : t)}

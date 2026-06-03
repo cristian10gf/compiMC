@@ -375,7 +375,7 @@ export function StringRecognitionLL({
 
                       return (
                         <TableRow
-                          key={index}
+                          key={`${step.stack.join(',')}|${step.action}`}
                           data-step={index}
                           className={cn(
                             'cursor-pointer transition-all duration-200',
@@ -429,8 +429,8 @@ export function StringRecognitionLL({
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Producciones Aplicadas</h4>
                 <div className="bg-muted/30 rounded-lg p-4 font-mono text-sm space-y-1 max-h-32 overflow-y-auto">
-                  {result.output.split('\n').map((line, idx) => (
-                    <div key={idx} className="text-muted-foreground">
+                  {result.output.split('\n').map((line) => (
+                    <div key={line} className="text-muted-foreground">
                       {line}
                     </div>
                   ))}

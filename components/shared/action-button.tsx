@@ -41,7 +41,7 @@ export function ActionButton({
       {loading ? (
         <>
           <Loader2 className="mr-2 animate-spin" />
-          Procesando...
+          Procesando…
         </>
       ) : (
         <>

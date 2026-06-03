@@ -248,9 +248,10 @@ export function AutomataEditor({
       isInitializedRef.current = true; // Marcar como inicializado para no llamar onChange
       
       // Hacer fit después de cargar
-      setTimeout(() => {
+      const fitId = setTimeout(() => {
         cyRef.current?.fit(undefined, 40);
       }, 100);
+      return () => clearTimeout(fitId);
     }
   }, [initialAutomaton]);
   
@@ -508,10 +509,11 @@ export function AutomataEditor({
   // Hacer fit cuando se añade un estado manualmente
   useEffect(() => {
     if (shouldFitAfterAddRef.current && cyRef.current) {
-      setTimeout(() => {
+      const id = setTimeout(() => {
         cyRef.current?.fit(undefined, 40);
         shouldFitAfterAddRef.current = false;
       }, 100);
+      return () => clearTimeout(id);
     }
   }, [states.length]);
 

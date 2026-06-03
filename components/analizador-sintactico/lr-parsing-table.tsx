@@ -268,8 +268,8 @@ export function LRParsingTable({
           <div className="mt-4 pt-4 border-t">
             <h4 className="font-semibold text-sm mb-2 text-destructive">Conflictos detectados:</h4>
             <ul className="space-y-1 text-sm text-muted-foreground">
-              {conflicts.map((c, idx) => (
-                <li key={idx} className="flex items-start gap-2">
+              {conflicts.map((c) => (
+                <li key={`${c.type}-${c.description}`} className="flex items-start gap-2">
                   <Badge variant="destructive" className="text-xs shrink-0">
                     {c.type}
                   </Badge>

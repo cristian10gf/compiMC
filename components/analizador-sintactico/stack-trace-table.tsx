@@ -174,7 +174,7 @@ export function StackTraceTable({
 
                 return (
                   <TableRow
-                    key={index}
+                    key={`${step.stack.join(',')}|${step.action}`}
                     className={cn(
                       'transition-all cursor-pointer',
                       isCurrentStep && 'bg-primary/10 ring-2 ring-primary'
