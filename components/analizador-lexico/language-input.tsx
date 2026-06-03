@@ -121,7 +121,7 @@ export function LanguageInput({
         <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-md border">
           {languages.map((lang, index) => (
             <Badge
-              key={index}
+              key={lang}
               variant="secondary"
               className="text-sm py-1 px-3 flex items-center gap-2"
             >
