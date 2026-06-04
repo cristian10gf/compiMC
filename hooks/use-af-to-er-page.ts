@@ -1,16 +1,14 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQueryStates } from 'nuqs';
+import { toast } from 'sonner';
 import { useAutomata } from '@/hooks';
 import { useHistory } from '@/lib/context';
 import { afToErSearchParams } from '@/lib/nuqs';
 import { createExampleAutomaton } from '@/lib/algorithms/lexical/af-to-er';
+import type { afToERByStateElimination } from '@/lib/algorithms/lexical/af-to-er';
 import type { Automaton } from '@/lib/types';
 
-interface ConversionResult {
-  regex: string;
-  steps: any[];
-  ardenEquations: any[];
-}
+type ConversionResult = ReturnType<typeof afToERByStateElimination>;
 
 export function useAfToErPage() {
   const [{ inputMode, alphabetMode, customAlphabet, automaton: automatonJson }, setParams] =
@@ -39,6 +37,10 @@ export function useAfToErPage() {
     }
     return ['a', 'b'];
   }, [alphabetMode, customAlphabet, automaton]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   // Validate automaton readiness before conversion
   const automatonValidation = useMemo(() => {
@@ -101,8 +103,8 @@ export function useAfToErPage() {
           automatonJson: JSON.stringify(automaton),
         },
       });
-    } catch (err: any) {
-      setError(err.message || 'Error al convertir el autómata a expresión regular');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al convertir el autómata a expresión regular');
     }
   }, [automaton, addEntry, inputMode, alphabetMode, customAlphabet]);
 

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQueryStates } from 'nuqs';
+import { toast } from 'sonner';
 import { useCompilerFull, useHistory } from '@/hooks';
 import { compilerSearchParams } from '@/lib/nuqs';
 import { createCustomTokenPatterns } from '@/lib/algorithms/general/compiler';
@@ -19,6 +20,10 @@ export function useGeneralPage() {
 
   const [activeTab, setActiveTab] = useState<'analysis' | 'synthesis'>('analysis');
   const [customTokens, setCustomTokens] = useState<CustomToken[]>([]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   // Initialize sourceCode from URL on mount only
   useEffect(() => {

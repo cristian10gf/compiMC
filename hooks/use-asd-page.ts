@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQueryStates } from 'nuqs';
+import { toast } from 'sonner';
 import { useDescendenteAnalysis, useHistory } from '@/hooks';
 import { asdSearchParams } from '@/lib/nuqs';
 import type { ParsingResult } from '@/lib/types';
@@ -24,6 +25,10 @@ export function useAsdPage() {
     () => ({ grammarText: grammar, terminals, autoDetect }),
     [grammar, terminals, autoDetect]
   );
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   // Auto-analyze when URL params are present (history navigation)
   const hasAutoAnalyzed = useRef(false);

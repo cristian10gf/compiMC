@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQueryStates } from 'nuqs';
+import { toast } from 'sonner';
 import { useAscendenteAnalysis, useHistory } from '@/hooks';
 import { asaSearchParams } from '@/lib/nuqs';
 import type { PrecedenceStep, PrecedenceTable as PrecedenceTableType, ParsingResult } from '@/lib/types';
@@ -30,6 +31,10 @@ export function useAsaPage() {
     () => ({ grammarText: grammar, terminals }),
     [grammar, terminals]
   );
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   // Auto-analyze on URL navigation (history back/forward)
   const hasAutoAnalyzed = useRef(false);
@@ -79,7 +84,7 @@ export function useAsaPage() {
             grammarText,
             terminals: terminalStr,
             method: 'lr',
-            lrType: state.lrAnalysis?.selectedType?.toLowerCase() as 'slr' | 'lr1' | 'lalr' | undefined,
+            lrType: state.lrAnalysis?.selectedType?.toLowerCase() as Lowercase<LRAnalysisType> | undefined,
           },
         });
       }
