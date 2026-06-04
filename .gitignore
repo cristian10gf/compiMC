@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#IA
+.idea
+.vscode/agents
+.claude/
+.agents/
