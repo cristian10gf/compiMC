@@ -31,7 +31,6 @@ export default function ASAClientPage() {
   const {
     state,
     isProcessing,
-    error,
     hasAnalysis,
     method,
     testString,
@@ -68,14 +67,6 @@ export default function ASAClientPage() {
         isProcessing={isProcessing}
         initialValues={initialValues}
       />
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
       {method === 'precedence' && hasPrecedenceAnalysis && (
         <div className="space-y-4">

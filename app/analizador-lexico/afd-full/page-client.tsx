@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useQueryStates } from 'nuqs';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,6 +47,10 @@ export default function AFDFullClientPage() {
     
     return removed;
   }, [automaton]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   const handleAnalyze = async () => {
     // Construir AFD Full mediante algoritmo de subconjuntos
@@ -117,11 +122,6 @@ export default function AFDFullClientPage() {
             )}
           </Button>
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
         </CardContent>
       </Card>
 

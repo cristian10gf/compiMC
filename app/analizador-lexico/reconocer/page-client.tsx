@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQueryStates } from 'nuqs';
 import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +18,6 @@ import { Loader2 } from 'lucide-react';
 import { reconocerSearchParams } from '@/lib/nuqs';
 
 export default function ReconocerClientPage() {
-  // Usar nuqs para manejar el estado de la URL
   const [{ regex, testString }, setParams] = useQueryStates(reconocerSearchParams);
   
   const { 
@@ -29,6 +30,10 @@ export default function ReconocerClientPage() {
   } = useAutomata();
   
   const { addEntry } = useHistory();
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   const handleBuildAutomaton = async () => {
     await buildAutomaton({
@@ -97,11 +102,6 @@ export default function ReconocerClientPage() {
             )}
           </Button>
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
         </CardContent>
       </Card>
 

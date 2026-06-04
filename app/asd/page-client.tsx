@@ -24,7 +24,6 @@ export default function ASDClientPage() {
   const {
     state,
     isProcessing,
-    error,
     hasAnalysis,
     testString,
     setParams,
@@ -40,14 +39,6 @@ export default function ASDClientPage() {
         isProcessing={isProcessing}
         initialValues={initialValues}
       />
-
-      {error && (
-        <Card className="border-destructive bg-destructive/10">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {hasAnalysis && state.workingGrammar && (
         <div className="space-y-4">

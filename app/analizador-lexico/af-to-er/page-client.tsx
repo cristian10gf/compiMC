@@ -39,7 +39,6 @@ export default function AFtoERClientPage() {
     effectiveAlphabet,
     automatonValidation,
     result,
-    error,
     resetKey,
     isProcessing,
     handleAutomatonChange,
@@ -166,11 +165,6 @@ export default function AFtoERClientPage() {
             </Button>
           </div>
 
-          {error && (
-            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -213,7 +207,7 @@ export default function AFtoERClientPage() {
                 que es más eficiente y produce expresiones más legibles.
               </p>
               <div className="space-y-2">
-                {result.ardenEquations.map((eq: any) => (
+                {result.ardenEquations.map((eq) => (
                   <div
                     key={eq.left}
                     className={cn(
@@ -252,7 +246,7 @@ export default function AFtoERClientPage() {
               </ol>
             </div>
             <div className="space-y-4">
-              {result.steps.map((step: any) => {
+              {result.steps.map((step) => {
                 if (step.stepNumber === 0) return null;
                 return (
                   <div
@@ -290,8 +284,8 @@ export default function AFtoERClientPage() {
                           <p className="text-xs font-medium text-muted-foreground mb-2">Transiciones:</p>
                           <div className="space-y-1">
                             {step.transitions
-                              .filter((t: any) => t.regex !== '∅')
-                              .map((t: any, tIdx: number) => (
+                              .filter((t) => t.regex !== '∅')
+                              .map((t, tIdx) => (
                                 <div key={tIdx} className="rounded-md bg-muted px-3 py-2 font-mono text-sm flex items-center gap-2">
                                   <span className="font-semibold">{t.from}</span>
                                   <span className="text-muted-foreground">→</span>

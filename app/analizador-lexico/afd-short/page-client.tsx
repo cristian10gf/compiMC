@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQueryStates } from 'nuqs';
 import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,6 +32,10 @@ export default function AFDShortClientPage() {
   
   const { automaton, isProcessing, error, buildAutomaton } = useAutomata();
   const { addEntry } = useHistory();
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   const handleAnalyze = async () => {
     // Construir AFD óptimo usando árbol sintáctico
@@ -101,11 +107,6 @@ export default function AFDShortClientPage() {
             )}
           </Button>
 
-          {error && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
         </CardContent>
       </Card>
 
